@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    if: github.repository == 'validflow/ccneed-cli'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      tag: ${{ steps.plan.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - name: Detect explicit version change, not PR type or branch name
+        id: plan
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: node scripts/release/prepare.mjs
+
+  publish:
+    needs: plan
+    # 普通 main push 不占发行队列，避免覆盖尚未执行的版本发行。
+    concurrency:
+      group: ccneed-cli-release
+      cancel-in-progress: false
+    # 默认关闭；只有产品联调、npm 身份、许可及 OIDC 授权完成后才由维护者开启。
+    if: needs.plan.outputs.release == 'true' && vars.CCNEED_RELEASE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: npm-release
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      RELEASE_TAG: ${{ needs.plan.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - name: Pin npm with OIDC publishing and dist-tag support
+        run: npm install --global npm@11.21.0 --ignore-scripts --no-audit --no-fund
+      - name: Deterministic release gates
+        run: |
+          npm test
+          bash scripts/check.sh
+          go test -race -count=1 ./...
+          node scripts/release/preflight.mjs
+          node -e 'if (require("child_process").execFileSync("npm",["--version"],{encoding:"utf8"}).trim() !== "11.21.0") process.exit(1)'
+      - name: Automatically tag the reviewed main revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release/tag.mjs
+      - name: Build and verify all platform assets and matching npm/Skill package
+        run: node scripts/release/build.mjs
+      - name: Preserve exact assets for failure recovery
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish GitHub assets before npm, then verify registry channel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/release/publish.mjs

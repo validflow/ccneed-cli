@@ -49,8 +49,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
-      - name: Review-control behavioral regression tests
-        run: node --test scripts/cx-review/*.test.mjs
+      - name: Review-control, release and installer behavioral regression tests
+        run: npm test
       - name: Validate workflow syntax and expressions
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 -config-file scripts/cx-review/actionlint.yml
       - name: Deterministic quality gate

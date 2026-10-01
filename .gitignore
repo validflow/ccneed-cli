@@ -1,5 +1,8 @@
 /bin/
 /dist/
+/vendor/
+/node_modules/
+/*.tgz
 /coverage.out
 /.context/
 /.tmp-*

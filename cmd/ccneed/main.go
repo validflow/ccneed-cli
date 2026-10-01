@@ -15,6 +15,7 @@ import (
 
 var buildVersion = "dev"
 var buildCommit = "unknown"
+var buildPackage = ""
 
 // main 将唯一进程退出点与可测试的命令层分开。
 func main() { os.Exit(run()) }
@@ -29,7 +30,13 @@ func run() int {
 	defer stop()
 	options := cli.Options{Version: version.Info{Version: buildVersion, Commit: buildCommit}, Stdout: os.Stdout, Stderr: os.Stderr}
 	if directory, err := os.UserCacheDir(); err == nil {
-		checker := update.New(update.NewGitHubSource(nil), update.NewFileCache(filepath.Join(directory, "ccneed", "update.json")), time.Now)
+		var source update.Source = update.NewGitHubSource(nil)
+		cacheName := "update-github.json"
+		if buildPackage != "" {
+			source = update.NewNPMSource(buildPackage, nil)
+			cacheName = "update-npm.json"
+		}
+		checker := update.New(source, update.NewFileCache(filepath.Join(directory, "ccneed", cacheName)), time.Now)
 		options.CheckUpdate = checker.Check
 	}
 	return cli.Run(ctx, os.Args[1:], options)

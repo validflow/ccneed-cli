@@ -49,13 +49,14 @@ go run ./cmd/ccneed version
 
 `account overview`、`account credits`、`account history --limit 20` 已完成命令和接口测试，但官网登录尚未接通，独立执行会返回 `not_authenticated`，不能用于真实账号查询。`history` 只展示现有接口的近期窗口（最多 200 条），不代表完整历史。
 
-正式版本的更新提醒只写 stderr，不污染 JSON 结果，也不自动升级；开发版本不检查更新。自动检查缓存 24 小时，网络请求最多等待 2 秒；使用 `--no-update-check` 可完全关闭本次检查与提醒。登录、任务、文件、HITL 和 npm 安装仍在实现中，尚未完成 staging 联调。
+正式版本的更新提醒只写 stderr，不污染 JSON 结果，也不自动升级；开发版本不检查更新。npm 发行查询 npm 稳定 `latest`，不会仅因出现 GitHub tag 就提示升级。自动检查缓存 24 小时，网络请求最多等待 2 秒；使用 `--no-update-check` 可关闭本次检查。精确版本安装、校验和及自动发行脚本已有本地实现，但尚未真实发版；登录、任务、文件、HITL、宿主 Skill 安装与 staging 联调仍待完成。
 
 | 文档 | 内容 |
 | --- | --- |
 | [贡献指南](CONTRIBUTING.md) | 分支、PR、staging 联调与发布顺序 |
 | [代码规范](CODE_STYLE.md) | 模块边界、Google 风格注释、测试和错误处理 |
 | [安全说明](SECURITY.md) | 凭证、环境隔离与漏洞报告 |
+| [发行说明](RELEASING.md) | 维护者版本准备、自动发布与失败恢复 |
 
 ## 安装与开源状态
 
