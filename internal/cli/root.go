@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/validflow/ccneed-cli/internal/api"
+	"github.com/validflow/ccneed-cli/internal/credential"
 	"github.com/validflow/ccneed-cli/internal/version"
 )
 
@@ -19,6 +20,7 @@ type Options struct {
 	Stderr      io.Writer
 	CheckUpdate func(context.Context, string) string
 	Connect     func(context.Context, string) (*api.Client, error)
+	Credentials *credential.Vault
 }
 
 // New 创建独立命令树；机器结果写 stdout，诊断写 stderr。
@@ -37,8 +39,12 @@ func New(options Options) *cobra.Command {
 	noUpdateCheck := false
 	command.PersistentFlags().BoolVar(&noUpdateCheck, "no-update-check", false, "Disable update checks and reminders for this invocation")
 	connection := &connectionConfig{origin: "https://ccneed.ai", connect: options.Connect}
+	if connection.connect == nil && options.Credentials != nil {
+		connection.connect = options.Credentials.Connect
+	}
 	command.PersistentFlags().StringVar(&connection.origin, "api-url", connection.origin, "Explicit service origin for development; credentials stay origin-bound")
 	command.AddCommand(accountCommand(connection))
+	command.AddCommand(authCommand(connection, options.Credentials))
 	command.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Print CLI build identity as JSON",

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/validflow/ccneed-cli/internal/cli"
+	"github.com/validflow/ccneed-cli/internal/credential"
 	"github.com/validflow/ccneed-cli/internal/update"
 	"github.com/validflow/ccneed-cli/internal/version"
 )
@@ -29,6 +30,7 @@ func run() int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	options := cli.Options{Version: version.Info{Version: buildVersion, Commit: buildCommit}, Stdout: os.Stdout, Stderr: os.Stderr}
+	options.Credentials = credential.New(credential.NewSystem(), time.Now)
 	if directory, err := os.UserCacheDir(); err == nil {
 		var source update.Source = update.NewGitHubSource(nil)
 		cacheName := "update-github.json"

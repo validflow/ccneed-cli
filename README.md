@@ -45,9 +45,14 @@ make check
 ```bash
 go run ./cmd/ccneed --help
 go run ./cmd/ccneed version
+go run ./cmd/ccneed auth status --no-update-check
 ```
 
-`account overview`、`account credits`、`account history --limit 20` 已完成命令和接口测试，但官网登录尚未接通，独立执行会返回 `not_authenticated`，不能用于真实账号查询。`history` 只展示现有接口的近期窗口（最多 200 条），不代表完整历史。
+`auth status` 只检查当前服务地址的本地凭证，返回 `missing`、`present` 或 `expired`，不代表服务端授权仍有效。凭证保存到系统凭证库，不读取浏览器 Cookie，也不自动回退明文文件；凭证库不可用会明确报错。官网授权和服务端撤销尚未接通，当前没有 `auth login` 命令。
+
+本地凭证读取最多等待 30 秒，Ctrl+C 可停止命令等待；操作系统的解锁提示可能继续存在。同一存储实例只允许一个未完成的读取，不会因重复取消不断弹出提示。三平台真实凭证库仍待验收，目前的测试只替换了系统边界。
+
+`account overview`、`account credits`、`account history --limit 20` 已完成命令和接口测试，并接入按环境隔离的凭证模块；由于还无法通过官网领取凭证，首次独立执行仍返回 `not_authenticated`，不能用于真实账号查询。`history` 只展示现有接口的近期窗口（最多 200 条），不代表完整历史。
 
 正式版本的更新提醒只写 stderr，不污染 JSON 结果，也不自动升级；开发版本不检查更新。npm 发行查询 npm 稳定 `latest`，不会仅因出现 GitHub tag 就提示升级。自动检查缓存 24 小时，网络请求最多等待 2 秒；使用 `--no-update-check` 可关闭本次检查。精确版本安装、校验和及自动发行脚本已有本地实现，但尚未真实发版；登录、任务、文件、HITL、宿主 Skill 安装与 staging 联调仍待完成。
 
