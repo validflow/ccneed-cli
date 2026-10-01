@@ -53,6 +53,18 @@ func New(origin, token string, transport http.RoundTripper) (*Client, error) {
 	}}, nil
 }
 
+// Origin 返回传输所绑定的规范化地址，不暴露凭证或可变 URL。
+//
+// Returns:
+//
+//	规范化服务 origin；nil 或未初始化的客户端返回空字符串。
+func (c *Client) Origin() string {
+	if c == nil || c.origin == nil {
+		return ""
+	}
+	return c.origin.String()
+}
+
 // DoJSON 执行单次有限期请求；取消仅取消本地请求，不代表取消云端任务。
 //
 // Args:

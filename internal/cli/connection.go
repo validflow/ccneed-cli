@@ -24,7 +24,7 @@ type connectionConfig struct {
 //
 // Errors:
 //
-//	origin 无效或未登录时失败关闭，不自动回退生产。
+//	origin 无效、未登录或认证层返回不同地址的连接时失败关闭，不自动回退生产。
 func (c *connectionConfig) client(ctx context.Context) (*api.Client, error) {
 	origin, err := api.ParseOrigin(c.origin)
 	if err != nil {
@@ -33,5 +33,15 @@ func (c *connectionConfig) client(ctx context.Context) (*api.Client, error) {
 	if c.connect == nil {
 		return nil, &api.Error{Code: "not_authenticated"}
 	}
-	return c.connect(ctx, origin.String())
+	client, err := c.connect(ctx, origin.String())
+	if err != nil {
+		return nil, err
+	}
+	if client.Origin() == "" {
+		return nil, &api.Error{Code: "not_authenticated"}
+	}
+	if client.Origin() != origin.String() {
+		return nil, &api.Error{Code: "origin_mismatch"}
+	}
+	return client, nil
 }
