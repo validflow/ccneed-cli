@@ -1,0 +1,150 @@
+name: CX Review
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Open PR number approved by a maintainer
+        required: true
+        type: string
+      head_sha:
+        description: Exact 40-character PR head SHA approved for review
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: cx-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    name: Authorize and prepare trusted review input
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    outputs:
+      allowed: ${{ steps.admit.outputs.allowed }}
+      head: ${{ steps.admit.outputs.head }}
+      base: ${{ steps.admit.outputs.base }}
+      number: ${{ steps.admit.outputs.number }}
+    steps:
+      - name: Checkout trusted main only
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Admit exact revision and set required status pending
+        id: admit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
+          APPROVED_HEAD: ${{ inputs.head_sha }}
+        run: node scripts/cx-review/github.mjs prepare "$RUNNER_TEMP/prepared.json"
+      - name: Checkout admitted trusted base, never PR head
+        if: steps.admit.outputs.allowed == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.admit.outputs.base }}
+          persist-credentials: false
+      - name: Build complete bounded review context
+        if: steps.admit.outputs.allowed == 'true'
+        run: node scripts/cx-review/pipeline.mjs bundle "$RUNNER_TEMP/prepared.json" "$RUNNER_TEMP/context.json"
+      - name: Preserve identity even if context preparation fails
+        if: always() && steps.admit.outputs.allowed == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cx-input
+          path: |
+            ${{ runner.temp }}/prepared.json
+            ${{ runner.temp }}/context.json
+          if-no-files-found: error
+          retention-days: 1
+
+  review:
+    name: Four independent Codex review passes
+    needs: prepare
+    # Explicit readiness guards prevent silently queueing on an unconfigured persistent pool.
+    if: needs.prepare.outputs.allowed == 'true' && vars.CX_REVIEW_READY == 'true' && vars.CX_REVIEW_EPHEMERAL == 'true'
+    runs-on: [self-hosted, macOS, ARM64, cc-review]
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout trusted review controls only
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.prepare.outputs.base }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: cx-input
+          path: ${{ runner.temp }}/cx-input
+      - name: Run tool-free Codex with isolated credentials and trusted Skill
+        env:
+          CX_CODEX_BINARY: ${{ vars.CX_CODEX_BINARY }}
+          CX_AUTH_FILE: ${{ vars.CX_AUTH_FILE }}
+        run: |
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+          node scripts/cx-review/pipeline.mjs review "$RUNNER_TEMP/cx-input/context.json" "$RUNNER_TEMP/review.json"
+      - name: Upload only structured review output, never temporary credentials
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cx-result
+          path: ${{ runner.temp }}/review.json
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish revision-bound required status
+    needs: [prepare, review]
+    if: always() && needs.prepare.outputs.allowed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+      statuses: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.prepare.outputs.base }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: cx-input
+          path: ${{ runner.temp }}/cx-input
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        if: needs.review.result == 'success'
+        with:
+          name: cx-result
+          path: ${{ runner.temp }}/cx-result
+      - name: Revalidate four passes and live head/base, then publish
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREPARED_FILE: ${{ runner.temp }}/cx-input/prepared.json
+          REVIEW_RESULT: ${{ needs.review.result }}
+        run: node scripts/cx-review/github.mjs publish "$RUNNER_TEMP/cx-result/review.json"
