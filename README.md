@@ -103,14 +103,14 @@ ccneed artifacts download --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --
 
 | 想做什么 | 命令 |
 | --- | --- |
-| 查看积分、订阅 | `ccneed account credits` / `ccneed account overview` |
-| 查看会话 | `ccneed threads list` |
-| 查看知识库 | `ccneed kb list` |
-| 创建知识库 | `ccneed kb create`，返回网页入口 |
-| 查看、上传文件 | `ccneed files list` / `ccneed files upload ./posts.csv` |
-| 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
-| 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
-| 退出登录 | `ccneed auth logout` |
+| 💳 查看积分、订阅 | `ccneed account credits` / `ccneed account overview` |
+| 💬 查看会话 | `ccneed threads list` |
+| 📚 查看知识库 | `ccneed kb list` |
+| ➕ 创建知识库 | `ccneed kb create`，返回网页入口 |
+| 📎 查看、上传文件 | `ccneed files list` / `ccneed files upload ./posts.csv` |
+| 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
+| 🕘 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
+| 🚪 退出登录 | `ccneed auth logout` |
 
 表中未展开的参数，可用 `ccneed <命令> --help` 查看。知识库与文件绑定只追加、不解绑；完整调用规则见 [Skill](skills/ccneed/SKILL.md)。
 
