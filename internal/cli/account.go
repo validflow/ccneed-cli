@@ -18,7 +18,7 @@ import (
 //
 //	不包含支付写操作的账号命令组。
 func accountCommand(connection *connectionConfig) *cobra.Command {
-	command := &cobra.Command{Use: "account", Short: "Read account credits, subscriptions and recent credit history"}
+	command := commandGroup("account", "Read account credits, subscriptions and recent credit history")
 	command.AddCommand(&cobra.Command{
 		Use: "credits", Short: "Read available credits", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {

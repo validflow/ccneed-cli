@@ -34,7 +34,7 @@ try {
   const packed = JSON.parse(execFileSync('npm', ['pack', '--json', '--ignore-scripts'], { cwd: staging, encoding: 'utf8', timeout: 60_000 }));
   if (packed.length !== 1 || !/^[a-zA-Z0-9._-]+\.tgz$/.test(packed[0].filename)) throw new Error('Invalid npm pack result');
   const included = new Set(packed[0].files.map((file) => file.path));
-  for (const required of ['checksums.json', 'scripts/npm/install.mjs', 'scripts/npm/run.mjs', 'skills/ccneed/SKILL.md']) if (!included.has(required)) throw new Error('npm package misses required release content');
+  for (const required of ['checksums.json', 'scripts/npm/install.mjs', 'scripts/npm/run.mjs', 'scripts/npm/setup.mjs', 'scripts/npm/skills.mjs', 'skills/ccneed/SKILL.md', ...['auth', 'account', 'tasks', 'resources'].map(name => 'skills/ccneed/references/' + name + '.md')]) if (!included.has(required)) throw new Error('npm package misses required release content');
   copyFileSync(join(staging, packed[0].filename), join(out, 'ccneed-npm-' + manifest.version + '.tgz'));
 } catch (error) {
   console.error('Release build failed: ' + error.message);

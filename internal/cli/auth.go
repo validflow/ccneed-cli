@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
-
 	"github.com/spf13/cobra"
 	"github.com/validflow/ccneed-cli/internal/credential"
 )
@@ -16,20 +14,10 @@ import (
 //
 // Returns:
 //
-//	不声称完成官网授权的认证命令组。
+//	分离登录、撤销、本地状态和显式服务器校验的认证命令组。
 func authCommand(connection *connectionConfig, vault *credential.Vault) *cobra.Command {
-	command := &cobra.Command{Use: "auth", Short: "Manage CCNeed authorization"}
-	command.AddCommand(&cobra.Command{
-		Use:   "status",
-		Short: "Inspect local credentials; does not validate server authorization",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			status, err := vault.Inspect(cmd.Context(), connection.origin)
-			if err != nil {
-				return err
-			}
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(status)
-		},
-	})
+	command := commandGroup("auth", "Manage CCNeed authorization")
+	command.AddCommand(loginCommand(connection, vault), logoutCommand(connection, vault))
+	command.AddCommand(statusCommand(connection, vault))
 	return command
 }

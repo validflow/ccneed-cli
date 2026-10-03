@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync, copyFileSync, cpSync, lstatSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { assetName } from '../npm/install.mjs';
+import { validateSkill, fingerprintSkill, validateBundledSkill } from '../npm/skills.mjs';
 import { validateManifest } from './version.mjs';
 
 /** targets 定义安装器和发行构建共同支持的六个平台。
@@ -57,15 +58,20 @@ export function stagePackage(root, out, manifest) {
   const skill = join(root, 'skills', 'ccneed');
   rejectLinks(skill);
   if (!readFileSync(join(skill, 'SKILL.md'), 'utf8').trim()) throw new Error('Release requires a usable Skill');
+  validateSkill(skill);
   const assets = Object.fromEntries(targets(manifest.version).map(({ asset }) => [asset, sha256(join(out, asset))]));
-  const checksums = JSON.stringify({ version: manifest.version, assets }, null, 2) + '\n';
+  const checksums = JSON.stringify({ version: manifest.version, assets, skill_sha256: fingerprintSkill(skill) }, null, 2) + '\n';
   writeFileSync(join(out, 'checksums.json'), checksums);
   const destination = join(out, 'npm');
   mkdirSync(join(destination, 'scripts', 'npm'), { recursive: true });
   writeFileSync(join(destination, 'package.json'), JSON.stringify(manifest, null, 2) + '\n');
   writeFileSync(join(destination, 'checksums.json'), checksums);
-  for (const file of ['install.mjs', 'run.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
-  for (const file of ['README.md', 'LICENSE']) copyFileSync(join(root, file), join(destination, file));
+  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
+  for (const file of ['README.md', 'INSTALL.md', 'LICENSE']) copyFileSync(join(root, file), join(destination, file));
+  const logo = join(root, 'assets', 'ccneed-logo.png');
+  rejectLinks(logo);
+  mkdirSync(join(destination, 'assets'));
+  copyFileSync(logo, join(destination, 'assets', 'ccneed-logo.png'));
   cpSync(skill, join(destination, 'skills', 'ccneed'), { recursive: true });
   return destination;
 }
@@ -82,6 +88,7 @@ export function verifyArtifacts(out) {
   const manifest = JSON.parse(readFileSync(join(out, 'npm', 'package.json'), 'utf8'));
   validateManifest(manifest);
   const checksums = JSON.parse(readFileSync(join(out, 'checksums.json'), 'utf8'));
+  validateBundledSkill(join(out, 'npm'));
   if (checksums.version !== manifest.version || readFileSync(join(out, 'npm', 'checksums.json'), 'utf8') !== readFileSync(join(out, 'checksums.json'), 'utf8')) throw new Error('Artifact checksum version mismatch');
   const names = targets(manifest.version).map(({ asset }) => asset);
   if (Object.keys(checksums.assets).length !== names.length) throw new Error('Incomplete artifact checksums');

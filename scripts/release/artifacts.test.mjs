@@ -15,11 +15,16 @@ function fixture() {
   const manifest = { name: '@validflow/ccneed-cli', version: '0.1.0', private: false, license: 'MIT' };
   writeFileSync(join(root, 'package.json'), JSON.stringify(manifest));
   writeFileSync(join(root, 'README.md'), 'fixture');
+  writeFileSync(join(root, 'INSTALL.md'), 'fixture agent installation');
+  mkdirSync(join(root, 'assets'));
+  writeFileSync(join(root, 'assets', 'ccneed-logo.png'), Buffer.from('fixture logo'));
   writeFileSync(join(root, 'LICENSE'), 'fixture license');
   mkdirSync(join(root, 'skills', 'ccneed'), { recursive: true });
   writeFileSync(join(root, 'skills', 'ccneed', 'SKILL.md'), 'fixture skill');
+  mkdirSync(join(root, 'skills', 'ccneed', 'references'));
+  for (const name of ['auth', 'account', 'tasks', 'resources']) writeFileSync(join(root, 'skills', 'ccneed', 'references', name + '.md'), 'fixture reference');
   mkdirSync(join(root, 'scripts', 'npm'), { recursive: true });
-  for (const file of ['install.mjs', 'run.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
+  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
   const out = join(root, 'dist');
   mkdirSync(out);
   for (const target of targets('0.1.0')) writeFileSync(join(out, target.asset), Buffer.from(target.asset));
@@ -30,7 +35,10 @@ test('npm staging includes same-source Skill and complete checksum map for all s
   const { root, out, manifest } = fixture();
   stagePackage(root, out, manifest);
   assert.equal(verifyArtifacts(out).length, 6);
+  for (const file of ['setup.mjs', 'skills.mjs']) assert.equal(readFileSync(join(out, 'npm', 'scripts', 'npm', file), 'utf8'), 'fixture source');
   assert.equal(readFileSync(join(out, 'npm', 'skills', 'ccneed', 'SKILL.md'), 'utf8'), 'fixture skill');
+  assert.equal(readFileSync(join(out, 'npm', 'INSTALL.md'), 'utf8'), 'fixture agent installation');
+  assert.deepEqual(readFileSync(join(out, 'npm', 'assets', 'ccneed-logo.png')), Buffer.from('fixture logo'));
   assert.equal(JSON.parse(readFileSync(join(out, 'npm', 'package.json'))).version, '0.1.0');
   writeFileSync(join(out, targets('0.1.0')[0].asset), 'corrupt');
   assert.throws(() => verifyArtifacts(out), /checksum/);
@@ -51,4 +59,10 @@ test('npm retry is idempotent only when published version and exact tarball matc
   assert.equal(publicationDecision(desired, { name: desired.name, version: desired.version, dist: { integrity: desired.integrity } }, { version: desired.version }), 'reuse');
   assert.throws(() => publicationDecision(desired, { name: desired.name, version: desired.version, dist: { integrity: 'sha512-other' } }, null), /integrity/);
   assert.throws(() => publicationDecision(desired, null, { version: '0.2.0' }), /rollback/);
+});
+
+test('a release cannot stage a Skill whose required task reference is missing', () => {
+  const { root, out, manifest } = fixture();
+  unlinkSync(join(root, 'skills', 'ccneed', 'references', 'tasks.md'));
+  assert.throws(() => stagePackage(root, out, manifest));
 });

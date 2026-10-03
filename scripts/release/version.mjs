@@ -55,19 +55,25 @@ export function validateManifest(manifest, tag) {
   return { version, tag: 'v' + version, channel: parsed.rc === null ? 'latest' : 'rc' };
 }
 
-/** planRelease 仅依据 main 前后 manifest 的版本变化确定是否发行。
+/** planRelease 根据版本变化或明确解除私有禁发确定是否发行。
  * Args:
  *   current: 已合入 main 的 manifest。
  *   previous: push 前的 manifest；首次引入时为 null。
  * Returns:
- *   不发行标记，或经过校验的发行身份。
+ *   私有源码里程碑与普通合并返回不发行，启用发行后返回校验后的身份。
  * Errors:
  *   不可发行或倒退的版本返回异常。
  */
 export function planRelease(current, previous) {
-  if (current.version === previous?.version) return { release: false };
-  if (previous && compareVersions(current.version, previous.version) <= 0) throw new Error('Release version must increase');
+  parseVersion(current.version);
+  const enabling = previous?.private === true && current.private === false;
+  if (current.version === previous?.version && !enabling) return { release: false };
+  if (previous) {
+    const order = compareVersions(current.version, previous.version);
+    if (order < 0 || (order === 0 && !enabling)) throw new Error('Release version must increase');
+  }
   if (current.version === '0.0.0') return { release: false };
+  if (current.private === true) return { release: false };
   const identity = validateManifest(current);
   return { release: true, ...identity };
 }

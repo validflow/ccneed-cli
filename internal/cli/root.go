@@ -44,6 +44,11 @@ func New(options Options) *cobra.Command {
 	}
 	command.PersistentFlags().StringVar(&connection.origin, "api-url", connection.origin, "Explicit service origin for development; credentials stay origin-bound")
 	command.AddCommand(accountCommand(connection))
+	command.AddCommand(tasksCommand(connection))
+	command.AddCommand(submitCommand(connection))
+	command.AddCommand(threadsCommand(connection))
+	command.AddCommand(requestsCommand(connection))
+	command.AddCommand(kbCommand(connection), filesCommand(connection), artifactsCommand(connection))
 	command.AddCommand(authCommand(connection, options.Credentials))
 	command.AddCommand(&cobra.Command{
 		Use:   "version",
@@ -54,7 +59,7 @@ func New(options Options) *cobra.Command {
 		},
 	})
 	command.PersistentPostRun = func(cmd *cobra.Command, _ []string) {
-		if noUpdateCheck || options.CheckUpdate == nil {
+		if cmd.HasSubCommands() || noUpdateCheck || options.CheckUpdate == nil {
 			return
 		}
 		latest := options.CheckUpdate(cmd.Context(), options.Version.Version)
