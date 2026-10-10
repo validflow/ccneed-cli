@@ -13,6 +13,25 @@ import (
 	"github.com/validflow/ccneed-cli/internal/api"
 )
 
+func TestRemoteHTTPRequiresExplicitPerInvocationOptIn(t *testing.T) {
+	origin := "http://192.0.2.10"
+	for _, scenario := range []struct {
+		args []string
+		want string
+		exit int
+	}{
+		{[]string{"--api-url", origin, "kb", "create"}, `"code":"invalid_origin"`, 1},
+		{[]string{"--api-url", origin, "--allow-insecure-http", "kb", "create"}, `"url":"http://192.0.2.10/insightflow/kb"`, 0},
+		{[]string{"--api-url", "http://ccneed.ai/api", "--allow-insecure-http", "kb", "create"}, `"code":"invalid_origin"`, 1},
+	} {
+		var output bytes.Buffer
+		code := Run(context.Background(), scenario.args, Options{Stdout: &output})
+		if code != scenario.exit || !strings.Contains(output.String(), scenario.want) {
+			t.Fatalf("args=%v code=%d output=%q", scenario.args, code, output.String())
+		}
+	}
+}
+
 func TestSelectedOriginRejectsDifferentAuthenticatedConnection(t *testing.T) {
 	var calls atomic.Int32
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

@@ -94,3 +94,37 @@ func TestArtifactReadReturnsPublicTextInsteadOfRawTerminalBytes(t *testing.T) {
 		t.Fatalf("exit=%d output=%s", code, output)
 	}
 }
+
+func TestArtifactExportPDFUsesRendererWithoutChangingRawDownload(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "report.pdf")
+	code, output := runTaskCommand(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/print/report/pdf/client" {
+			t.Errorf("unexpected %s %s", r.Method, r.URL)
+		}
+		if r.Header.Get("Authorization") != "Bearer test-only-value" {
+			t.Error("export must forward only the selected origin credential")
+		}
+		w.Header().Set("Content-Type", "application/pdf")
+		_, _ = fmt.Fprint(w, "%PDF-test")
+	}, "artifacts", "export-pdf", "--thread-id", taskThread, "--artifact-id", taskTurn, "--output", target)
+	if code != 0 || !strings.Contains(output, `"content_type":"application/pdf"`) {
+		t.Fatalf("exit=%d output=%s", code, output)
+	}
+	data, err := os.ReadFile(target)
+	if err != nil || string(data) != "%PDF-test" {
+		t.Fatalf("saved=%q err=%v", data, err)
+	}
+}
+
+func TestArtifactExportPDFRejectsNonPDFResponseWithoutTarget(t *testing.T) {
+	directory := t.TempDir()
+	target := filepath.Join(directory, "report.pdf")
+	code, _ := runTaskCommand(t, func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/markdown")
+		_, _ = fmt.Fprint(w, "# report")
+	}, "artifacts", "export-pdf", "--thread-id", taskThread, "--artifact-id", taskTurn, "--output", target)
+	if code == 0 {
+		t.Fatal("non-PDF export must fail")
+	}
+	checkDownloadDirectory(t, directory, 0)
+}

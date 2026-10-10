@@ -94,10 +94,11 @@ ccneed run "分析已绑定资料并生成报告" --thread-id THREAD_UUID
 ```bash
 ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s
 ccneed artifacts list --thread-id THREAD_UUID
-ccneed artifacts download --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.pdf
+ccneed artifacts download --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.md
+ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.pdf
 ```
 
-`watch` 等待超时不取消任务，稍后查询同一轮即可。需要确认时，Agent 会把问题和选项交给你，再用 `tasks reply` 提交你的答案。任务完成后可查看本轮回答及 findings/reports，不展示隐藏推理或完整工具日志。下载不会覆盖已有文件。
+`watch` 等待超时不取消任务，稍后查询同一轮即可。需要确认时，Agent 会把问题和选项交给你，再用 `tasks reply` 提交你的答案。任务完成后可查看本轮回答及 findings/reports，不展示隐藏推理或完整工具日志。阅读带图表与排版的完整报告，建议 `export-pdf`；需要原文或继续编辑时用 `download` 保存 MD。两者都不会覆盖已有文件。
 
 ### 常用命令
 

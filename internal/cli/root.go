@@ -40,9 +40,12 @@ func New(options Options) *cobra.Command {
 	command.PersistentFlags().BoolVar(&noUpdateCheck, "no-update-check", false, "Disable update checks and reminders for this invocation")
 	connection := &connectionConfig{origin: "https://ccneed.ai", connect: options.Connect}
 	if connection.connect == nil && options.Credentials != nil {
-		connection.connect = options.Credentials.Connect
+		connection.connect = func(ctx context.Context, origin string) (*api.Client, error) {
+			return connection.vault(options.Credentials).Connect(ctx, origin)
+		}
 	}
 	command.PersistentFlags().StringVar(&connection.origin, "api-url", connection.origin, "Explicit service origin for development; credentials stay origin-bound")
+	command.PersistentFlags().BoolVar(&connection.allowInsecureHTTP, "allow-insecure-http", false, "Allow plaintext HTTP for an explicitly selected staging IP; credentials are exposed in transit")
 	command.AddCommand(accountCommand(connection))
 	command.AddCommand(tasksCommand(connection))
 	command.AddCommand(submitCommand(connection))

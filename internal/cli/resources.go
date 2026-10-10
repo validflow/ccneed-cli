@@ -86,7 +86,7 @@ func kbListCommand(connection *connectionConfig) *cobra.Command {
 //	需要用户在网站完成的创建交接命令。
 func kbCreateCommand(connection *connectionConfig) *cobra.Command {
 	return &cobra.Command{Use: "create", Short: "Return the website knowledge-base creation entry", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		origin, err := api.ParseOrigin(connection.origin)
+		origin, err := connection.selectedOrigin()
 		if err != nil {
 			return err
 		}

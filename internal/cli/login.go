@@ -28,11 +28,15 @@ func loginCommand(connection *connectionConfig, vault *credential.Vault) *cobra.
 	command.Flags().BoolVar(&complete, "complete", false, "Complete the pending authorization for this origin after website approval")
 	command.Flags().DurationVar(&timeout, "timeout", time.Minute, "Bounded wait for --complete (1s to 10m); timeout does not grant authorization")
 	command.RunE = func(cmd *cobra.Command, _ []string) error {
-		client, err := api.New(connection.origin, "", nil)
+		newClient := api.New
+		if connection.allowInsecureHTTP {
+			newClient = api.NewWithInsecureHTTP
+		}
+		client, err := newClient(connection.origin, "", nil)
 		if err != nil {
 			return err
 		}
-		service := auth.New(client, vault, nil)
+		service := auth.New(client, connection.vault(vault), nil)
 		var outcome auth.Outcome
 		if complete {
 			outcome, err = service.Complete(cmd.Context(), timeout)
@@ -65,7 +69,7 @@ func logoutCommand(connection *connectionConfig, vault *credential.Vault) *cobra
 	command := &cobra.Command{Use: "logout", Short: "Revoke this client credential, then remove it locally", Args: cobra.NoArgs}
 	command.Flags().BoolVar(&localOnly, "local-only", false, "Remove only local credentials; does not revoke server authorization")
 	command.RunE = func(cmd *cobra.Command, _ []string) error {
-		origin, err := api.ParseOrigin(connection.origin)
+		origin, err := connection.selectedOrigin()
 		if err != nil {
 			return err
 		}
@@ -84,10 +88,10 @@ func logoutCommand(connection *connectionConfig, vault *credential.Vault) *cobra
 				return &api.Error{Code: "invalid_response"}
 			}
 		}
-		if err := vault.Forget(cmd.Context(), origin.String()); err != nil {
+		if err := connection.vault(vault).Forget(cmd.Context(), origin.String()); err != nil {
 			return err
 		}
-		if err := vault.ForgetPending(cmd.Context(), origin.String()); err != nil {
+		if err := connection.vault(vault).ForgetPending(cmd.Context(), origin.String()); err != nil {
 			return err
 		}
 		return json.NewEncoder(cmd.OutOrStdout()).Encode(struct {

@@ -182,7 +182,7 @@ func (s *Service) accept(ctx context.Context, pending credential.Pending, respon
 	if err := s.vault.Save(ctx, pending.Origin, record); err != nil {
 		cleanup, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		client, createErr := api.New(pending.Origin, response.Token, nil)
+		client, createErr := api.NewWithInsecureHTTP(pending.Origin, response.Token, nil)
 		if createErr == nil {
 			_ = client.DoJSON(cleanup, http.MethodPost, "/api/v1/client/auth/revoke", nil, nil, nil)
 		}

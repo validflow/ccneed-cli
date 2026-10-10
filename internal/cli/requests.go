@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/spf13/cobra"
-	"github.com/validflow/ccneed-cli/internal/api"
 	"github.com/validflow/ccneed-cli/internal/requests"
 	"github.com/validflow/ccneed-cli/internal/tasks"
 )
@@ -40,7 +39,7 @@ func requestListCommand(connection *connectionConfig) *cobra.Command {
 			if err := tasks.ValidateIDs(threadID, threadID); err != nil {
 				return err
 			}
-			origin, err := api.ParseOrigin(connection.origin)
+			origin, err := connection.selectedOrigin()
 			if err != nil {
 				return err
 			}

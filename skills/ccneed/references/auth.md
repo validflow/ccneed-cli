@@ -68,6 +68,6 @@ ccneed auth logout --local-only --no-update-check
 
 ## 开发环境
 
-正式发行默认服务面向普通用户；仅明确联调时才传开发者确认可信的 `--api-url`。参数是 HTTPS origin，不带 `/api` 路径、用户名、query 或 fragment；仅明确的本机 loopback 可用 HTTP。
+正式发行默认服务面向普通用户；仅明确联调时才传开发者确认可信的 `--api-url`。通常传 HTTPS origin，不带 `/api` 路径、用户名、query 或 fragment；本机 loopback 可用 HTTP。若 staging 预览只有 HTTP 且使用 IP 地址，开发者可以在每条命令上额外传 `--allow-insecure-http`，但凭证会在网络中明文传输，只能使用测试账号，绝不能对生产地址使用。该例外不改变默认 HTTPS 行为。
 
 登录发起、完成、验证、注销和后续业务请求都保持同一 `--api-url`。官网链接从当前 origin 生成，应原样展示；不改写链接或到别的环境批准。凭证按 origin 隔离，不自动回退生产；网站登录态和 CLI 凭证是两回事。

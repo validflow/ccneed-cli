@@ -21,6 +21,7 @@ func artifactsCommand(connection *connectionConfig) *cobra.Command {
 	command := commandGroup("artifacts", "Read public findings and reports")
 	command.AddCommand(artifactListCommand(connection))
 	command.AddCommand(artifactContentCommand(connection, false), artifactContentCommand(connection, true))
+	command.AddCommand(artifactExportPDFCommand(connection))
 	return command
 }
 

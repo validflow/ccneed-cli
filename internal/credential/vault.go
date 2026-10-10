@@ -40,9 +40,10 @@ type Status struct {
 
 // Vault 将一个 origin 的凭证交给系统凭证库，不使用明文文件回退。
 type Vault struct {
-	backend  Backend
-	now      func() time.Time
-	readSlot chan struct{}
+	backend           Backend
+	now               func() time.Time
+	readSlot          chan struct{}
+	allowInsecureHTTP bool
 }
 
 // New 创建显式注入系统凭证库与时钟的存储。
@@ -60,6 +61,21 @@ func New(backend Backend, now func() time.Time) *Vault {
 		now = time.Now
 	}
 	return &Vault{backend: backend, now: now, readSlot: make(chan struct{}, 1)}
+}
+
+// WithInsecureHTTP returns a per-invocation view for explicitly selected HTTP staging.
+// It shares the same origin-keyed backend without changing the default vault policy.
+//
+// Returns:
+//
+//	A policy-scoped vault, or nil when the receiver is nil.
+func (v *Vault) WithInsecureHTTP() *Vault {
+	if v == nil {
+		return nil
+	}
+	copy := *v
+	copy.allowInsecureHTTP = true
+	return &copy
 }
 
 // Save 保存已授权且未过期的凭证，不允许静默改写所属 origin。
@@ -82,7 +98,7 @@ func (v *Vault) Save(ctx context.Context, origin string, record Record) error {
 	if err != nil {
 		return err
 	}
-	if err := validateRecord(record, canonical); err != nil {
+	if err := validateRecord(record, canonical, v.allowInsecureHTTP); err != nil {
 		return err
 	}
 	if !record.ExpiresAt.After(v.now()) {
@@ -120,6 +136,9 @@ func (v *Vault) Connect(ctx context.Context, origin string) (*api.Client, error)
 	}
 	if !record.ExpiresAt.After(v.now()) {
 		return nil, &api.Error{Code: "credential_expired"}
+	}
+	if v.allowInsecureHTTP {
+		return api.NewWithInsecureHTTP(record.Origin, record.Token, nil)
 	}
 	return api.New(record.Origin, record.Token, nil)
 }
@@ -214,7 +233,7 @@ func (v *Vault) load(ctx context.Context, origin string) (Record, string, error)
 	if err != nil {
 		return Record{}, canonical, &api.Error{Code: "credential_store_unavailable"}
 	}
-	record, err := decodeRecord(raw, canonical)
+	record, err := decodeRecord(raw, canonical, v.allowInsecureHTTP)
 	return record, canonical, err
 }
 
@@ -264,13 +283,13 @@ func encodeRecord(record Record) (string, error) {
 // Errors:
 //
 //	任何载荷或绑定错误都返回 credential_corrupt，不回显原始数据。
-func decodeRecord(raw, origin string) (Record, error) {
+func decodeRecord(raw, origin string, allowInsecureHTTP bool) (Record, error) {
 	var payload wireRecord
 	if len(raw) > maxRecordBytes || json.Unmarshal([]byte(raw), &payload) != nil || payload.Version != 1 {
 		return Record{}, &api.Error{Code: "credential_corrupt"}
 	}
 	record := Record{Origin: payload.Origin, CredentialID: payload.CredentialID, UserID: payload.UserID, ExpiresAt: payload.ExpiresAt, Token: payload.Token}
-	if err := validateRecord(record, origin); err != nil {
+	if err := validateRecord(record, origin, allowInsecureHTTP); err != nil {
 		return Record{}, &api.Error{Code: "credential_corrupt"}
 	}
 	return record, nil

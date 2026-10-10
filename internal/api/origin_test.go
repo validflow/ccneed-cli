@@ -39,3 +39,15 @@ func TestParseOrigin(t *testing.T) {
 		})
 	}
 }
+
+func TestParseOriginWithExplicitInsecureHTTP(t *testing.T) {
+	got, err := ParseOriginWithInsecureHTTP("http://139.224.249.230:80/")
+	if err != nil || got.String() != "http://139.224.249.230" {
+		t.Fatalf("explicit HTTP origin = %v, %v", got, err)
+	}
+	for _, raw := range []string{"http://user:secret@139.224.249.230", "http://139.224.249.230/api", "ftp://139.224.249.230", "http://ccneed.ai"} {
+		if _, err := ParseOriginWithInsecureHTTP(raw); err == nil {
+			t.Fatalf("accepted unsafe origin %q", raw)
+		}
+	}
+}

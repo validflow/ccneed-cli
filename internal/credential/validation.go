@@ -30,7 +30,11 @@ func (v *Vault) location(ctx context.Context, origin string) (string, string, er
 	if err := ctx.Err(); err != nil {
 		return "", "", err
 	}
-	parsed, err := api.ParseOrigin(origin)
+	parse := api.ParseOrigin
+	if v != nil && v.allowInsecureHTTP {
+		parse = api.ParseOriginWithInsecureHTTP
+	}
+	parsed, err := parse(origin)
 	if err != nil {
 		return "", "", &api.Error{Code: "invalid_origin"}
 	}
@@ -55,8 +59,12 @@ func (v *Vault) location(ctx context.Context, origin string) (string, string, er
 // Errors:
 //
 //	绑定不符返回 origin_mismatch，其余字段错误返回 invalid_credential。
-func validateRecord(record Record, origin string) error {
-	bound, err := api.ParseOrigin(record.Origin)
+func validateRecord(record Record, origin string, allowInsecureHTTP bool) error {
+	parse := api.ParseOrigin
+	if allowInsecureHTTP {
+		parse = api.ParseOriginWithInsecureHTTP
+	}
+	bound, err := parse(record.Origin)
 	if err != nil {
 		return &api.Error{Code: "invalid_credential"}
 	}

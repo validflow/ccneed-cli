@@ -86,6 +86,27 @@ func TestVaultOriginIsolationAndSafeOutput(t *testing.T) {
 	}
 }
 
+func TestExplicitHTTPVaultDoesNotChangeDefaultOrCrossOriginCredentials(t *testing.T) {
+	now := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
+	backend := &memoryBackend{values: map[string]string{}}
+	secure := New(backend, func() time.Time { return now })
+	insecure := secure.WithInsecureHTTP()
+	origin := "http://192.0.2.10"
+	other := "http://192.0.2.11"
+	requireCode(t, secure.Save(context.Background(), origin, testRecord(origin, now)), "invalid_origin")
+	if err := insecure.Save(context.Background(), origin, testRecord(origin, now)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := secure.Connect(context.Background(), origin); err == nil {
+		t.Fatal("default vault accepted remote HTTP after opt-in on another view")
+	}
+	client, err := insecure.Connect(context.Background(), origin)
+	if err != nil || client.Origin() != origin {
+		t.Fatalf("explicit HTTP client=%v err=%v", client, err)
+	}
+	requireCode(t, func() error { _, err := insecure.Connect(context.Background(), other); return err }(), "not_authenticated")
+}
+
 func TestVaultSerializationHasNoToken(t *testing.T) {
 	now := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
 	origin := "https://service.example"

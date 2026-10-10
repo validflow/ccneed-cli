@@ -39,7 +39,50 @@ type Client struct {
 //
 //	返回不合法的 origin 或凭证格式错误，不回显输入值。
 func New(origin, token string, transport http.RoundTripper) (*Client, error) {
-	parsed, err := ParseOrigin(origin)
+	return newClient(origin, token, transport, false)
+}
+
+// NewWithInsecureHTTP creates a client for an explicitly selected HTTP staging origin.
+//
+// Args:
+//
+//	origin: Explicit HTTP(S) service origin.
+//	token: Credential bound to that exact origin, or empty before login.
+//	transport: Optional HTTP transport.
+//
+// Returns:
+//
+//	Origin-bound client, or a configuration error.
+//
+// Errors:
+//
+//	Rejects malformed origins and invalid token characters.
+func NewWithInsecureHTTP(origin, token string, transport http.RoundTripper) (*Client, error) {
+	return newClient(origin, token, transport, true)
+}
+
+// newClient applies the chosen origin policy without changing redirect behavior.
+//
+// Args:
+//
+//	origin: Service origin to bind.
+//	token: Optional origin-bound credential.
+//	transport: Optional HTTP transport.
+//	allowInsecureHTTP: Whether non-loopback HTTP was explicitly selected.
+//
+// Returns:
+//
+//	Bound client, or a configuration error.
+//
+// Errors:
+//
+//	Rejects unsafe origins or invalid credential characters.
+func newClient(origin, token string, transport http.RoundTripper, allowInsecureHTTP bool) (*Client, error) {
+	parse := ParseOrigin
+	if allowInsecureHTTP {
+		parse = ParseOriginWithInsecureHTTP
+	}
+	parsed, err := parse(origin)
 	if err != nil {
 		return nil, err
 	}

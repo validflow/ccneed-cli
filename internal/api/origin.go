@@ -25,12 +25,52 @@ var errOrigin = errors.New("invalid service origin: use an HTTPS origin or expli
 //
 //	拒绝无法绑定凭证的地址。
 func ParseOrigin(raw string) (*url.URL, error) {
+	return parseOrigin(raw, false)
+}
+
+// ParseOriginWithInsecureHTTP allows an explicitly selected HTTP staging IP.
+// It retains all origin-only, port, userinfo, and scheme validation.
+//
+// Args:
+//
+//	raw: Explicit service origin, without paths, queries, or credentials. Remote HTTP requires a literal IP.
+//
+// Returns:
+//
+//	Canonical origin, or an address error.
+//
+// Errors:
+//
+//	Rejects malformed or non-HTTP(S) addresses.
+func ParseOriginWithInsecureHTTP(raw string) (*url.URL, error) {
+	return parseOrigin(raw, true)
+}
+
+// parseOrigin centralizes canonicalization for secure and explicit HTTP modes.
+//
+// Args:
+//
+//	raw: Service origin to validate.
+//	allowInsecureHTTP: Whether non-loopback HTTP was explicitly selected.
+//
+// Returns:
+//
+//	Canonical origin, or an address error.
+//
+// Errors:
+//
+//	Rejects malformed origins and disallowed schemes.
+func parseOrigin(raw string, allowInsecureHTTP bool) (*url.URL, error) {
 	origin, err := url.Parse(raw)
 	if err != nil || !isOriginOnly(origin) || strings.Contains(raw, "#") {
 		return nil, errOrigin
 	}
 	host := strings.ToLower(origin.Hostname())
-	if !secureScheme(origin.Scheme, host) {
+	allowed := secureScheme(origin.Scheme, host)
+	if allowInsecureHTTP && origin.Scheme == "http" && net.ParseIP(host) != nil {
+		allowed = true
+	}
+	if !allowed {
 		return nil, errOrigin
 	}
 	port, err := canonicalPort(origin)

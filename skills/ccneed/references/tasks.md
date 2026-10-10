@@ -63,6 +63,8 @@ ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s
 
 `pending_action` 包含 `action_id`、`action_type`、`resume_schema`，以及可选 `reason`、`suggested`。向用户说明问题/选项、影响和所需参数，按实际 schema 收集选择；建议值不等于用户同意。不要假设每种 action 都只有一个 `approved` 字段。
 
+例如 AskUser 返回 `reason: 用户想研究的“苹果”具体指哪一个？` 和 `suggested.options: [苹果公司, 水果苹果]` 时，先把这两个选项发给用户，结束当前回复并等待。用户说“苹果公司，我想研究 iPhone 18”后，若 `resume_schema` 要求 `reply` 字符串，就把这段完整原话放入 `{"reply":"苹果公司，我想研究 iPhone 18"}`；不要只取选项、替用户挑选，或把 HITL 回答另发成 `ccneed run`。其他 action 仍以它们各自的 schema 为准。
+
 用户确认后，把满足当前 `resume_schema` 的 JSON 对象写入普通文件（不超过 64 KiB），再提交：
 
 ```bash
@@ -70,5 +72,7 @@ ccneed tasks reply --thread-id THREAD_UUID --turn-id TURN_UUID --action-id ACTIO
 ```
 
 `status: queued` 只表示恢复请求排队，之后继续 `get/watch` 同一回合，不开启新回合。接收未知先查询，不自动重发；action 已过期、被其他客户端回答或状态改变时重新读取快照，不套用旧选择。schema 错误只修正答案，不绕过用户确认。
+
+若原任务明确要求确认后只复述选择，回合完成后不能声称已执行用户后来提到的研究；需要新的实际研究任务时，向用户说明当前结果，并在用户明确委托后再提交下一回合。
 
 网页登录授权与任务 HITL 是两个流程：前者使用 `auth login`，后者使用本回合的 `tasks reply`。

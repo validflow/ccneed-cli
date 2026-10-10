@@ -29,7 +29,7 @@ func statusCommand(connection *connectionConfig, vault *credential.Vault) *cobra
 	command := &cobra.Command{
 		Use: "status", Short: "Inspect local credentials; use --verify to check server authorization", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			status, err := vault.Inspect(cmd.Context(), connection.origin)
+			status, err := connection.vault(vault).Inspect(cmd.Context(), connection.origin)
 			if err != nil {
 				return err
 			}

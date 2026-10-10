@@ -52,7 +52,7 @@ func (v *Vault) SavePending(ctx context.Context, origin string, pending Pending)
 	if err != nil {
 		return err
 	}
-	if !validPending(pending, canonical) || pending.ExpiresAt.After(v.now().Add(10*time.Minute)) {
+	if !validPending(pending, canonical, v.allowInsecureHTTP) || pending.ExpiresAt.After(v.now().Add(10*time.Minute)) {
 		return &api.Error{Code: "invalid_auth_request"}
 	}
 	if !pending.ExpiresAt.After(v.now()) {
@@ -105,7 +105,7 @@ func (v *Vault) LoadPending(ctx context.Context, origin string) (Pending, error)
 	}
 	pending := wire.Pending
 	pending.DeviceCode, pending.Verifier = wire.DeviceCode, wire.Verifier
-	if !validPending(pending, canonical) {
+	if !validPending(pending, canonical, v.allowInsecureHTTP) {
 		return Pending{}, &api.Error{Code: "auth_request_corrupt"}
 	}
 	if !pending.ExpiresAt.After(v.now()) {
@@ -149,8 +149,12 @@ func (v *Vault) ForgetPending(ctx context.Context, origin string) error {
 // Returns:
 //
 //	所有字段符合短期请求契约时为 true。
-func validPending(pending Pending, origin string) bool {
-	bound, err := api.ParseOrigin(pending.Origin)
+func validPending(pending Pending, origin string, allowInsecureHTTP bool) bool {
+	parse := api.ParseOrigin
+	if allowInsecureHTTP {
+		parse = api.ParseOriginWithInsecureHTTP
+	}
+	bound, err := parse(pending.Origin)
 	return err == nil && bound.String() == origin && proofPattern.MatchString(pending.DeviceCode) &&
 		proofPattern.MatchString(pending.Verifier) && codePattern.MatchString(pending.UserCode) &&
 		!pending.ExpiresAt.IsZero() && !pending.NextPollAt.IsZero() && pending.Interval >= 5 && pending.Interval <= 60
