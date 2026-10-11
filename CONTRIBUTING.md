@@ -88,7 +88,7 @@ main 已启用分支保护：禁止删除和强推，必须通过 PR 合并，�
 
 普通测试只在无生产凭证的 GitHub-hosted runner 执行。模型审查只读取可信 main 的控制代码与预先收集的 PR 数据，不执行 PR 代码，不加载 PR 配置。外部 PR 等待维护者从 main 手动批准具体 head SHA；有新提交就重新批准。发布结果前再次核对 head / base，旧结果不能给新提交放行。
 
-首次接入需先人工完成同等四类审查，将可信控制代码合入 main，再配置隔离的临时 review runner 和必需检查。操作步骤、配置开关与验证要求见 [CX Review 运维说明](.agents/skills/review-pipeline/references/operations.md)。未配置或未实测前，不能宣称自动 review 已启用。
+首次接入需先人工完成同等四类审查，将可信控制代码合入 main，再授予本仓使用组织级 `cc-review` runner 的权限、配置专用 Codex 认证并实测，最后设置必需检查。操作步骤、配置开关与验证要求见 [CX Review 运维说明](.agents/skills/review-pipeline/references/operations.md)。未配置或未实测前，不能宣称自动 review 已启用。
 
 发布前确认 sg-prod 服务兼容，再验证生产登录与受控任务闭环。发行工作流已定义，但 `CCNEED_RELEASE_ENABLED` 默认未开启；首次 npm 发布、GitHub Release 和许可证选择仍需单独授权。生产凭证不进入仓库、CI 日志或外部贡献者 PR。操作和失败恢复见 [发行说明](RELEASING.md)。
 

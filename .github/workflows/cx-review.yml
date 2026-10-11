@@ -77,8 +77,8 @@ jobs:
   review:
     name: Four independent Codex review passes
     needs: prepare
-    # Explicit readiness guards prevent silently queueing on an unconfigured persistent pool.
-    if: needs.prepare.outputs.allowed == 'true' && vars.CX_REVIEW_READY == 'true' && vars.CX_REVIEW_EPHEMERAL == 'true'
+    # Enable only after the shared cc-review runner and Codex identity are verified.
+    if: needs.prepare.outputs.allowed == 'true' && vars.CX_REVIEW_READY == 'true'
     runs-on: [self-hosted, macOS, ARM64, cc-review]
     timeout-minutes: 45
     permissions:
@@ -97,6 +97,26 @@ jobs:
         with:
           name: cx-input
           path: ${{ runner.temp }}/cx-input
+      - name: Prepare Codex authentication
+        shell: bash
+        env:
+          CODEX_ACCESS_TOKEN: ${{ secrets.CODEX_ACCESS_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+          if ! command -v codex >/dev/null 2>&1; then
+            echo "codex CLI is not installed on this runner" >&2
+            exit 1
+          fi
+          if [ -n "${CODEX_ACCESS_TOKEN:-}" ]; then
+            printf '%s' "$CODEX_ACCESS_TOKEN" | codex login --with-access-token
+          elif [ -n "${OPENAI_API_KEY:-}" ]; then
+            printf '%s' "$OPENAI_API_KEY" | codex login --with-api-key
+          else
+            codex login status
+          fi
+          codex --version
       - name: Run tool-free Codex with isolated credentials and trusted Skill
         env:
           CX_CODEX_BINARY: ${{ vars.CX_CODEX_BINARY }}
