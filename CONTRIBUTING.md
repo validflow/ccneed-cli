@@ -78,17 +78,17 @@ flowchart TD
 
 GitHub Actions 在 Linux、macOS、Windows 执行测试与构建，Linux 额外执行完整 Go 门禁、race 检测、审查/发行/安装脚本测试与固定版本 actionlint。Go 本地门禁不增加 Node 运行依赖；修改 npm、发行或 CI 时另跑 `npm test`（需要 Node 22.14.0+）。
 
-main 已启用分支保护：禁止删除和强推，必须通过 PR 合并，管理员也受约束；仓库只允许 Squash and merge。目前未设置必需 CI 状态。等真实 runner 与检查完成验证后，再要求 `quality` 和提交状态 `cx-review` 均通过，并要求分支包含最新 main。**仅提交 workflow 不等于已启用 CI 必需检查。** 不用可被跳过的 review job 代替必需的提交状态。
+main 已启用分支保护：禁止删除和强推，必须通过 PR 合并，管理员也受约束；仓库只允许 Squash and merge。目前未设置必需 CI 状态。等真实 runner 与检查完成验证后，再要求 `quality` 和 `AI Code Review` 检查通过。CX Review 与 usight_agent 一样只自动运行同仓库 PR；fork PR 会跳过，不能把跳过当作完成审查。**仅提交 workflow 不等于已启用 CI 必需检查。**
 
 第一阶段不设置任意覆盖率百分比。新增行为必须有能抓住回归的测试，覆盖率用于 review，不写凑数测试。先确认测试失败，再实现并确认通过。
 
 ## PR 与发布
 
-使用 PR 模板说明范围、测试证据和风险。CX Review 直接调用 Codex CLI 和仓库内 `review-pipeline` Skill，分别审查正确性、模块边界、安全、需求一致性。Critical / Important 候选由独立调用二次核实，确认后阻止合并；Minor 提醒改进。缺失报告、审查失败、上下文不完整不能显示通过。
+使用 PR 模板说明范围、测试证据和风险。CX Review 与 usight_agent 一样在 `cc-review` runner 直接调用 Codex CLI 和仓库内 `review-pipeline` Skill，分别审查正确性、模块边界、安全、需求一致性，并二次核实 Critical / Important 候选。工作流把报告写为 PR 评论；维护者须在合并前处理确认的问题。审查失败时工作流发布失败通知，不得把未完成审查称为通过。
 
-普通测试只在无生产凭证的 GitHub-hosted runner 执行。模型审查只读取可信 main 的控制代码与预先收集的 PR 数据，不执行 PR 代码，不加载 PR 配置。外部 PR 等待维护者从 main 手动批准具体 head SHA；有新提交就重新批准。发布结果前再次核对 head / base，旧结果不能给新提交放行。
+普通测试只在无生产凭证的 GitHub-hosted runner 执行。模型审查签出 PR merge ref 供只读检查，不运行 PR 构建或测试；PR 内容中的指令不具权威性。仅同仓库 PR 自动进入持有 Codex 登录状态的 runner；fork PR 不运行该工作流，未来开放外部贡献前须另行确定审查流程。
 
-首次接入需先人工完成同等四类审查，将可信控制代码合入 main，再授予本仓使用组织级 `cc-review` runner 的权限、配置专用 Codex 认证并实测，最后设置必需检查。操作步骤、配置开关与验证要求见 [CX Review 运维说明](.agents/skills/review-pipeline/references/operations.md)。未配置或未实测前，不能宣称自动 review 已启用。
+首次接入需先人工完成同等四类审查，将工作流合入 main，再授予本仓使用组织级 `cc-review` runner 的权限。runner 已登录 Codex 即可，不强制新增 token；实测通过后再设置必需检查。操作步骤见 [CX Review 运维说明](.agents/skills/review-pipeline/references/operations.md)。未配置或未实测前，不能宣称自动 review 已启用。
 
 发布前确认 sg-prod 服务兼容，再验证生产登录与受控任务闭环。发行工作流已定义，但 `CCNEED_RELEASE_ENABLED` 默认未开启；首次 npm 发布、GitHub Release 和许可证选择仍需单独授权。生产凭证不进入仓库、CI 日志或外部贡献者 PR。操作和失败恢复见 [发行说明](RELEASING.md)。
 

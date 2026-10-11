@@ -1,0 +1,4 @@
+# Repository-scoped Codex configuration, matching the usight_agent review setup.
+[agents]
+max_threads = 6
+max_depth = 1
