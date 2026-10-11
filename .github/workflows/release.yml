@@ -63,11 +63,13 @@ jobs:
       - name: Pin npm with OIDC publishing and dist-tag support
         run: npm install --global npm@11.21.0 --ignore-scripts --no-audit --no-fund
       - name: Deterministic release gates
+        env:
+          REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
         run: |
+          node scripts/release/preflight.mjs
           npm test
           bash scripts/check.sh
           go test -race -count=1 ./...
-          node scripts/release/preflight.mjs
           node -e 'if (require("child_process").execFileSync("npm",["--version"],{encoding:"utf8"}).trim() !== "11.21.0") process.exit(1)'
       - name: Automatically tag the reviewed main revision
         env:

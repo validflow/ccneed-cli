@@ -12,7 +12,7 @@ flowchart TD
     F --> G[装配同版本 npm 包装、校验和与 Skill]
     G --> H[验证并公开 GitHub Release 产物]
     H --> I[发布 npm X.Y.Z]
-    I --> J[校验 latest 或 rc 通道]
+    I --> J[校验 latest 或 next 通道]
 ```
 
 Git tag 不等于 npm 已发布。用户通过 npm registry 安装，不直接读取 GitHub main。发行通过一个工作流连续执行；不依赖 GitHub token 创建的 tag 再触发第二个工作流。
@@ -21,16 +21,16 @@ Git tag 不等于 npm 已发布。用户通过 npm registry 安装，不直接�
 
 当前 `package.json` 与锁文件使用 `0.1.0-rc.1`、`private: true`、`UNLICENSED`。这是待验收源码里程碑，尚不能用于用户安装。合并后经维护者确认，可手动将 `v0.1.0-rc.1` 绑定该 main 提交；不创建公开 Release 或 npm 包，也不移动已有 tag。
 
-私有包更新版本只记录源码，不生成发行计划。只有明确解除 `private` 禁发、通过包身份/许可/材料预检并开启发行开关后才进入发行；首次启用可以使用同一版本，但须校验既有 tag 绑定的提交，若源码已经变化则使用新版本。统一宿主安装器目前只支持正式版，npm RC 安装不是本次里程碑承诺。
+私有包更新版本只记录源码，不生成发行计划。只有明确解除 `private` 禁发、通过包身份/许可/材料预检并开启发行开关后才进入发行；首次启用可以使用同一版本，但须校验既有 tag 绑定的提交，若源码已经变化则使用新版本。发行后的 RC 可通过 npm `next` 明确试装，安装器仍会全局安装同一精确版本的 CLI 与 Skill；私有源码里程碑不可试装。
 
 1. 完成真实 staging 联调，确认兼容服务已上线 sg-prod；CLI 发行不部署 Club。
-2. 确认 npm 包名、首发版本、开源许可及仓库公开策略；添加实际 `LICENSE`、`CHANGELOG.md`、可用的 `skills/ccneed/SKILL.md`，不是占位说明。
+2. 将 GitHub 仓库改为 public，让公开 npm 包的安装器能够下载 GitHub Release 二进制；发行预检会在仓库仍为 private 时拒绝打 tag。确认 npm 包名、首发版本与开源许可；添加实际 `LICENSE`、`CHANGELOG.md`、可用的 `skills/ccneed/SKILL.md`，不是占位说明。
 3. 确认 main 的 PR、CX Review 和质量保护已启用。仅存在 workflow 文件不代表这些设置已生效。
 4. 在 npm 为实际包配置 trusted publisher：组织 `validflow`、仓库 `ccneed-cli`、工作流 `release.yml`、环境 `npm-release`，允许 `npm publish` 和 `npm dist-tag`。首次建立包与权限的步骤单独确认；不在源码中保存长期发布 token。
 5. GitHub 的 `npm-release` 环境仅允许 main；若希望全自动，不设置每次发布都需人工批准的 environment reviewer。生产资源凭证不进入此环境。
 6. 明确授权后，维护者才将仓库变量 `CCNEED_RELEASE_ENABLED` 设为 `true`。本次开发不修改该变量，也不选择许可证或真实发布。
 
-npm OIDC 要求受支持的 Node/npm 与 GitHub-hosted runner；`dist-tag` 的 OIDC 恢复至少需要 npm 11.21.0（12.x 至少 12.2.0）。工作流使用 Node 24 并固定 npm 11.21.0，不依赖 Node 自带的 npm 版本。public npm 包的 provenance 与私有仓库支持限制，启用前按 [官方说明](https://docs.npmjs.com/trusted-publishers/) 核验。
+npm OIDC 要求受支持的 Node/npm 与 GitHub-hosted runner；`dist-tag` 的 OIDC 恢复至少需要 npm 11.21.0（12.x 至少 12.2.0）。工作流使用 Node 24 并固定 npm 11.21.0，不依赖 Node 自带的 npm 版本。发行要求 GitHub 仓库已公开；满足条件时 trusted publishing 自动生成 provenance，无须在命令里强制 `--provenance`，见 [npm 官方说明](https://docs.npmjs.com/trusted-publishers/)。
 
 ## 每次发行
 
@@ -46,7 +46,9 @@ bash scripts/check.sh
 
 发布 PR 经审查后 Squash 合并。CI 对该合并提交执行预检、打 tag、构建和发布。保持一次发行完成后再合下一次版本 PR；GitHub concurrency 只保留一个待执行发行，不将其当作无限队列。
 
-版本唯一来源是 `package.json.version`。锁文件根版本及根包版本要同步，二进制注入同一版本/提交/包名。稳定发行使用 `vX.Y.Z` 与 npm `latest`；预发布使用 `vX.Y.Z-rc.N` 与 npm `rc`，不进入普通用户更新提醒。不兼容变更的版本选择由维护者审查，0.x 的具体约定待首发前确认。
+版本唯一来源是 `package.json.version`。锁文件根版本及根包版本要同步，二进制注入同一版本/提交/包名。稳定发行使用 `vX.Y.Z` 与 npm `latest`；预发布使用 `vX.Y.Z-rc.N` 与 npm `next`，不进入普通用户更新提醒。`latest` / `next` 是 npm 的可移动安装入口，不是 Git tag；Action 通过 `npm publish --tag` 明确选择，不能只凭版本号后缀期待 npm 自动分流。不兼容变更的版本选择由维护者审查，0.x 的具体约定待首发前确认。
+
+普通功能 PR 可以积累一周，不触发发行。准备发行时由维护者单独提交版本 PR：需要试装才先发 `X.Y.Z-rc.1`，修复后递增 RC 序号；验收完成再发 `X.Y.Z` 正式版。RC 不是必经步骤。`npm version X.Y.Z --no-git-tag-version --ignore-scripts` 同步修改 manifest 与锁文件，合并后 Action 才自动打 Git tag、构建及发布 npm；仅改 `package.json` 而遗漏锁文件会被发行预检拒绝。合并时不自动计算版本号，也不按周定时强制发布。
 
 产物支持 Linux、macOS、Windows 的 amd64/arm64。每个平台提供独立可执行文件，npm 安装器按自身精确版本下载，校验 SHA-256 后才安装；不要求用户安装 Go，也不解压不可信归档。npm 包含同一源码版本的完整 Skill 和统一安装器模块；校验和另包含 Skill 完整文件摘要。统一入口全局安装精确版本 CLI，将所选宿主的用户级目录链接到同包 Skill，并校验程序实际版本和 Skill 摘要。已有宿主入口随全局包一起更新，不维护独立复制件；真实宿主加载仍需验收。
 

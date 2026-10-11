@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, unlinkSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stagePackage, verifyArtifacts, targets } from './artifacts.mjs';
-import { publicationDecision } from './publish.mjs';
+import { publicationDecision, npmPublishArgs } from './publish.mjs';
 
 /** fixture 创建可校验的跨平台产物与同版本 npm 内容，不执行编译或云端写入。
  * Returns:
@@ -59,6 +59,12 @@ test('npm retry is idempotent only when published version and exact tarball matc
   assert.equal(publicationDecision(desired, { name: desired.name, version: desired.version, dist: { integrity: desired.integrity } }, { version: desired.version }), 'reuse');
   assert.throws(() => publicationDecision(desired, { name: desired.name, version: desired.version, dist: { integrity: 'sha512-other' } }, null), /integrity/);
   assert.throws(() => publicationDecision(desired, null, { version: '0.2.0' }), /rollback/);
+});
+
+test('npm publication explicitly selects stable or prerelease channel without private-repo provenance', () => {
+  assert.deepEqual(npmPublishArgs('/tmp/ccneed.tgz', 'next'), ['publish', '/tmp/ccneed.tgz', '--access', 'public', '--tag', 'next', '--ignore-scripts']);
+  assert.deepEqual(npmPublishArgs('/tmp/ccneed.tgz', 'latest'), ['publish', '/tmp/ccneed.tgz', '--access', 'public', '--tag', 'latest', '--ignore-scripts']);
+  assert.throws(() => npmPublishArgs('/tmp/ccneed.tgz', 'rc'), /channel/);
 });
 
 test('a release cannot stage a Skill whose required task reference is missing', () => {

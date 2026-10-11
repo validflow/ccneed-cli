@@ -52,7 +52,7 @@ export function validateManifest(manifest, tag) {
   if (typeof manifest.name !== 'string' || !/^@[a-z0-9-]+\/[a-z0-9-]+$/.test(manifest.name)) throw new Error('Invalid npm package name');
   if (!manifest.license || manifest.license === 'UNLICENSED') throw new Error('Release license is not approved');
   if (tag !== undefined && tag !== 'v' + version) throw new Error('Release tag differs from package version');
-  return { version, tag: 'v' + version, channel: parsed.rc === null ? 'latest' : 'rc' };
+  return { version, tag: 'v' + version, channel: parsed.rc === null ? 'latest' : 'next' };
 }
 
 /** planRelease 根据版本变化或明确解除私有禁发确定是否发行。

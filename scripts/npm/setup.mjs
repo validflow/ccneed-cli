@@ -8,9 +8,9 @@ import { prepareSkillLinks, attachSkillLinks, parseAgents, validateBundledSkill 
 
 const exec = promisify(execFile);
 const officialPackage = '@validflow/ccneed-cli';
-const stableVersion = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
+const releaseVersion = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-rc\.(0|[1-9][0-9]*))?$/;
 
-/** releaseManifest 只接受已启用发行的官方稳定包。
+/** releaseManifest 只接受已启用发行的官方正式包或 RC 包。
  * Args:
  *   root: 本轮 npm 包路径。
  * Returns:
@@ -20,7 +20,7 @@ const stableVersion = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/;
  */
 function releaseManifest(root) {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  if (manifest.name !== officialPackage || manifest.private !== false || manifest.license === 'UNLICENSED' || !manifest.license || !stableVersion.test(manifest.version) || manifest.version === '0.0.0') {
+  if (manifest.name !== officialPackage || manifest.private !== false || manifest.license === 'UNLICENSED' || !manifest.license || !releaseVersion.test(manifest.version) || manifest.version === '0.0.0') {
     throw new Error('Development package is private or unpublished; unified global installation is disabled');
   }
   return manifest;
@@ -79,18 +79,22 @@ function existingManifest(root) {
   return releaseManifest(root);
 }
 
-/** newerVersion 检查已装版本，禁止旧安装入口静默降级。
+/** newerVersion 按 SemVer 比较已装正式版与 RC，禁止旧安装入口静默降级。
  * Args:
- *   current: 当前稳定版本。
- *   desired: 请求安装的稳定版本。
+ *   current: 当前官方已安装版本。
+ *   desired: 请求安装的官方正式版或 RC 版本。
  * Returns:
  *   当前版本是否更高。
  */
 function newerVersion(current, desired) {
-  const left = current.split('.').map(BigInt);
-  const right = desired.split('.').map(BigInt);
-  for (let index = 0; index < 3; index++) if (left[index] !== right[index]) return left[index] > right[index];
-  return false;
+  const left = releaseVersion.exec(current);
+  const right = releaseVersion.exec(desired);
+  for (let index = 1; index <= 3; index++) {
+    if (BigInt(left[index]) !== BigInt(right[index])) return BigInt(left[index]) > BigInt(right[index]);
+  }
+  if (left[4] === undefined) return right[4] !== undefined;
+  if (right[4] === undefined) return false;
+  return BigInt(left[4]) > BigInt(right[4]);
 }
 
 /** installIntegration 全局安装精确版本 CLI，并将所选宿主指向同包技能。
@@ -133,7 +137,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
  */
 export async function installerMain(args) {
   if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
-    return 'Install or update CLI + same-version Skill globally.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nHosts: codex, workbuddy, claude. Restart selected hosts after updating.\n';
+    return 'Install or update CLI + same-version Skill globally.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nRC: npx @validflow/ccneed-cli@next install --agent codex,workbuddy\nHosts: codex, workbuddy, claude. Restart selected hosts after updating.\n';
   }
   if (args.length !== 2 || args[0] !== '--agent') throw new Error('Use install --agent codex,workbuddy,claude; see install --help');
   return JSON.stringify(await installIntegration({ agents: args[1] })) + '\n';

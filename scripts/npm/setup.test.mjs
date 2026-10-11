@@ -163,6 +163,25 @@ test('an older installer cannot downgrade an already installed newer release', a
   assert.equal(JSON.parse(readFileSync(join(data.globalPackage, 'package.json'))).version, '0.2.0');
 });
 
+test('next-channel RC installs the exact CLI and Skill version', async () => {
+  const data = fixture('0.1.1-rc.1');
+  const result = await installIntegration(data.options);
+  assert.equal(result.version, '0.1.1-rc.1');
+  assert.equal(readFileSync(join(result.skill_targets[0], 'SKILL.md'), 'utf8'), 'skill 0.1.1-rc.1');
+  assert.deepEqual(data.calls.find(args => args[0] === 'install')?.slice(0, 3), ['install', '--global', '@validflow/ccneed-cli@0.1.1-rc.1']);
+});
+
+test('RC upgrades follow SemVer order and never replace a newer stable release', async () => {
+  const data = fixture('0.1.0-rc.2');
+  writePackage(data.globalPackage, '0.1.0');
+  await assert.rejects(installIntegration(data.options), /downgrade/);
+  assert.equal(data.calls.filter(args => args[0] === 'install').length, 0);
+  writePackage(data.root, '0.1.1-rc.1');
+  assert.equal((await installIntegration(data.options)).version, '0.1.1-rc.1');
+  writePackage(data.root, '0.1.1');
+  assert.equal((await installIntegration(data.options)).version, '0.1.1');
+});
+
 test('invalid/moving global root and corrupted existing package fail closed', async () => {
   for (const value of ['relative/path', '/', 'C:\\', 'one\ntwo']) {
     const data = fixture();

@@ -7,7 +7,7 @@ const manifest = (version, extra = {}) => ({ name: '@validflow/ccneed-cli', vers
 test('only a changed version creates a release plan; no PR title or branch inference', () => {
   assert.deepEqual(planRelease(manifest('0.1.0'), manifest('0.1.0')), { release: false });
   assert.deepEqual(planRelease(manifest('0.1.1'), manifest('0.1.0')), { release: true, version: '0.1.1', tag: 'v0.1.1', channel: 'latest' });
-  assert.equal(planRelease(manifest('0.1.0-rc.2'), manifest('0.1.0-rc.1')).channel, 'rc');
+  assert.equal(planRelease(manifest('0.1.0-rc.2'), manifest('0.1.0-rc.1')).channel, 'next');
 });
 
 test('rejects invalid versions, tag mismatch, unpublished placeholder and unapproved license', () => {
@@ -38,6 +38,6 @@ test('private RC milestones never publish; first publication can explicitly enab
   assert.deepEqual(planRelease(rc, manifest('0.0.0', { private: true })), { release: false });
   assert.deepEqual(planRelease(manifest('0.1.0-rc.2', { private: true, license: 'UNLICENSED' }), rc), { release: false });
   assert.throws(() => validateManifest(rc, 'v0.1.0-rc.1'), /private/);
-  assert.deepEqual(planRelease(manifest('0.1.0-rc.1'), rc), { release: true, version: '0.1.0-rc.1', tag: 'v0.1.0-rc.1', channel: 'rc' });
+  assert.deepEqual(planRelease(manifest('0.1.0-rc.1'), rc), { release: true, version: '0.1.0-rc.1', tag: 'v0.1.0-rc.1', channel: 'next' });
   assert.throws(() => planRelease(manifest('0.0.1', { private: true }), rc), /increase/);
 });

@@ -18,6 +18,8 @@ npx @validflow/ccneed-cli@latest install --agent workbuddy
 
 需要 Node 22.14.0+ 和 npm。CLI 安装在 npm 全局命令目录；该目录必须在宿主实际执行环境的 PATH 中。本机安装不会自动提供给远程沙箱，不默认申请管理员权限。安装器不读取账号、创建任务或修改宿主安全配置。
 
+已公开发布 RC 且需要试装时，显式选择 npm 的 `next` 入口，例如 `npx @validflow/ccneed-cli@next install --agent codex`；也可以把 `@next` 改为精确版本 `@0.1.0-rc.1`。安装器会全局安装同一精确版本的 CLI 与 Skill，不会回退到 `latest`。正式版保持 `@latest`；没有正式版前，`@latest` 不作为可用入口。当前仓库的私有源码版本仍无法通过 npm 安装。
+
 ```mermaid
 flowchart LR
     Entry[统一安装 / 更新] --> Package[同一版本 npm 包]
@@ -83,7 +85,7 @@ go install ./cmd/ccneed
 
 需要 Git、Go 1.25+。将 `go env GOBIN` 返回目录加入 PATH；为空时使用 GOPATH 下的 bin。记录 checkout SHA，使用该 checkout 的完整 `skills/ccneed`。这条开发路径不是 npm 联动升级路径；源码 CLI 和独立技能要人工保持同一 revision，不能声称可自动同步。
 
-仓库内可离线查看安装器帮助：`node scripts/npm/run.mjs install --help`。当前 0.1.0-rc.1 是 private/UNLICENSED 的待验收源码，拒绝真正全局安装；不要改这些字段绕过发行门禁。统一宿主安装器目前只接受正式版本，公开 npm RC 安装还需单独完善和验收。
+仓库内可离线查看安装器帮助：`node scripts/npm/run.mjs install --help`。当前 0.1.0-rc.1 是 private/UNLICENSED 的待验收源码，拒绝真正全局安装；不要改这些字段绕过发行门禁。RC 的安装器逻辑有本地测试，但公开 npm RC 与真实宿主加载仍需发行后验收。
 
 ## 宿主官方说明
 

@@ -3,7 +3,12 @@ import test from 'node:test';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { validateLock, preflight } from './preflight.mjs';
+import { validateLock, preflight, assertPublicDistribution } from './preflight.mjs';
+
+test('public npm publication requires publicly downloadable GitHub release assets', () => {
+  assert.doesNotThrow(() => assertPublicDistribution('false'));
+  for (const value of ['true', '', undefined]) assert.throws(() => assertPublicDistribution(value), /public GitHub repository/);
+});
 
 test('lock version and package name must match at both root levels', () => {
   const manifest = { name: '@validflow/ccneed-cli', version: '0.1.0' };

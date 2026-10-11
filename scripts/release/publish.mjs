@@ -60,6 +60,20 @@ async function registry(name, selector) {
  */
 function command(binary, args) { return execFileSync(binary, args, { encoding: 'utf8', timeout: 120_000, stdio: ['ignore', 'pipe', 'pipe'] }); }
 
+/** npmPublishArgs 将已校验的发行通道传给 npm，避免预发布误入 latest。
+ * Args:
+ *   tarball: 已构建并校验的 npm 包路径。
+ *   channel: 正式版 latest 或候选版 next。
+ * Returns:
+ *   受信任发布命令参数；公开仓库的 provenance 由 npm 自动生成。
+ * Errors:
+ *   未知通道返回异常，不执行发布。
+ */
+export function npmPublishArgs(tarball, channel) {
+  if (!['latest', 'next'].includes(channel)) throw new Error('Invalid npm release channel');
+  return ['publish', tarball, '--access', 'public', '--tag', channel, '--ignore-scripts'];
+}
+
 /** publishGitHub 补齐草稿中缺失的同版本产物，校验现有字节后才公开 Release。
  * Args:
  *   identity: manifest 校验后的发行身份。
@@ -117,7 +131,7 @@ async function publish() {
   await publishGitHub(identity, sha, out, [...verifyArtifacts(out), 'checksums.json', tarball]);
   // 发布前再次核对通道；workflow 的全局 concurrency 串行化所有版本发行。
   const action = publicationDecision(desired, existing, await registry(manifest.name, identity.channel));
-  if (action === 'publish') command('npm', ['publish', join(out, tarball), '--access', 'public', '--tag', identity.channel, '--provenance', '--ignore-scripts']);
+  if (action === 'publish') command('npm', npmPublishArgs(join(out, tarball), identity.channel));
   const published = await registry(manifest.name, identity.version);
   if (!published) throw new Error('npm version is not visible yet; retry this exact release run');
   publicationDecision(desired, published, null);
