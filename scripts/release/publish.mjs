@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { compareVersions, validateManifest } from './version.mjs';
 import { verifyArtifacts } from './artifacts.mjs';
 import { githubAPI, ensureTag } from './tag.mjs';
@@ -158,6 +159,25 @@ export async function publishGitHub(identity, sha, out, names, { api = githubAPI
   }
 }
 
+/** waitForPublication 等待 npm 已接受的发布在版本查询和安装通道上同时可见。
+ * Args:
+ *   desired: 本次构建的包名、版本及 SHA-512 integrity。
+ *   channel: latest 或 next。
+ *   dependencies: 可注入的查询和等待边界，供时序测试使用。
+ * Errors:
+ *   发布内容不一致、通道倒退或有界等待后仍不可见时返回异常。
+ */
+export async function waitForPublication(desired, channel, { lookup = registry, delay = sleep, attempts = 19 } = {}) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const published = await lookup(desired.name, desired.version);
+    const tagged = await lookup(desired.name, channel);
+    publicationDecision(desired, published, tagged);
+    if (published && tagged?.version === desired.version) return;
+    if (attempt + 1 < attempts) await delay(10_000);
+  }
+  throw new Error('npm version or channel did not become visible after publish');
+}
+
 /** publish 完成 GitHub 产物与 npm 的顺序发布，重试不移动 tag 或覆盖既有内容。
  * Errors:
  *   任何校验、权限或出版失败返回异常；不谎报完成，不回退 latest。
@@ -175,15 +195,11 @@ async function publish() {
   publicationDecision(desired, existing, await registry(manifest.name, identity.channel));
   await publishGitHub(identity, sha, out, [...verifyArtifacts(out), 'checksums.json', tarball]);
   // 发布前再次核对通道；workflow 的全局 concurrency 串行化所有版本发行。
-  const action = publicationDecision(desired, existing, await registry(manifest.name, identity.channel));
+  const channel = await registry(manifest.name, identity.channel);
+  const action = publicationDecision(desired, existing, channel);
   if (action === 'publish') command('npm', npmPublishArgs(join(out, tarball), identity.channel));
-  const published = await registry(manifest.name, identity.version);
-  if (!published) throw new Error('npm version is not visible yet; retry this exact release run');
-  publicationDecision(desired, published, null);
-  const current = await registry(manifest.name, identity.channel);
-  publicationDecision(desired, published, current);
-  if (current?.version !== identity.version) command('npm', ['dist-tag', 'add', manifest.name + '@' + identity.version, identity.channel]);
-  if ((await registry(manifest.name, identity.channel))?.version !== identity.version) throw new Error('npm channel update not verified');
+  else if (channel?.version !== identity.version) command('npm', ['dist-tag', 'add', manifest.name + '@' + identity.version, identity.channel]);
+  await waitForPublication(desired, identity.channel);
   console.log('Verified release ' + identity.tag + ' and npm channel ' + identity.channel);
 }
 

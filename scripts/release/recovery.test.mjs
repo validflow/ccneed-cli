@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { publishGitHub } from './publish.mjs';
+import { publishGitHub, waitForPublication } from './publish.mjs';
 import { sha256 } from './artifacts.mjs';
 const sha = 'a'.repeat(40);
 const identity = { version: '0.1.0', tag: 'v0.1.0', channel: 'latest' };
@@ -164,4 +164,50 @@ test('an old draft is rejected before a replacement tag can be created', async (
 
   await assert.rejects(publishGitHub(identity, sha, b.out, ['binary'], { ...b, api }), /release identity mismatch/i);
   assert.equal(b.calls.some((call) => call[0] === 'POST'), false);
+});
+
+test('successful npm publish waits for version and latest to become visible', async () => {
+  const desired = { name: '@validflow/ccneed-cli', version: '0.1.1', integrity: 'sha512-expected' };
+  const published = { ...desired, dist: { integrity: desired.integrity } };
+  const old = { name: desired.name, version: '0.1.0' };
+  const replies = [
+    [null, old],
+    [published, old],
+    [published, published],
+  ];
+  let lookups = 0;
+  let delays = 0;
+  const lookup = async () => {
+    const reply = replies[Math.floor(lookups / 2)][lookups % 2];
+    lookups++;
+    return reply;
+  };
+  const delay = async () => { delays++; };
+
+  await waitForPublication(desired, 'latest', { lookup, delay, attempts: 3 });
+
+  assert.equal(lookups, 6);
+  assert.equal(delays, 2);
+});
+
+test('npm publication verification fails immediately on foreign bytes', async () => {
+  const desired = { name: '@validflow/ccneed-cli', version: '0.1.1', integrity: 'sha512-expected' };
+  let lookups = 0;
+  const lookup = async () => {
+    lookups++;
+    return { name: desired.name, version: desired.version, dist: { integrity: 'sha512-foreign' } };
+  };
+  await assert.rejects(waitForPublication(desired, 'latest', { lookup, delay: async () => {}, attempts: 3 }), /integrity differs/);
+  assert.equal(lookups, 2);
+});
+
+test('npm publication verification has a finite visibility window', async () => {
+  const desired = { name: '@validflow/ccneed-cli', version: '0.1.1', integrity: 'sha512-expected' };
+  let delays = 0;
+  await assert.rejects(waitForPublication(desired, 'latest', {
+    lookup: async () => null,
+    delay: async () => { delays++; },
+    attempts: 3,
+  }), /did not become visible/);
+  assert.equal(delays, 2);
 });
