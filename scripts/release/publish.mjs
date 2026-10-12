@@ -74,6 +74,28 @@ export function npmPublishArgs(tarball, channel) {
   return ['publish', tarball, '--access', 'public', '--tag', channel, '--ignore-scripts'];
 }
 
+/** findRelease 查找已发布发行版，也能通过授权列表找到按 tag 查询不可见的草稿。
+ * Args:
+ *   api: 当前仓库的受限 GitHub API 调用函数。
+ *   tag: 已验证的发行标签。
+ * Returns:
+ *   精确匹配的 Release，或不存在时返回 null。
+ * Errors:
+ *   列表异常或超出有界查询范围时返回异常，不冒险创建重复草稿。
+ */
+async function findRelease(api, tag) {
+  const result = await api('GET', '/releases/tags/' + tag, null, [200, 404]);
+  if (result.status === 200) return result.body;
+  for (let page = 1; page <= 10; page++) {
+    const listed = await api('GET', '/releases?per_page=100&page=' + page);
+    if (!Array.isArray(listed.body)) throw new Error('Invalid GitHub release listing');
+    const match = listed.body.find((release) => release.tag_name === tag);
+    if (match) return match;
+    if (listed.body.length < 100) return null;
+  }
+  throw new Error('GitHub release listing exceeded safe lookup limit');
+}
+
 /** publishGitHub 补齐草稿中缺失的同版本产物，校验现有字节后才公开 Release。
  * Args:
  *   identity: manifest 校验后的发行身份。
@@ -86,14 +108,14 @@ export function npmPublishArgs(tarball, channel) {
  */
 export async function publishGitHub(identity, sha, out, names, { api = githubAPI(process.env.GH_TOKEN), execute = command } = {}) {
   await ensureTag(api, identity.tag, sha);
-  let result = await api('GET', '/releases/tags/' + identity.tag, null, [200, 404]);
-  if (result.status === 404) {
+  let release = await findRelease(api, identity.tag);
+  if (!release) {
     const args = ['release', 'create', identity.tag, '--repo', 'validflow/ccneed-cli', '--target', sha, '--verify-tag', '--draft', '--title', identity.tag, '--notes-file', 'CHANGELOG.md'];
     if (identity.channel !== 'latest') args.push('--prerelease');
     execute('gh', args);
-    result = await api('GET', '/releases/tags/' + identity.tag);
+    release = await findRelease(api, identity.tag);
+    if (!release) throw new Error('Created GitHub release was not found');
   }
-  const release = result.body;
   if (release.tag_name !== identity.tag || release.prerelease !== (identity.channel !== 'latest')) throw new Error('Existing GitHub release identity mismatch');
   const remote = mkdtempSync(join(out, '.verify-'));
   for (const name of names) {

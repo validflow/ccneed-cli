@@ -1,126 +1,118 @@
 <div align="center">
-  <img src="assets/ccneed-logo.png" alt="CCNeed：拿着放大镜的白色小河马" width="320">
+  <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="CCNeed mascot holding a magnifying glass" width="320">
   <h1>CCNeed CLI</h1>
-  <p>在你自己的 Agent 或终端中使用 CCNeed。</p>
+  <p>Run research with CCNeed from your own AI agent or terminal.</p>
+  <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
-    <a href="https://ccneed.ai">官网</a> ·
-    <a href="INSTALL.md">安装指南</a> ·
-    <a href="skills/ccneed/SKILL.md">Skill</a> ·
-    <a href="CONTRIBUTING.md">参与贡献</a> ·
-    <a href="https://github.com/validflow/ccneed-cli/issues">反馈</a>
+    <a href="https://ccneed.ai">Website</a> ·
+    <a href="INSTALL.md">Installation guide</a> ·
+    <a href="skills/ccneed/SKILL.md">Agent Skill</a> ·
+    <a href="https://github.com/validflow/ccneed-cli/issues">Issues</a>
   </p>
 </div>
 
-把研究任务交给 CCNeed 云端执行，继续在你自己的 Agent 里查看进度、回答确认问题、拿回报告。
+CCNeed runs long research tasks in the cloud. Its CLI lets you submit work, follow progress, answer questions, and bring reports back into the agent you already use. The CLI and its companion Skill are installed together.
 
-首个正式版为 `0.1.0`。确认 npm 上已有 `@validflow/ccneed-cli@latest` 后，按 [安装指南](INSTALL.md) 安装。CLI 可以独立发布；部分云端命令仍取决于 Club 正式环境的接口部署进度。
+> Some cloud commands depend on the corresponding CCNeed service APIs being available in production.
 
-## 安装
+## Install
 
-需要 Node.js 22.14+ 和 npm；通过 npm 安装时无需安装 Go 或编译源码。
-
-在自己的电脑上一次安装 CLI 和配套 Skill。将 `AGENT` 换成你使用的 Agent 类型（`codex`、`workbuddy` 或 `claude`）：
+Node.js 22.14+ and npm are required. Choose your agent: `codex`, `workbuddy` (local coding environment), or `claude`.
 
 ```bash
-npx @validflow/ccneed-cli@latest install --agent AGENT
+npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-安装完成后，直接使用：
+Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. The installer adds a global `ccneed` command and links the same-version Skill into the selected agent's user directory; it does not modify the current project. Restart your agent after installation.
 
 ```bash
 ccneed --help
 ```
 
-安装器会把 CLI 装为全局 `ccneed` 命令，并把同版本 Skill 接入你选择的 Agent；不会修改当前项目。使用多个 Agent 时，可用逗号分隔类型。安装后重新打开 Agent，详见 [安装指南](INSTALL.md)。
+### Build from source
 
-### 让 Agent 帮你安装
+For development, use Git and Go 1.25+:
 
-也可以把这句话发给你正在使用的 Agent：
-
-```text
-请阅读 https://github.com/validflow/ccneed-cli 的 INSTALL.md，
-确认官方 npm 包已发布、当前 Agent 在支持列表中后，
-帮我在这台电脑上安装 CCNeed CLI 和对应的 Skill；不支持时先告诉我。
-登录时把官网授权链接发给我，由我完成授权。
+```bash
+git clone https://github.com/validflow/ccneed-cli.git
+cd ccneed-cli
+go install ./cmd/ccneed
+ccneed --help
 ```
 
-## 登录
+This builds the development CLI only. The source Skill lives in `skills/ccneed` and is **not** installed or updated automatically by `go install`. For a linked CLI + Skill that update together, use the npm method above. See the [installation guide](INSTALL.md) for PATH and source-build details.
 
-🔑 使用已有的 CCNeed 官网账号，不用再注册一套账号。
+### Ask your agent to install it
 
-先发起登录：
+```text
+Read https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md.
+Install the official CCNeed CLI and Skill for the agent I am using.
+Give me the website authorization link; I will approve the login myself.
+```
+
+## Sign in
+
+Use your existing CCNeed account. The CLI opens a website authorization flow; it does not need your password or browser cookies.
 
 ```bash
 ccneed auth login
-```
-
-打开返回的官网链接，核对账号和确认码，点击同意授权。回到终端后完成登录并验证：
-
-```bash
+# Open the URL, check the confirmation code, and approve in your browser.
 ccneed auth login --complete --timeout 60s
 ccneed auth status --verify
 ccneed account credits
 ```
 
-第一步返回 `pending` 只是等待授权；完成授权后才能使用账号功能。CLI 默认连接 CCNeed 正式环境的 HTTPS 地址 `https://ccneed.ai`。开发者可用 `--api-url` 显式连接 staging；不要把测试环境凭证用于正式环境，也不要把密码、Token 或浏览器 Cookie 发给 Agent。
+The default service is `https://ccneed.ai`. Developers can explicitly target staging with `--api-url`; staging and production credentials must stay separate.
 
-## 使用
+## Work with CCNeed
 
-💬 安装并登录后，在你自己的 Agent 里直接说：
+In your agent, you can ask:
 
 ```text
-使用 CCNeed，先让我选择知识库和文件，
-分析高价值博主，生成报告并下载到我指定的目录。
-需要确认的地方请问我。
+Use CCNeed to analyze my posts.csv, find high-value creators, and bring me a PDF report.
+Ask me before making any choice that needs my confirmation.
 ```
 
-也可以直接在终端操作。下面的 ID 要替换为命令返回的真实值：
+Or use the CLI directly. Replace example IDs with values returned by your commands:
 
 ```bash
 ccneed kb list
 ccneed files upload ./posts.csv
-ccneed threads create --title "博主分析" --kb-id 7 --file-id FILE_UUID
-ccneed run "分析已绑定资料并生成报告" --thread-id THREAD_UUID
+ccneed threads create --title "Creator research" --kb-id 7 --file-id FILE_UUID
+ccneed run "Analyze the attached data and prepare a report" --thread-id THREAD_UUID
 ```
 
-文件上传后还需要绑定到会话；创建会话不会启动研究，`run` 才会提交任务。任务可能消耗官网积分。
+Uploading a file does not bind it to a conversation automatically. Creating a conversation does not start a task; `run` does. A task may use your CCNeed credits.
 
-### 查看进度与报告
-
-`run` 返回会话 ID 和本轮任务 ID 后就退出，研究继续在云端执行：
+`run` returns immediately while the cloud task continues. You can watch the same turn, respond to a confirmation request, and retrieve its results:
 
 ```bash
 ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s
 ccneed artifacts list --thread-id THREAD_UUID
-ccneed artifacts download --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.md
 ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.pdf
 ```
 
-`watch` 等待超时不取消任务，稍后查询同一轮即可。需要确认时，Agent 会把问题和选项交给你，再用 `tasks reply` 提交你的答案。任务完成后可查看本轮回答及 findings/reports，不展示隐藏推理或完整工具日志。阅读带图表与排版的完整报告，建议 `export-pdf`；需要原文或继续编辑时用 `download` 保存 MD。两者都不会覆盖已有文件。
+For an editable Markdown report, use `ccneed artifacts download` instead. `watch` timing out does not cancel the cloud task; you can check again later. For all options, run `ccneed <command> --help` or read the [Skill](skills/ccneed/SKILL.md).
 
-### 常用命令
+### At a glance
 
-| 想做什么 | 命令 |
+| What you need | Command |
 | --- | --- |
-| 💳 查看积分、订阅 | `ccneed account credits` / `ccneed account overview` |
-| 💬 查看会话 | `ccneed threads list` |
-| 📚 查看知识库 | `ccneed kb list` |
-| ➕ 创建知识库 | `ccneed kb create`，返回网页入口 |
-| 📎 查看、上传文件 | `ccneed files list` / `ccneed files upload ./posts.csv` |
-| 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
-| 🕘 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
-| 🚪 退出登录 | `ccneed auth logout` |
+| 💳 Check credits and subscription | `ccneed account credits` / `ccneed account overview` |
+| 💬 Find conversations | `ccneed threads list` |
+| 📚 Explore knowledge bases | `ccneed kb list` |
+| ➕ Create a knowledge base in the browser | `ccneed kb create` |
+| 📎 List or upload files | `ccneed files list` / `ccneed files upload ./posts.csv` |
+| 🗂️ View or add conversation resources | `ccneed threads resources` / `ccneed threads append` |
+| 🕘 Review task history | `ccneed tasks list --thread-id THREAD_UUID` |
+| 🚪 Sign out | `ccneed auth logout` |
 
-表中未展开的参数，可用 `ccneed <命令> --help` 查看。知识库与文件绑定只追加、不解绑；完整调用规则见 [Skill](skills/ccneed/SKILL.md)。
+Knowledge-base and file bindings can be added, but not removed. Use `ccneed <command> --help` for the required arguments.
 
-## 更新
+## Update and contribute
 
-🔄 以后重新执行安装命令即可更新。CLI 和已接入的 Skill 一起升级，不需要分别下载；更新后重新打开 Agent。更新提醒不会替你自动升级。
+Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update both the CLI and linked Skill. Reload your agent afterward; update notifications never install software without your action.
 
-## 反馈与贡献
+Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues) with your OS, CLI version, and a redacted error message. Never post credentials or private files.
 
-遇到问题请 [提交 Issue](https://github.com/validflow/ccneed-cli/issues)，附上操作系统、CLI 版本和脱敏后的错误。不要上传凭证或私人文件。
-
-[安装与排障](INSTALL.md) · [开发与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)
-
-源码构建与开发联调见 [贡献指南](CONTRIBUTING.md)；版本与 npm 发布见 [发行说明](RELEASING.md)。
+[Installation](INSTALL.md) · [Contributing](CONTRIBUTING.md) · [Code style](CODE_STYLE.md) · [Security](SECURITY.md) · [Releasing](RELEASING.md)
