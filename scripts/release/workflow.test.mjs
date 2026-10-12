@@ -15,6 +15,14 @@ test('release checks and builds cannot request npm publishing identity', () => {
   assert.match(publish, /id-token:\s*write/);
   assert.match(publish, /actions\/download-artifact@/);
   assert.doesNotMatch(build, /node scripts\/release\/tag\.mjs|node scripts\/release\/publish\.mjs/);
-  assert.match(publish, /node scripts\/release\/tag\.mjs/);
+  assert.doesNotMatch(publish, /node scripts\/release\/tag\.mjs/);
+  assert.match(publish, /node scripts\/release\/publish\.mjs/);
   assert.doesNotMatch(publish, /node scripts\/release\/build\.mjs|bash scripts\/check\.sh|go test -race/);
+});
+
+test('a failed unchanged version can only be reissued explicitly from main', () => {
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /retry_version:/);
+  assert.match(workflow, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /RETRY_VERSION: \$\{\{ inputs\.retry_version \}\}/);
 });
