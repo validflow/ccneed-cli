@@ -13,11 +13,17 @@
 
 把研究任务交给 CCNeed 云端执行，继续在你自己的 Agent 里查看进度、回答确认问题、拿回报告。
 
-第一版源码已完成。npm 包尚未发布；下面是首发后的安装方式。现在需要从源码使用，可参阅 [安装指南](INSTALL.md)。
+CLI 首个候选版正在发布。确认 npm 上已有 `@validflow/ccneed-cli@next` 后，可按 [安装指南](INSTALL.md) 试装；正式版发布后，下面的 `@latest` 命令才可用。正式环境的部分能力还取决于 Club 接口部署进度。
 
 ## 安装
 
 需要 Node.js 22.14+ 和 npm；通过 npm 安装时无需安装 Go 或编译源码。
+
+候选版在 npm 的 `next` 通道发布后，可先试装：
+
+```bash
+npx @validflow/ccneed-cli@next install --agent codex
+```
 
 在自己的电脑上一次安装 CLI 和配套 Skill。将 `AGENT` 换成你使用的 Agent 类型（`codex`、`workbuddy` 或 `claude`）：
 
@@ -123,4 +129,4 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 
 [安装与排障](INSTALL.md) · [开发与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)
 
-源码构建与开发联调见 [贡献指南](CONTRIBUTING.md)；npm 首发和仓库公开将单独进行。
+源码构建与开发联调见 [贡献指南](CONTRIBUTING.md)；版本与 npm 发布见 [发行说明](RELEASING.md)。

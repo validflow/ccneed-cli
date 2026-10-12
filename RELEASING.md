@@ -8,16 +8,16 @@ Git tag 不等于 npm 已发布。用户通过 npm registry 安装，不直接�
 
 ## 首次启用前
 
-当前 `package.json` 与锁文件使用 `0.1.0-rc.1`、`private: true`、`MIT`。这是待验收源码里程碑，尚不能用于用户安装；现在不手动打 tag，也不创建公开 Release 或 npm 包。
+首个候选版使用 `0.1.0-rc.1` 与 MIT 许可。解除 `private` 后由发布工作流构建并打 tag；是否可安装仍以 GitHub Release、npm 包和 `next` 通道全部验证成功为准。
 
 私有包更新版本只记录源码，不生成发行计划。只有明确解除 `private` 禁发、通过包身份/许可/材料预检并开启发行开关后才进入发行；首次启用可以使用同一版本，但须校验既有 tag 绑定的提交，若源码已经变化则使用新版本。发行后的 RC 可通过 npm `next` 明确试装，安装器仍会全局安装同一精确版本的 CLI 与 Skill；私有源码里程碑不可试装。
 
-1. 完成真实 staging 联调，确认兼容服务已上线 sg-prod；CLI 发行不部署 Club。
-2. 经所有者确认后将 GitHub 仓库改为 public，让公开 npm 包的安装器能够下载 GitHub Release 二进制；发行预检会在仓库仍为 private 时拒绝打 tag。MIT 许可与 `LICENSE` 已确定；发行前还要确认 npm 包名、首发版本，补齐 `CHANGELOG.md` 并验收 `skills/ccneed/SKILL.md`。公开前检查提交历史是否含私密数据。
-3. 确认 main 的 PR、CX Review 和质量保护已启用。仅存在 workflow 文件不代表这些设置已生效。
-4. 先解决**首包引导**：npm 的 trusted publisher 设置在已有包的设置页；`npm trust` 也要求包已存在。因此 `@validflow/ccneed-cli` 尚未建立时，不能只打开 Action 就期待 OIDC 完成首发。维护者须在正式发布前单独批准首包的创建/人工发布方案，核对精确版本与产物；不得临时把长期 npm token 塞进 CI。首包建好后，再在 npm 包设置中配置 trusted publisher：组织 `validflow`、仓库 `ccneed-cli`、工作流 `release.yml`、环境 `npm-release`，分别允许 `npm publish` 和 `npm dist-tag`。
+1. 完成真实 staging 联调。CLI 可以先于 Club 的 sg-prod 兼容接口发行，但必须说明服务侧尚未完成的验收；CLI 发行不部署 Club。
+2. GitHub 仓库保持 public，让公开 npm 包的安装器能够下载 GitHub Release 二进制；发行预检会在仓库仍为 private 时拒绝打 tag。确认 npm 包名、版本、MIT 许可、`CHANGELOG.md` 与 `skills/ccneed/SKILL.md`。
+3. 确认本次 PR 的 CX Review 和质量检查成功。若 GitHub 尚未把检查设为必需状态，合并前由维护者人工核对；仅存在 workflow 文件不代表检查已生效。
+4. 先解决**首包引导**：npm 的 trusted publisher 设置在已有包的设置页；`npm trust` 也要求包已存在。因此 `@validflow/ccneed-cli` 尚未建立时，不能只打开 Action 就期待 OIDC 完成首发。首次 npm 发布已经所有者授权；仍须核对精确版本与产物，不得临时把长期 npm token 塞进 CI。首包建好后，再在 npm 包设置中配置 trusted publisher：组织 `validflow`、仓库 `ccneed-cli`、工作流 `release.yml`、环境 `npm-release`，分别允许 `npm publish` 和 `npm dist-tag`。
 5. GitHub 的 `npm-release` 环境仅允许 main；若希望全自动，不设置每次发布都需人工批准的 environment reviewer。生产资源凭证不进入此环境。
-6. 确认首包、可信发布者和 Club 生产兼容都已完成后，维护者才将仓库变量 `CCNEED_RELEASE_ENABLED` 设为 `true`。确定 MIT 许可不等于授权立即发布；本次许可准备不修改该变量或真实发布。新建 trusted publisher 配置必须在 2 天内完成首次成功发布；不要提前配置后搁置。详见 [npm 官方 Trusted Publishing 文档](https://docs.npmjs.com/trusted-publishers/)。
+6. 首包候选版的 PR 检查通过、准备合并时，将仓库变量 `CCNEED_RELEASE_ENABLED` 设为 `true`。合并后 Action 构建精确产物、打 tag 并发布 GitHub Release；由于 npm 包尚不存在，首次 npm 发布可能因缺少 trusted publisher 而失败。此时不能宣称发行成功：维护者从该次 Action 下载原始 npm tarball，核对版本和 SHA-512 后，在已登录的公司设备上以 2FA 执行 `npm publish <tarball> --access public --tag next --ignore-scripts`，再重跑同一次工作流验证精确包内容和通道。不要重新打包或重新编译。首包建立后配置 trusted publisher；下一次新版本由 Action 通过 OIDC 完成发布。新建 trusted publisher 配置须在 2 天内完成首次成功发布，不要提前配置后搁置。Club 生产兼容是完整可用能力的验收项，不阻止已明确披露限制的 CLI 候选版发行。详见 [npm 官方 Trusted Publishing 文档](https://docs.npmjs.com/trusted-publishers/)。
 
 npm OIDC 要求受支持的 Node/npm 与 GitHub-hosted runner；`dist-tag` 的 OIDC 恢复至少需要 npm 11.21.0（12.x 至少 12.2.0）。工作流使用 Node 24 并固定 npm 11.21.0，不依赖 Node 自带的 npm 版本。发行要求 GitHub 仓库已公开；满足条件时 trusted publishing 自动生成 provenance，无须在命令里强制 `--provenance`。npm 页面上的 `npm publish` 和 `npm dist-tag` 是独立授权，缺一个都可能导致恢复失败。
 
