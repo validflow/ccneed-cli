@@ -4,6 +4,13 @@ import test from 'node:test';
 
 const workflow = readFileSync(new URL('../../.github/workflows/cx-review.yml', import.meta.url), 'utf8');
 
+test('automatic review stays paused without losing the same-repository guard', () => {
+  const review = workflow.split('\n  review:')[1]?.split('\n  post-review:')[0];
+  const post = workflow.split('\n  post-review:')[1];
+  assert.match(review, /if: false && github\.event\.pull_request\.head\.repo\.full_name == github\.repository/);
+  assert.match(post, /needs\.review\.result != 'skipped'/);
+});
+
 test('Codex review is read-only and posting is isolated in a separate job', () => {
   const review = workflow.split('\n  review:')[1]?.split('\n  post-review:')[0];
   const post = workflow.split('\n  post-review:')[1];

@@ -47,6 +47,7 @@ bash scripts/check.sh
 - tag 已存在：只有指向同一 main SHA 才能复用，绝不移动 tag。
 - GitHub 草稿只补缺失文件；已有文件逐个核对大小与 SHA-256 摘要，禁止覆盖不同字节。公开 Release 缺产物时停止，不悄悄补发改变既有版本。
 - npm 已存在该版本：只有精确 tarball integrity 相同才能复用；不覆盖版本，不把稳定通道倒退。
+- `npm publish` 成功后，registry 的版本和 `latest`/`next` 查询可能稍后才可见；发布 job 以 10 秒间隔最多核对 19 次两者及 tarball integrity，不因一次临时 404 误报失败。内容不同立即停止，超过时限仍不可见则明确失败，不重复发布或移动 tag。
 - Actions 保存构建产物 30 天。同一次运行若只重跑失败的 publish job，构建产物名中的 `run_attempt` 会变化而找不到原产物；需要重跑整个工作流。重跑旧运行仍使用旧提交，不会带入后来合并的脚本修复。
 - 若发布失败后已修复发行脚本、但 `package.json.version` 未改变，在 Release 工作流页面选择 main，手动运行并填写与当前 `package.json` 完全一致的 `retry_version`。它会从当前 main 重新预检、构建、打 tag 和发布；普通代码合并仍不会自动重发同版本。已存在的 tag 只能指向当前 main 提交；旧草稿也必须指向相同提交，否则先核对并清理失败草稿和未发布 tag，不能移动已成功发布的版本。
 - 发行脚本使用新建草稿响应中的 Release ID 上传资产并公开草稿，不假定草稿可被立即按 tag 或列表再次查到。重试复用草稿时仍核对 tag、目标提交与每项资产的 SHA-256 摘要；任何不一致都停止，不覆盖旧产物。
