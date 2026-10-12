@@ -87,8 +87,8 @@ CX Review 在 `cc-review` runner 调用 Codex CLI 和受信任的 `review-pipeli
 
 首次接入先授予本仓使用组织级 `cc-review` runner 的权限；runner 已登录 Codex 即可，不强制新增 token。工作流所在 PR 即可触发审查，核对真实报告和结果后再设置必需检查。操作步骤见 [CX Review 运维说明](.agents/skills/review-pipeline/references/operations.md)。未配置或未实测前，不能宣称自动 review 已启用。
 
-发布前确认 sg-prod 服务兼容，再验证生产登录与受控任务闭环。发行工作流已定义，但 `CCNEED_RELEASE_ENABLED` 默认未开启；首次 npm 发布、GitHub Release 和许可证选择仍需单独授权。生产凭证不进入仓库、CI 日志或外部贡献者 PR。操作和失败恢复见 [发行说明](RELEASING.md)。
+发布前确认 sg-prod 服务兼容，再验证生产登录与受控任务闭环。发行工作流已定义，但 `CCNEED_RELEASE_ENABLED` 默认未开启；MIT 许可证已确定，首次 npm 发布和 GitHub Release 仍需单独授权。生产凭证不进入仓库、CI 日志或外部贡献者 PR。操作和失败恢复见 [发行说明](RELEASING.md)。
 
 CLI 发行使用独立的 `vX.Y.Z` tag；npm、二进制的 `ccneed version` 和随包 Skill 属于同一版发行，不沿用 Club 的服务版本。预发行使用 `vX.Y.Z-rc.N`，不能进入 npm `latest` 或普通用户更新提醒。推送开发提交不等于发行，也不自动打 tag。
 
-发行门禁校验 tag 与程序/npm 版本一致、各平台产物及校验值完整、npm 通道与对应包内容一致后才能宣布成功。发行构建注入官方包名，更新提醒查询 npm `latest`；未注入包名的源码构建使用公开 GitHub 来源。两类缓存隔离，不能因 GitHub Release 存在而让 npm 安装的客户端提醒升级。当前 0.1.0-rc.1 只记录待验收源码，保持 private/UNLICENSED 禁发，实际首发尚未完成。
+发行门禁校验 tag 与程序/npm 版本一致、各平台产物及校验值完整、npm 通道与对应包内容一致后才能宣布成功。发行构建注入官方包名，更新提醒查询 npm `latest`；未注入包名的源码构建使用公开 GitHub 来源。两类缓存隔离，不能因 GitHub Release 存在而让 npm 安装的客户端提醒升级。当前 0.1.0-rc.1 只记录待验收源码，保持 `private: true` 禁发，实际首发尚未完成。
