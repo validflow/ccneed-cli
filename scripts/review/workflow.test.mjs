@@ -20,12 +20,11 @@ test('Codex review is read-only and posting is isolated in a separate job', () =
   assert.match(review, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/);
   assert.match(review, /gh pr diff/);
   assert.match(workflow, /pull_request_target:/);
-  assert.match(post, /ref: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/);
-  assert.match(post, /node scripts\/review\/validate\.mjs/);
+  assert.doesNotMatch(post, /node scripts\/review\/validate\.mjs/);
   assert.match(post, /REVIEW_RESULT/);
-  assert.ok(post.indexOf('Validate trusted review result') < post.indexOf('Post report or failure notice'));
-  assert.match(post, /steps\.report-validation\.outcome/);
-  assert.match(post, /test "\$VALIDATION_OUTCOME" = success/);
+  assert.match(post, /gh pr comment "\$PR_NUMBER" --repo "\$GITHUB_REPOSITORY" --body-file review-output\/codex-review\.md/);
+  assert.match(post, /test -s review-output\/codex-review\.md/);
+  assert.match(post, /test "\$REVIEW_RESULT" = success/);
   assert.match(post, /pull-requests:\s*write/);
   assert.match(post, /actions\/download-artifact@/);
 });
