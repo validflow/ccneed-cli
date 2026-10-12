@@ -46,6 +46,13 @@ jobs:
         with:
           go-version: '1.27.1'
           cache: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Release and installer behavioral regression tests
+        run: npm test
+      - name: Validate workflow syntax and expressions
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 -config-file scripts/cx-review/actionlint.yml
       - name: Deterministic quality gate
         run: bash scripts/check.sh
       - name: Race detector
@@ -57,6 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Require all gates
+        timeout-minutes: 2
         env:
           PLATFORM_RESULT: ${{ needs.platform.result }}
           CHECKS_RESULT: ${{ needs.checks.result }}

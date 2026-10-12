@@ -1,52 +1,129 @@
-# CCNeed CLI
+<div align="center">
+  <img src="assets/ccneed-logo.png" alt="CCNeed：拿着放大镜的白色小河马" width="320">
+  <h1>CCNeed CLI</h1>
+  <p>在 Codex、WorkBuddy 或终端里使用 CCNeed。</p>
+  <p>
+    <a href="https://ccneed.ai">官网</a> ·
+    <a href="INSTALL.md">安装指南</a> ·
+    <a href="skills/ccneed/SKILL.md">Skill</a> ·
+    <a href="CONTRIBUTING.md">参与贡献</a> ·
+    <a href="https://github.com/validflow/ccneed-cli/issues">反馈</a>
+  </p>
+</div>
 
-把 CCNeed 云端 Agent 接入你常用的 Agent，而不是再学习一款产品。
+把研究任务交给 CCNeed 云端执行，在你常用的 Agent 里查看进度、回答确认问题、拿回报告。
 
-CCNeed CLI 是 Go 编写的轻量客户端。分析任务仍在 CCNeed 云端执行，本地只负责提交任务、回答确认问题和获取结果，不运行另一套 Agent。
+> 🚧 当前为 `0.1.0-rc.1` 待验收源码，仓库仍是私有的，npm 尚未发布。以下安装命令是首发后的用法，**现在不要执行，也不要安装同名的非官方包**。
 
-> 当前处于开发阶段，尚未发布 npm 包或用户可用的 CLI。不要使用未经确认的同名 npm 包。安装命令和宿主 Skill 会在首个可用版本中一起提供。
+## 安装
 
-```mermaid
-flowchart LR
-    A[Codex / Claude Code / WorkBuddy] --> S[CCNeed 宿主 Skill]
-    S --> C[ccneed 命令行]
-    C --> API[CCNeed API]
-    API --> R[云端 Agent 执行任务]
-    R --> O[本轮回答 / findings / reports]
-    O --> C
-```
+需要 Node.js 22.14+ 和 npm；正式发布后无需安装 Go 或编译源码。
 
-## 第一版要解决什么
-
-- 复用官网登录，无须另外设置密码。
-- 提交长程任务后立即返回会话与回合标识，再按需查看进度。
-- 遇到需要用户确认的问题，以结构化参数回答并继续任务。
-- 上传文件、查看知识库，并在对话中追加文件或补绑知识库。
-- 复杂的知识库创建操作打开网页完成，不把整个创建界面搬进命令行。
-- 查看本轮结果及工作空间中的 findings、reports，下载报告到本地。
-
-以上是目标能力，**不是当前已实现的命令清单**。平台 Skill/MCP 配置管理、Bot 和 MCP 接入暂不开放；云端已有配置仍由平台决定。
-
-## 开发入口
-
-需要 Go 1.25 或更高版本、Git，以及 Bash（Windows 可使用 Git Bash）。
+选择你使用的 Agent，一次安装 CLI 和 Skill：
 
 ```bash
-git clone https://github.com/validflow/ccneed-cli.git
-cd ccneed-cli
-make check
+# Codex
+npx @validflow/ccneed-cli@latest install --agent codex
+
+# WorkBuddy
+npx @validflow/ccneed-cli@latest install --agent workbuddy
 ```
 
-没有 GNU Make 时，执行 `bash scripts/check.sh`。门禁检查代码格式、注释规范、静态分析、lint 和测试，不依赖线上账号。
+安装完成后，直接使用：
 
-| 文档 | 内容 |
+```bash
+ccneed --help
+```
+
+安装器会把 CLI 装为全局 `ccneed` 命令，并把同版本 Skill 链接到所选 Agent 的用户目录；不会修改当前项目。两个 Agent 都用，可指定 `--agent codex,workbuddy`；Claude Code 使用 `--agent claude`。安装后重新打开 Agent，详见 [安装指南](INSTALL.md)。
+
+### 让 Agent 帮你安装
+
+也可以直接把这句话发给 Codex 或 WorkBuddy：
+
+```text
+请阅读 https://github.com/validflow/ccneed-cli 的 INSTALL.md，
+确认官方正式版已发布后，帮我安装 CCNeed CLI 和当前 Agent 的 Skill。
+登录时把官网授权链接发给我，由我完成授权。
+```
+
+## 登录
+
+🔑 使用已有的 CCNeed 官网账号，不用再注册一套账号。
+
+先发起登录：
+
+```bash
+ccneed auth login
+```
+
+打开返回的官网链接，核对账号和确认码，点击同意授权。回到终端后完成登录并验证：
+
+```bash
+ccneed auth login --complete --timeout 60s
+ccneed auth status --verify
+ccneed account credits
+```
+
+第一步返回 `pending` 只是等待授权；完成授权后才能使用账号功能。CLI 默认连接 CCNeed 正式环境的 HTTPS 地址 `https://ccneed.ai`。开发者可用 `--api-url` 显式连接 staging；不要把测试环境凭证用于正式环境，也不要把密码、Token 或浏览器 Cookie 发给 Agent。
+
+## 使用
+
+💬 安装 Skill 并登录后，在你的 Agent 里直接说：
+
+```text
+使用 CCNeed，先让我选择知识库和文件，
+分析高价值博主，生成报告并下载到我指定的目录。
+需要确认的地方请问我。
+```
+
+也可以直接在终端操作。下面的 ID 要替换为命令返回的真实值：
+
+```bash
+ccneed kb list
+ccneed files upload ./posts.csv
+ccneed threads create --title "博主分析" --kb-id 7 --file-id FILE_UUID
+ccneed run "分析已绑定资料并生成报告" --thread-id THREAD_UUID
+```
+
+文件上传后还需要绑定到会话；创建会话不会启动研究，`run` 才会提交任务。任务可能消耗官网积分。
+
+### 查看进度与报告
+
+`run` 返回会话 ID 和本轮任务 ID 后就退出，研究继续在云端执行：
+
+```bash
+ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s
+ccneed artifacts list --thread-id THREAD_UUID
+ccneed artifacts download --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.md
+ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.pdf
+```
+
+`watch` 等待超时不取消任务，稍后查询同一轮即可。需要确认时，Agent 会把问题和选项交给你，再用 `tasks reply` 提交你的答案。任务完成后可查看本轮回答及 findings/reports，不展示隐藏推理或完整工具日志。阅读带图表与排版的完整报告，建议 `export-pdf`；需要原文或继续编辑时用 `download` 保存 MD。两者都不会覆盖已有文件。
+
+### 常用命令
+
+| 想做什么 | 命令 |
 | --- | --- |
-| [贡献指南](CONTRIBUTING.md) | 分支、PR、staging 联调与发布顺序 |
-| [代码规范](CODE_STYLE.md) | 模块边界、Google 风格注释、测试和错误处理 |
-| [安全说明](SECURITY.md) | 凭证、环境隔离与漏洞报告 |
+| 💳 查看积分、订阅 | `ccneed account credits` / `ccneed account overview` |
+| 💬 查看会话 | `ccneed threads list` |
+| 📚 查看知识库 | `ccneed kb list` |
+| ➕ 创建知识库 | `ccneed kb create`，返回网页入口 |
+| 📎 查看、上传文件 | `ccneed files list` / `ccneed files upload ./posts.csv` |
+| 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
+| 🕘 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
+| 🚪 退出登录 | `ccneed auth logout` |
 
-## 安装与开源状态
+表中未展开的参数，可用 `ccneed <命令> --help` 查看。知识库与文件绑定只追加、不解绑；完整调用规则见 [Skill](skills/ccneed/SKILL.md)。
 
-首个发行版本计划通过 npm 安装平台二进制，并提供配套宿主 Skill；具体包名和安装命令以正式发布时的 README 为准。普通用户只连接 sg-prod。
+## 更新
 
-仓库当前为 private。公开前需要确认许可证、完成密钥与依赖审查，并验证安装及卸载流程；当前没有授予开源许可证。
+🔄 正式发布后，重新执行上面的安装命令即可更新。CLI 和已接入的 Skill 一起升级，不需要分别下载；更新后重新打开 Agent。更新提醒不会替你自动升级。
+
+## 反馈与贡献
+
+遇到问题请 [提交 Issue](https://github.com/validflow/ccneed-cli/issues)，附上操作系统、CLI 版本和脱敏后的错误。不要上传凭证或私人文件。
+
+[安装与排障](INSTALL.md) · [开发与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)
+
+仓库尚未公开，也尚未授予开源许可证；公开和 npm 首发是后续独立步骤。开发者联调与源码构建见 [贡献指南](CONTRIBUTING.md)。

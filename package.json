@@ -1,0 +1,16 @@
+{
+  "name": "@validflow/ccneed-cli",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "description": "CCNeed cloud agent command-line integration",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": { "node": ">=22.14.0" },
+  "repository": { "type": "git", "url": "git+https://github.com/validflow/ccneed-cli.git" },
+  "bin": { "ccneed": "scripts/npm/run.mjs" },
+  "files": ["scripts/npm/install.mjs", "scripts/npm/run.mjs", "scripts/npm/setup.mjs", "scripts/npm/skills.mjs", "checksums.json", "skills/", "assets/", "README.md", "INSTALL.md"],
+  "scripts": {
+    "postinstall": "node scripts/npm/install.mjs",
+    "test": "node --test scripts/release/*.test.mjs scripts/npm/*.test.mjs scripts/review/*.test.mjs"
+  }
+}
