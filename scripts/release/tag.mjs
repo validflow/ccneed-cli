@@ -36,7 +36,7 @@ export async function ensureTag(api, tag, sha) {
  */
 export function githubAPI(token) {
   return async (method, path, body = null, statuses = [200]) => {
-    if (!token || !/^\/(git|releases)\//.test(path)) throw new Error('Invalid release API request');
+    if (!token || !/^\/(git|releases)(\/|\?)/.test(path)) throw new Error('Invalid release API request');
     const response = await fetch('https://api.github.com/repos/validflow/ccneed-cli' + path, {
       method, redirect: 'error', signal: AbortSignal.timeout(30_000),
       headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },

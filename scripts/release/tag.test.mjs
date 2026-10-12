@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ensureTag } from './tag.mjs';
+import { ensureTag, githubAPI } from './tag.mjs';
 const sha = 'a'.repeat(40);
 const ref = (value = sha) => ({ object: { type: 'commit', sha: value } });
 
@@ -36,4 +36,21 @@ test('creation race revalidates exact revision', async () => {
   const results = [{ status: 404, body: {} }, { status: 422, body: {} }, { status: 200, body: ref() }];
   assert.equal(await ensureTag(async () => results.shift(), 'v0.1.0', sha), 'reused');
   assert.equal(results.length, 0);
+});
+
+test('authenticated release listing permits only the fixed release API path', async () => {
+  const originalFetch = globalThis.fetch;
+  let requested;
+  globalThis.fetch = async (url) => {
+    requested = url;
+    return { status: 200, json: async () => [] };
+  };
+  try {
+    const api = githubAPI('test-token');
+    assert.deepEqual((await api('GET', '/releases?per_page=100&page=1')).body, []);
+    assert.equal(requested, 'https://api.github.com/repos/validflow/ccneed-cli/releases?per_page=100&page=1');
+    await assert.rejects(api('GET', '/issues?per_page=100'), /Invalid release API request/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

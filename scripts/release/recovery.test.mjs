@@ -63,3 +63,50 @@ test('public missing/starter assets and completed foreign bytes are never overwr
     assert.equal(b.calls.some((call) => call[0] === 'DELETE' || call[1] === 'upload' || call[1] === 'edit'), false);
   }
 });
+
+test('new draft is discovered through release listing when tag lookup returns 404', async () => {
+  const release = { tag_name: identity.tag, prerelease: false, draft: true, assets: [] };
+  const b = boundary(release);
+  let created = false;
+  const api = async (method, path, body, statuses) => {
+    if (path === '/releases/tags/' + identity.tag) {
+      b.calls.push([method, path]);
+      return created && !release.draft
+        ? { status: 200, body: structuredClone(release) }
+        : { status: 404, body: null };
+    }
+    if (path.startsWith('/releases?')) {
+      b.calls.push([method, path]);
+      return { status: 200, body: created ? [structuredClone(release)] : [] };
+    }
+    return b.api(method, path, body, statuses);
+  };
+  const execute = (binary, args) => {
+    if (args[1] === 'create') created = true;
+    b.execute(binary, args);
+  };
+
+  await publishGitHub(identity, sha, b.out, ['binary'], { api, execute });
+  await publishGitHub(identity, sha, b.out, ['binary'], { api, execute });
+
+  assert.equal(b.calls.filter((call) => call[1] === 'create').length, 1);
+  assert.equal(b.calls.filter((call) => call[1] === 'upload').length, 1);
+  assert.equal(b.calls.filter((call) => call[1] === 'edit').length, 1);
+  assert.equal(release.draft, false);
+});
+
+test('retry finds an existing draft without creating or replacing its assets', async () => {
+  const release = { tag_name: identity.tag, prerelease: false, draft: true, assets: [{ name: 'binary', state: 'uploaded', size: 14, id: 7 }] };
+  const b = boundary(release);
+  const api = async (method, path, body, statuses) => {
+    if (path === '/releases/tags/' + identity.tag) return { status: 404, body: null };
+    if (path.startsWith('/releases?')) return { status: 200, body: [structuredClone(release)] };
+    return b.api(method, path, body, statuses);
+  };
+
+  await publishGitHub(identity, sha, b.out, ['binary'], { ...b, api });
+
+  assert.equal(b.calls.filter((call) => call[1] === 'create' || call[1] === 'upload').length, 0);
+  assert.equal(b.calls.filter((call) => call[1] === 'download').length, 1);
+  assert.equal(release.draft, false);
+});
