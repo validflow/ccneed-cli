@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="CCNeed mascot holding a magnifying glass" width="320">
   <h1>CCNeed CLI</h1>
   <p>Run research with CCNeed from your own AI agent or terminal.</p>
-  <p><a href="https://github.com/validflow/ccneed-cli/blob/main/README.zh.md">中文</a> | <a href="https://github.com/validflow/ccneed-cli/blob/main/README.md">English</a></p>
+  <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
     <a href="https://ccneed.ai">Website</a> ·
     <a href="INSTALL.md">Installation guide</a> ·
@@ -93,6 +93,21 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 ```
 
 For an editable Markdown report, use `ccneed artifacts download` instead. `watch` timing out does not cancel the cloud task; you can check again later. For all options, run `ccneed <command> --help` or read the [Skill](skills/ccneed/SKILL.md).
+
+### At a glance
+
+| What you need | Command |
+| --- | --- |
+| 💳 Check credits and subscription | `ccneed account credits` / `ccneed account overview` |
+| 💬 Find conversations | `ccneed threads list` |
+| 📚 Explore knowledge bases | `ccneed kb list` |
+| ➕ Create a knowledge base in the browser | `ccneed kb create` |
+| 📎 List or upload files | `ccneed files list` / `ccneed files upload ./posts.csv` |
+| 🗂️ View or add conversation resources | `ccneed threads resources` / `ccneed threads append` |
+| 🕘 Review task history | `ccneed tasks list --thread-id THREAD_UUID` |
+| 🚪 Sign out | `ccneed auth logout` |
+
+Knowledge-base and file bindings can be added, but not removed. Use `ccneed <command> --help` for the required arguments.
 
 ## Update and contribute
 

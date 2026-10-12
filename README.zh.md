@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="拿着放大镜的 CCNeed 小河马" width="320">
   <h1>CCNeed CLI</h1>
   <p>在你熟悉的 Agent 或终端里使用 CCNeed。</p>
-  <p><a href="https://github.com/validflow/ccneed-cli/blob/main/README.zh.md">中文</a> | <a href="https://github.com/validflow/ccneed-cli/blob/main/README.md">English</a></p>
+  <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
     <a href="https://ccneed.ai">官网</a> ·
     <a href="INSTALL.md">安装指南</a> ·
@@ -93,6 +93,21 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 ```
 
 需要可编辑的 Markdown 原文时，改用 `ccneed artifacts download`。`watch` 超时不会取消云端任务，稍后可以继续查看。完整参数用 `ccneed <命令> --help` 查询，Agent 调用规则见 [Skill](skills/ccneed/SKILL.md)。
+
+### 功能速览
+
+| 想做什么 | 命令 |
+| --- | --- |
+| 💳 查看积分、订阅 | `ccneed account credits` / `ccneed account overview` |
+| 💬 查看会话 | `ccneed threads list` |
+| 📚 查看知识库 | `ccneed kb list` |
+| ➕ 在网页创建知识库 | `ccneed kb create` |
+| 📎 查看、上传文件 | `ccneed files list` / `ccneed files upload ./posts.csv` |
+| 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
+| 🕘 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
+| 🚪 退出登录 | `ccneed auth logout` |
+
+知识库和文件绑定只追加、不解绑。具体参数可用 `ccneed <命令> --help` 查看。
 
 ## 更新与反馈
 
