@@ -13,7 +13,7 @@
 
 把研究任务交给 CCNeed 云端执行，继续在你自己的 Agent 里查看进度、回答确认问题、拿回报告。
 
-首个正式版为 `0.1.0`。确认 npm 上已有 `@validflow/ccneed-cli@latest` 后，按 [安装指南](INSTALL.md) 安装。CLI 可以独立发布；部分云端命令仍取决于 Club 正式环境的接口部署进度。
+正式版通过 `@validflow/ccneed-cli@latest` 安装，详情见 [安装指南](INSTALL.md)。CLI 可以独立发布；部分云端命令仍取决于 Club 正式环境的接口部署进度。
 
 ## 安装
 
@@ -32,6 +32,19 @@ ccneed --help
 ```
 
 安装器会把 CLI 装为全局 `ccneed` 命令，并把同版本 Skill 接入你选择的 Agent；不会修改当前项目。使用多个 Agent 时，可用逗号分隔类型。安装后重新打开 Agent，详见 [安装指南](INSTALL.md)。
+
+### 从源码构建
+
+想查看或修改 CLI 源码时，可以克隆仓库并自行编译；需要 Git 和 Go 1.25+：
+
+```bash
+git clone https://github.com/validflow/ccneed-cli.git
+cd ccneed-cli
+go install ./cmd/ccneed
+ccneed --help
+```
+
+这条路径安装的是开发版 CLI，不会自动接入或更新 Skill。配套 Skill 在仓库的 `skills/ccneed` 目录；需要同时接入 Agent、让 CLI 与 Skill 一起升级时，使用上面的 npm 安装方式。源码安装的 PATH 说明见 [安装指南](INSTALL.md)。
 
 ### 让 Agent 帮你安装
 
