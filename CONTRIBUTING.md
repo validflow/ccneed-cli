@@ -39,7 +39,7 @@ CLI 与宿主 Skill 使用同一套命名约定：新增 Skill 能力用 `feat(s
 
 ## 先本地测试，再 staging 联调
 
-联调顺序：CLI 和 Club 各自通过本地测试 → Club 分支部署到 staging → CLI 指向该地址验证 → 记录两仓 SHA 与结果。正式发布还需 Club 按既有流程上线 sg-prod、生产冒烟通过，然后才能发布 CLI。CLI 的 PR 合并不自动部署 Club。
+联调顺序：CLI 和 Club 各自通过本地测试 → Club 分支部署到 staging → CLI 指向该地址验证 → 记录两仓 SHA 与结果。正式开放完整云端能力仍需 Club 按既有流程上线 sg-prod、生产冒烟通过。CLI 可以独立发行，但必须注明尚未上线的服务能力；CLI 的 PR 合并不自动部署 Club。
 
 - `staging` 和 `sg-prod` 是两套环境。测试数据库、存储、队列、任务执行和额度账本不得使用生产资源。
 - 开发者通过 `--api-url` 显式选择服务 origin；默认只接受 HTTPS 或本机 HTTP，不接受路径、查询、重定向或地址内凭证。若分支预览暂时只有 HTTP，必须在**每条**联调命令上同时传 `--allow-insecure-http`，且远程地址必须是预览的 IP；它会让登录证明和凭证经明文网络传输，只能使用 staging 测试账号，不能对生产地址使用。正式发行默认 sg-prod 的 HTTPS，普通用户无须选择环境。该参数不是任意地址转发器；登录与服务端隔离仍需 staging 验证。
@@ -56,7 +56,7 @@ CLI 与宿主 Skill 使用同一套命名约定：新增 Skill 能力用 `feat(s
 4. 首个闭环是 staging 浏览器授权后查询账号积分，再逐步测试文件、知识库、任务、HITL 和报告。授权、回调及业务网页必须跟随同一环境；认证层返回其他地址的连接时，CLI 在发请求前拒绝。
 5. 保留 Club 实际部署 SHA、CLI 构建 SHA、目标 URL、测试 fixture 标识、结果及清理说明，不记录 token 或原始认证响应。只改 CLI 且部署健康兼容时复用；后端更新、过期或不兼容时才重新部署。
 
-以上是联调流程，不是已上线声明。源码已实现官网设备授权与撤销、账号、资料、异步任务、通用 HITL、历史恢复和报告读取/下载，并有本地 HTTP 与存储测试；配套 Club 接口尚未完成部署及隔离验收。三平台真实凭证库和宿主安装也需要验收。staging 通过后仍须后端先上线、受控生产冒烟通过、最后发行 CLI。
+以上是联调流程，不是已上线声明。源码已实现官网设备授权与撤销、账号、资料、异步任务、通用 HITL、历史恢复和报告读取/下载，并有本地 HTTP 与存储测试；配套 Club 接口尚未完成正式部署及隔离验收。三平台真实凭证库和宿主安装也需要验收。CLI 可先发行并注明这些限制；完整云端能力仍须等后端上线并通过受控生产冒烟。
 
 ## 质量门禁
 
@@ -87,8 +87,8 @@ CX Review 在 `cc-review` runner 调用 Codex CLI 和受信任的 `review-pipeli
 
 首次接入先授予本仓使用组织级 `cc-review` runner 的权限；runner 已登录 Codex 即可，不强制新增 token。工作流所在 PR 即可触发审查，核对真实报告和结果后再设置必需检查。操作步骤见 [CX Review 运维说明](.agents/skills/review-pipeline/references/operations.md)。未配置或未实测前，不能宣称自动 review 已启用。
 
-发布前确认 sg-prod 服务兼容，再验证生产登录与受控任务闭环。发行工作流已定义，但 `CCNEED_RELEASE_ENABLED` 默认未开启；MIT 许可证已确定，首次 npm 发布和 GitHub Release 仍需单独授权。生产凭证不进入仓库、CI 日志或外部贡献者 PR。操作和失败恢复见 [发行说明](RELEASING.md)。
+公开发行完整可用版本前确认 sg-prod 服务兼容，再验证生产登录与受控任务闭环。若 CLI 先独立发行，须在发行说明中明确尚未完成的服务验收。发行工作流由 `CCNEED_RELEASE_ENABLED` 控制；MIT 许可证与首次 CLI 发行已获所有者授权。生产凭证不进入仓库、CI 日志或外部贡献者 PR。操作和失败恢复见 [发行说明](RELEASING.md)。
 
 CLI 发行使用独立的 `vX.Y.Z` tag；npm、二进制的 `ccneed version` 和随包 Skill 属于同一版发行，不沿用 Club 的服务版本。预发行使用 `vX.Y.Z-rc.N`，不能进入 npm `latest` 或普通用户更新提醒。推送开发提交不等于发行，也不自动打 tag。
 
-发行门禁校验 tag 与程序/npm 版本一致、各平台产物及校验值完整、npm 通道与对应包内容一致后才能宣布成功。发行构建注入官方包名，更新提醒查询 npm `latest`；未注入包名的源码构建使用公开 GitHub 来源。两类缓存隔离，不能因 GitHub Release 存在而让 npm 安装的客户端提醒升级。当前 0.1.0-rc.1 只记录待验收源码，保持 `private: true` 禁发，实际首发尚未完成。
+发行门禁校验 tag 与程序/npm 版本一致、各平台产物及校验值完整、npm 通道与对应包内容一致后才能宣布成功。发行构建注入官方包名，更新提醒查询 npm `latest`；未注入包名的源码构建使用公开 GitHub 来源。两类缓存隔离，不能因 GitHub Release 存在而让 npm 安装的客户端提醒升级。首个正式版为 0.1.0，成功发布与否以 GitHub Release、npm 包及 `latest` 通道的实际状态为准。

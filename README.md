@@ -13,7 +13,7 @@
 
 把研究任务交给 CCNeed 云端执行，继续在你自己的 Agent 里查看进度、回答确认问题、拿回报告。
 
-第一版源码已完成。npm 包尚未发布；下面是首发后的安装方式。现在需要从源码使用，可参阅 [安装指南](INSTALL.md)。
+首个正式版为 `0.1.0`。确认 npm 上已有 `@validflow/ccneed-cli@latest` 后，按 [安装指南](INSTALL.md) 安装。CLI 可以独立发布；部分云端命令仍取决于 Club 正式环境的接口部署进度。
 
 ## 安装
 
@@ -123,4 +123,4 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 
 [安装与排障](INSTALL.md) · [开发与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)
 
-源码构建与开发联调见 [贡献指南](CONTRIBUTING.md)；npm 首发和仓库公开将单独进行。
+源码构建与开发联调见 [贡献指南](CONTRIBUTING.md)；版本与 npm 发布见 [发行说明](RELEASING.md)。

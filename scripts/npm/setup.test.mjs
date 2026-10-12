@@ -229,8 +229,12 @@ test('unified installer help works offline without downloading a binary or creat
   assert.match(result.stdout, /CLI.*Skill/);
 });
 
-test('private development package refuses global installation before any npm operation', () => {
-  const result = spawnSync(process.execPath, [fileURLToPath(new URL('./run.mjs', import.meta.url)), 'install', '--agent', 'codex'], { encoding: 'utf8', windowsHide: true });
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /unpublished|private|Development package/i);
+test('private development package refuses global installation before any npm operation', async () => {
+  const data = fixture();
+  const manifestPath = join(data.root, 'package.json');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  manifest.private = true;
+  writeFileSync(manifestPath, JSON.stringify(manifest));
+  await assert.rejects(installIntegration(data.options), /unpublished|private|Development package/i);
+  assert.equal(data.calls.length, 0);
 });
