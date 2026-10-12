@@ -3,7 +3,7 @@
   "version": "0.1.0-rc.1",
   "private": true,
   "description": "CCNeed cloud agent command-line integration",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "engines": { "node": ">=22.14.0" },
   "repository": { "type": "git", "url": "git+https://github.com/validflow/ccneed-cli.git" },
