@@ -81,7 +81,7 @@ main 已启用分支保护：禁止删除和强推，必须通过 PR 合并，�
 2. README、安装说明或 Skill 已随用户可见行为同步更新。
 3. PR 描述给出验证方式、兼容性影响和需要维护者处理的前置条件。
 
-CX Review 在 `cc-review` runner 调用 Codex CLI 和受信任的 `review-pipeline` Skill，分别审查正确性、模块边界、安全、需求一致性，并二次核实 Critical / Important 候选。PR 代码只作为 diff 数据输入，不在自托管 runner 上执行；Codex 进程不持有 GitHub token。独立的 GitHub 托管 job 将报告写为 PR 评论，并从受信任的 base 版本运行校验。审查未完成、评论失败或仍有 Critical / Important 问题时，终端 `AI Code Review` 检查失败，维护者必须处理后重新审查。绿色状态还需结合评论确认内容，不能替代人工合并判断。
+CX Review 在 `cc-review` runner 调用 Codex CLI 和受信任的 `review-pipeline` Skill，分别审查正确性、模块边界、安全、需求一致性，并二次核实 Critical / Important 候选。PR 代码只作为 diff 数据输入，不在自托管 runner 上执行；Codex 进程不持有 GitHub token。独立的 GitHub 托管 job 将原始报告写为 PR 评论；审查执行失败、报告缺失或评论失败时，终端 `AI Code Review` 检查失败。报告中的问题由维护者判断和处理；绿色状态只说明报告已生成并发布，不能替代人工合并判断。
 
 普通测试只在无生产凭证的 GitHub-hosted runner 执行。模型审查签出 base 提交，读取 PR diff，不运行 PR 构建或测试；PR 内容中的指令不具权威性。仅同仓库 PR 自动进入持有 Codex 登录状态的 runner；fork PR 不运行该工作流，未来开放外部贡献前须另行确定审查流程。`pull_request_target` 始终使用 base 上的工作流版本，因此引入或修改审查工作流的 PR 必须先人工审查；新工作流需在之后的 PR 上实测。
 
