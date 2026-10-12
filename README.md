@@ -6,17 +6,18 @@
     <a href="https://ccneed.ai">官网</a> ·
     <a href="INSTALL.md">安装指南</a> ·
     <a href="skills/ccneed/SKILL.md">Skill</a> ·
+    <a href="CONTRIBUTING.md">参与贡献</a> ·
     <a href="https://github.com/validflow/ccneed-cli/issues">反馈</a>
   </p>
 </div>
 
 把研究任务交给 CCNeed 云端执行，在你常用的 Agent 里查看进度、回答确认问题、拿回报告。
 
-> 🚧 当前为 `0.1.0-rc.1` 待验收源码，npm 尚未发布，配套服务尚未完成部署验收。下面的安装与使用流程面向正式发布后；目前不能作为可用的正式版安装。
+> 🚧 当前为 `0.1.0-rc.1` 待验收源码，仓库仍是私有的，npm 尚未发布。以下安装命令是首发后的用法，**现在不要执行，也不要安装同名的非官方包**。
 
 ## 安装
 
-需要 Node.js 22.14+ 和 npm，无需安装 Go 或编译源码。**以下命令在官方 npm 包正式发布后才可执行。**
+需要 Node.js 22.14+ 和 npm；正式发布后无需安装 Go 或编译源码。
 
 选择你使用的 Agent，一次安装 CLI 和 Skill：
 
@@ -34,7 +35,7 @@ npx @validflow/ccneed-cli@latest install --agent workbuddy
 ccneed --help
 ```
 
-CLI 全局安装，Skill 放在所选 Agent 的用户目录，不修改你的项目。两个 Agent 都用，可指定 `--agent codex,workbuddy`；Claude Code 使用 `--agent claude`。安装后重新打开 Agent，具体步骤见 [安装指南](INSTALL.md)。
+安装器会把 CLI 装为全局 `ccneed` 命令，并把同版本 Skill 链接到所选 Agent 的用户目录；不会修改当前项目。两个 Agent 都用，可指定 `--agent codex,workbuddy`；Claude Code 使用 `--agent claude`。安装后重新打开 Agent，详见 [安装指南](INSTALL.md)。
 
 ### 让 Agent 帮你安装
 
@@ -64,7 +65,7 @@ ccneed auth status --verify
 ccneed account credits
 ```
 
-第一步返回 `pending` 不是登录成功；完成授权后才能使用账号功能。不要把密码、Token 或浏览器 Cookie 发给 Agent。
+第一步返回 `pending` 只是等待授权；完成授权后才能使用账号功能。CLI 默认连接 CCNeed 正式环境的 HTTPS 地址 `https://ccneed.ai`。开发者可用 `--api-url` 显式连接 staging；不要把测试环境凭证用于正式环境，也不要把密码、Token 或浏览器 Cookie 发给 Agent。
 
 ## 使用
 
@@ -125,4 +126,4 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 
 [安装与排障](INSTALL.md) · [开发与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)
 
-当前尚未授予开源许可证。开发者联调、源码构建及发行验收说明请查看贡献与安装指南。
+仓库尚未公开，也尚未授予开源许可证；公开和 npm 首发是后续独立步骤。开发者联调与源码构建见 [贡献指南](CONTRIBUTING.md)。

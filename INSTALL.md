@@ -1,6 +1,6 @@
 # CCNeed CLI 与 Skill 安装指南
 
-默认全局安装 CLI，Skill 接入所选宿主的**当前用户目录**。不同项目复用同一套版本，不改用户项目。安装与升级共用一个入口；登录仍由用户在官网明确授权。
+默认全局安装 CLI，Skill 接入所选 Agent 的**当前用户目录**。不同项目复用同一套版本，不改用户项目。安装与升级共用一个入口；登录仍由用户在官网明确授权。
 
 > 开发中，npm 尚未发行，配套云端接口尚未完成部署验收。以下正式安装命令只在官方首发后可用；不要安装未经确认的同名包。安装器源码和隔离本地测试已完成，不代表宿主实际加载或三平台发行已验收。
 
@@ -19,16 +19,6 @@ npx @validflow/ccneed-cli@latest install --agent workbuddy
 需要 Node 22.14.0+ 和 npm。CLI 安装在 npm 全局命令目录；该目录必须在宿主实际执行环境的 PATH 中。本机安装不会自动提供给远程沙箱，不默认申请管理员权限。安装器不读取账号、创建任务或修改宿主安全配置。
 
 已公开发布 RC 且需要试装时，显式选择 npm 的 `next` 入口，例如 `npx @validflow/ccneed-cli@next install --agent codex`；也可以把 `@next` 改为精确版本 `@0.1.0-rc.1`。安装器会全局安装同一精确版本的 CLI 与 Skill，不会回退到 `latest`。正式版保持 `@latest`；没有正式版前，`@latest` 不作为可用入口。当前仓库的私有源码版本仍无法通过 npm 安装。
-
-```mermaid
-flowchart LR
-    Entry[统一安装 / 更新] --> Package[同一版本 npm 包]
-    Package --> CLI[校验后启动 CLI]
-    Package --> Skill[完整 Skill 与 references]
-    Skill --> CX[Codex 用户级入口]
-    Skill --> WB[WorkBuddy 用户级入口]
-    Skill --> CC[Claude Code 用户级入口]
-```
 
 宿主入口按明确的 `--agent` 选择建立：
 
@@ -62,7 +52,7 @@ ccneed --help
 
 核对 CLI 版本、全局命令 PATH 与所选宿主 Skill 加载状态。安装器的 `restart_required` 表示需重新加载；`auth: not_started` 表示没有登录。不能把目录存在当成加载成功。
 
-配套服务已部署、用户要求登录后：
+配套服务已部署、用户要求登录后，默认连接 `https://ccneed.ai`：
 
 ```bash
 ccneed auth login
@@ -71,7 +61,7 @@ ccneed auth login --complete --timeout 60s
 ccneed auth status --verify
 ```
 
-不代点同意、不输出秘密、不读取浏览器 Cookie。开发联调使用同一个明确 `--api-url`，staging 凭证不能回退正式环境。
+不代点同意、不输出秘密、不读取浏览器 Cookie。开发联调在每条命令上显式使用同一个 `--api-url`；远程 HTTP 还需 `--allow-insecure-http` 和 staging 测试账号。staging 凭证不能回退正式环境，详见 [贡献指南](CONTRIBUTING.md)。
 
 ## 当前开发安装
 

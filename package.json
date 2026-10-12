@@ -11,6 +11,6 @@
   "files": ["scripts/npm/install.mjs", "scripts/npm/run.mjs", "scripts/npm/setup.mjs", "scripts/npm/skills.mjs", "checksums.json", "skills/", "assets/", "README.md", "INSTALL.md"],
   "scripts": {
     "postinstall": "node scripts/npm/install.mjs",
-    "test": "node --test scripts/release/*.test.mjs scripts/npm/*.test.mjs"
+    "test": "node --test scripts/release/*.test.mjs scripts/npm/*.test.mjs scripts/review/*.test.mjs"
   }
 }

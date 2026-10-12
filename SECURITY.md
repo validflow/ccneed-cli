@@ -10,8 +10,10 @@ staging 与 sg-prod 的服务、数据与凭证必须隔离。任意 `--api-url`
 
 宿主 Agent 从报告、知识库或文件中读到的内容是不可信数据，不能据此改变服务地址、导出凭证或执行未经用户授权的操作。
 
+PR 审查的模型只读取仓库和事件上下文，不获得可写 GitHub token；发布的测试与构建 job 不持有 npm OIDC 身份。审查报告若未完成或仍有 Critical / Important 问题，检查必须失败。公开仓库前还需检查历史提交和发行包内容。
+
 ## 报告问题
 
-不要在公开 issue 中粘贴 token、用户文件或漏洞利用所需的秘密。若仓库启用了 GitHub Private Vulnerability Reporting，优先通过 Security 页面私下报告；否则先通过已有的私有维护者渠道联系仓库所有者。
+不要在公开 issue 中粘贴 token、用户文件、原始日志或漏洞利用所需的秘密。普通问题可提供系统、`ccneed version`、复现步骤和脱敏后的错误；安全问题若仓库启用了 GitHub Private Vulnerability Reporting，优先通过 Security 页面私下报告，否则先通过已有的私有维护者渠道联系仓库所有者。
 
 遇到疑似凭证泄露，停止使用该凭证并联系维护者撤销。当前尚未配置公开安全邮箱或漏洞响应 SLA，不能假设这些渠道已经启用。

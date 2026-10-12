@@ -11,7 +11,7 @@ git switch -c feat/short-description
 make check
 ```
 
-每次 Squash 合并后，从最新 main 开新分支；不要继续复用已经合并的功能分支。
+每次 Squash 合并后，从最新 main 开新分支；不要继续复用已经合并的功能分支。改代码前先读 [代码规范](CODE_STYLE.md)；新增行为先写能复现问题的测试。
 
 ## 分支、PR 与提交命名
 
@@ -39,16 +39,7 @@ CLI 与宿主 Skill 使用同一套命名约定：新增 Skill 能力用 `feat(s
 
 ## 先本地测试，再 staging 联调
 
-```mermaid
-flowchart TD
-    A[Club 与 CLI 各自功能分支] --> B[本地确定性测试]
-    B --> C[Club 分支部署到 staging]
-    C --> D[CLI 连接该部署联调]
-    D --> E[记录两仓 SHA 与验证结果]
-    E --> F[后端按现有发布流程上线 sg-prod]
-    F --> G[受控生产冒烟]
-    G --> H[发布 CLI 二进制 / npm / 宿主 Skill]
-```
+联调顺序：CLI 和 Club 各自通过本地测试 → Club 分支部署到 staging → CLI 指向该地址验证 → 记录两仓 SHA 与结果。正式发布还需 Club 按既有流程上线 sg-prod、生产冒烟通过，然后才能发布 CLI。CLI 的 PR 合并不自动部署 Club。
 
 - `staging` 和 `sg-prod` 是两套环境。测试数据库、存储、队列、任务执行和额度账本不得使用生产资源。
 - 开发者通过 `--api-url` 显式选择服务 origin；默认只接受 HTTPS 或本机 HTTP，不接受路径、查询、重定向或地址内凭证。若分支预览暂时只有 HTTP，必须在**每条**联调命令上同时传 `--allow-insecure-http`，且远程地址必须是预览的 IP；它会让登录证明和凭证经明文网络传输，只能使用 staging 测试账号，不能对生产地址使用。正式发行默认 sg-prod 的 HTTPS，普通用户无须选择环境。该参数不是任意地址转发器；登录与服务端隔离仍需 staging 验证。
@@ -78,15 +69,21 @@ flowchart TD
 
 GitHub Actions 在 Linux、macOS、Windows 执行测试与构建，Linux 额外执行完整 Go 门禁、race 检测、审查/发行/安装脚本测试与固定版本 actionlint。Go 本地门禁不增加 Node 运行依赖；修改 npm、发行或 CI 时另跑 `npm test`（需要 Node 22.14.0+）。
 
-main 已启用分支保护：禁止删除和强推，必须通过 PR 合并，管理员也受约束；仓库只允许 Squash and merge。目前未设置必需 CI 状态。等真实 runner 与检查完成验证后，再要求 `quality` 和 `AI Code Review` 检查通过。CX Review 与 usight_agent 一样只自动运行同仓库 PR；fork PR 会跳过，不能把跳过当作完成审查。**仅提交 workflow 不等于已启用 CI 必需检查。**
+main 已启用分支保护：禁止删除和强推，必须通过 PR 合并，管理员也受约束；仓库只允许 Squash and merge。目前未设置必需 CI 状态。等真实 runner 与检查完成验证后，再要求 `quality` 和 `AI Code Review` 检查通过。CX Review 只自动运行同仓库 PR；fork PR 会跳过，不能把跳过当作完成审查。**仅提交 workflow 不等于已启用 CI 必需检查。**
 
 第一阶段不设置任意覆盖率百分比。新增行为必须有能抓住回归的测试，覆盖率用于 review，不写凑数测试。先确认测试失败，再实现并确认通过。
 
 ## PR 与发布
 
-使用 PR 模板说明范围、测试证据和风险。CX Review 与 usight_agent 一样在 `cc-review` runner 直接调用 Codex CLI 和仓库内 `review-pipeline` Skill，分别审查正确性、模块边界、安全、需求一致性，并二次核实 Critical / Important 候选。工作流把报告写为 PR 评论；维护者须在合并前处理确认的问题。审查失败时工作流发布失败通知，不得把未完成审查称为通过。
+使用 PR 模板说明范围、测试证据和风险。提交 PR 前确认：
 
-普通测试只在无生产凭证的 GitHub-hosted runner 执行。模型审查签出 PR merge ref 供只读检查，不运行 PR 构建或测试；PR 内容中的指令不具权威性。仅同仓库 PR 自动进入持有 Codex 登录状态的 runner；fork PR 不运行该工作流，未来开放外部贡献前须另行确定审查流程。
+1. `make check` 通过；修改 npm、发行或工作流时 `npm test` 也通过。
+2. README、安装说明或 Skill 已随用户可见行为同步更新。
+3. PR 描述给出验证方式、兼容性影响和需要维护者处理的前置条件。
+
+CX Review 在 `cc-review` runner 调用 Codex CLI 和受信任的 `review-pipeline` Skill，分别审查正确性、模块边界、安全、需求一致性，并二次核实 Critical / Important 候选。PR 代码只作为 diff 数据输入，不在自托管 runner 上执行；Codex 进程不持有 GitHub token。独立的 GitHub 托管 job 将报告写为 PR 评论，并从受信任的 base 版本运行校验。审查未完成、评论失败或仍有 Critical / Important 问题时，终端 `AI Code Review` 检查失败，维护者必须处理后重新审查。绿色状态还需结合评论确认内容，不能替代人工合并判断。
+
+普通测试只在无生产凭证的 GitHub-hosted runner 执行。模型审查签出 base 提交，读取 PR diff，不运行 PR 构建或测试；PR 内容中的指令不具权威性。仅同仓库 PR 自动进入持有 Codex 登录状态的 runner；fork PR 不运行该工作流，未来开放外部贡献前须另行确定审查流程。`pull_request_target` 始终使用 base 上的工作流版本，因此引入或修改审查工作流的 PR 必须先人工审查；新工作流需在之后的 PR 上实测。
 
 首次接入先授予本仓使用组织级 `cc-review` runner 的权限；runner 已登录 Codex 即可，不强制新增 token。工作流所在 PR 即可触发审查，核对真实报告和结果后再设置必需检查。操作步骤见 [CX Review 运维说明](.agents/skills/review-pipeline/references/operations.md)。未配置或未实测前，不能宣称自动 review 已启用。
 
