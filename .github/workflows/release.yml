@@ -3,13 +3,19 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      retry_version:
+        description: 'Rebuild an unpublished version already in package.json'
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   plan:
-    if: github.repository == 'validflow/ccneed-cli'
+    if: github.repository == 'validflow/ccneed-cli' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -28,6 +34,7 @@ jobs:
         id: plan
         env:
           BEFORE_SHA: ${{ github.event.before }}
+          RETRY_VERSION: ${{ inputs.retry_version }}
         run: node scripts/release/prepare.mjs
 
   build:
@@ -105,11 +112,7 @@ jobs:
         with:
           name: release-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist/
-      - name: Automatically tag the reviewed main revision
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node scripts/release/tag.mjs
-      - name: Publish GitHub assets before npm, then verify registry channel
+      - name: Verify release identity, tag main, publish assets and npm
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/release/publish.mjs

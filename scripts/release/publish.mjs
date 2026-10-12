@@ -1,11 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync, mkdtempSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { compareVersions, validateManifest } from './version.mjs';
-import { verifyArtifacts, sha256 } from './artifacts.mjs';
+import { verifyArtifacts } from './artifacts.mjs';
 import { githubAPI, ensureTag } from './tag.mjs';
+import { assertAssetMatches, uploadReleaseAsset } from './release-assets.mjs';
+import { git } from './git.mjs';
 
 /** publicationDecision 判断首次发布或可安全复用的 npm 版本，不接受覆盖和通道回退。
  * Args:
@@ -96,43 +98,64 @@ async function findRelease(api, tag) {
   throw new Error('GitHub release listing exceeded safe lookup limit');
 }
 
+/** assertReleaseIdentity 阻止复用与当前 tag、提交或通道不一致的草稿。
+ * Args:
+ *   release: GitHub 返回的 Release 对象。
+ *   identity: 当前 manifest 的发行身份。
+ *   sha: 本次 main 提交 SHA。
+ * Errors:
+ *   发行身份不一致或元数据不完整时返回异常。
+ */
+function assertReleaseIdentity(release, identity, sha) {
+  if (!Number.isSafeInteger(release?.id) || release.id <= 0 || release.tag_name !== identity.tag || release.target_commitish !== sha || release.prerelease !== (identity.channel !== 'latest') || !Array.isArray(release.assets)) {
+    throw new Error('Existing GitHub release identity mismatch');
+  }
+}
+
 /** publishGitHub 补齐草稿中缺失的同版本产物，校验现有字节后才公开 Release。
  * Args:
  *   identity: manifest 校验后的发行身份。
  *   sha: 已审查 main 提交。
  *   out: 已完成的产物目录。
  *   names: 必须齐全且不可覆盖的文件名。
- *   dependencies: 可注入的远程 API 和外部命令边界。
+ *   dependencies: 可注入的远程 API 和资产上传边界。
  * Errors:
  *   已有文件不一致、公开 Release 缺文件或 GH 请求失败时返回异常。
  */
-export async function publishGitHub(identity, sha, out, names, { api = githubAPI(process.env.GH_TOKEN), execute = command } = {}) {
-  await ensureTag(api, identity.tag, sha);
+export async function publishGitHub(identity, sha, out, names, { api = githubAPI(process.env.GH_TOKEN), upload = (id, name, file) => uploadReleaseAsset(process.env.GH_TOKEN, id, name, file) } = {}) {
   let release = await findRelease(api, identity.tag);
+  if (release) assertReleaseIdentity(release, identity, sha);
+  await ensureTag(api, identity.tag, sha);
   if (!release) {
-    const args = ['release', 'create', identity.tag, '--repo', 'validflow/ccneed-cli', '--target', sha, '--verify-tag', '--draft', '--title', identity.tag, '--notes-file', 'CHANGELOG.md'];
-    if (identity.channel !== 'latest') args.push('--prerelease');
-    execute('gh', args);
-    release = await findRelease(api, identity.tag);
-    if (!release) throw new Error('Created GitHub release was not found');
+    const created = await api('POST', '/releases', {
+      tag_name: identity.tag,
+      target_commitish: sha,
+      name: identity.tag,
+      body: readFileSync('CHANGELOG.md', 'utf8'),
+      draft: true,
+      prerelease: identity.channel !== 'latest',
+    }, [201, 422]);
+    release = created.status === 201 ? created.body : await findRelease(api, identity.tag);
+    if (!release) throw new Error('Existing GitHub release is not visible; retry without creating another draft');
   }
-  if (release.tag_name !== identity.tag || release.prerelease !== (identity.channel !== 'latest')) throw new Error('Existing GitHub release identity mismatch');
-  const remote = mkdtempSync(join(out, '.verify-'));
+  assertReleaseIdentity(release, identity, sha);
   for (const name of names) {
     const existing = release.assets.find((asset) => asset.name === name);
     if (existing?.state === 'starter') {
       if (!release.draft || existing.size !== 0 || !Number.isSafeInteger(existing.id) || existing.id <= 0) throw new Error('Incomplete release reservation cannot be safely reconciled');
       await api('DELETE', '/releases/assets/' + existing.id, null, [204]);
-      execute('gh', ['release', 'upload', identity.tag, join(out, name), '--repo', 'validflow/ccneed-cli']);
+      assertAssetMatches(await upload(release.id, name, join(out, name)), name, join(out, name));
     } else if (existing) {
-      execute('gh', ['release', 'download', identity.tag, '--repo', 'validflow/ccneed-cli', '--pattern', name, '--dir', remote]);
-      if (sha256(join(remote, name)) !== sha256(join(out, name))) throw new Error('Existing release asset differs; never overwrite');
+      assertAssetMatches(existing, name, join(out, name));
     } else {
       if (!release.draft) throw new Error('Published GitHub release is missing required assets');
-      execute('gh', ['release', 'upload', identity.tag, join(out, name), '--repo', 'validflow/ccneed-cli']);
+      assertAssetMatches(await upload(release.id, name, join(out, name)), name, join(out, name));
     }
   }
-  if (release.draft) execute('gh', ['release', 'edit', identity.tag, '--repo', 'validflow/ccneed-cli', '--draft=false']);
+  if (release.draft) {
+    const published = await api('PATCH', '/releases/' + release.id, { draft: false });
+    if (published.body?.id !== release.id || published.body.draft !== false) throw new Error('GitHub release publication was not confirmed');
+  }
 }
 
 /** publish 完成 GitHub 产物与 npm 的顺序发布，重试不移动 tag 或覆盖既有内容。
@@ -144,7 +167,7 @@ async function publish() {
   const manifest = JSON.parse(readFileSync(join(out, 'npm', 'package.json'), 'utf8'));
   const identity = validateManifest(manifest, process.env.RELEASE_TAG);
   const sha = process.env.GITHUB_SHA;
-  if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error('Missing release revision');
+  if (!/^[a-f0-9]{40}$/.test(sha) || git(['rev-parse', 'HEAD']) !== sha || git(['status', '--porcelain'])) throw new Error('Release requires a clean exact main checkout');
   const tarball = 'ccneed-npm-' + identity.version + '.tgz';
   const bytes = readFileSync(join(out, tarball));
   const desired = { name: manifest.name, version: identity.version, integrity: 'sha512-' + createHash('sha512').update(bytes).digest('base64') };

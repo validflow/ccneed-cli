@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdtempSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { publishGitHub } from './publish.mjs';
+import { sha256 } from './artifacts.mjs';
 const sha = 'a'.repeat(40);
 const identity = { version: '0.1.0', tag: 'v0.1.0', channel: 'latest' };
 
-/** boundary 提供真实文件与仅替换外部 gh/API 的发行边界。
+/** boundary 提供真实文件与仅替换外部 GitHub API 的发行边界。
  * Args:
  *   release: 模拟的 GitHub 草稿或公开发行状态。
  * Returns:
@@ -16,8 +18,10 @@ const identity = { version: '0.1.0', tag: 'v0.1.0', channel: 'latest' };
 function boundary(release) {
   const out = mkdtempSync(join(tmpdir(), 'ccneed-release-recovery-'));
   writeFileSync(join(out, 'binary'), 'verified bytes');
+  release.id ??= 42;
+  release.target_commitish ??= sha;
   const calls = [];
-  const api = async (method, path) => {
+  const api = async (method, path, body) => {
     calls.push([method, path]);
     if (path.includes('/git/ref/')) return { status: 200, body: { object: { type: 'commit', sha } } };
     if (method === 'DELETE') {
@@ -25,20 +29,21 @@ function boundary(release) {
       release.assets = release.assets.filter((asset) => asset.id !== id);
       return { status: 204, body: null };
     }
+    if (method === 'PATCH') {
+      assert.equal(path, '/releases/' + release.id);
+      release.draft = body.draft;
+      return { status: 200, body: structuredClone(release) };
+    }
     return { status: 200, body: structuredClone(release) };
   };
-  const execute = (binary, args) => {
-    assert.equal(binary, 'gh');
-    calls.push(args);
-    if (args[1] === 'upload') release.assets.push({ name: 'binary', state: 'uploaded', size: 14, id: 9 });
-    if (args[1] === 'download') {
-      const target = join(args[args.indexOf('--dir') + 1], 'binary');
-      copyFileSync(join(out, 'binary'), target);
-      if (release.corrupt) writeFileSync(target, 'foreign bytes');
-    }
-    if (args[1] === 'edit') release.draft = false;
+  const upload = async (id, name, file) => {
+    assert.equal(id, release.id);
+    calls.push(['UPLOAD', id, name]);
+    const asset = { name, state: 'uploaded', size: statSync(file).size, digest: 'sha256:' + sha256(file), id: 9 };
+    release.assets.push(asset);
+    return asset;
   };
-  return { out, calls, api, execute };
+  return { out, calls, api, upload };
 }
 
 test('empty starter reservation in draft is safely reconciled, then retries only verify bytes', async () => {
@@ -46,8 +51,8 @@ test('empty starter reservation in draft is safely reconciled, then retries only
   const b = boundary(release);
   for (let attempt = 0; attempt < 3; attempt++) await publishGitHub(identity, sha, b.out, ['binary'], b);
   assert.equal(b.calls.filter((call) => call[0] === 'DELETE').length, 1);
-  assert.equal(b.calls.filter((call) => call[1] === 'upload').length, 1);
-  assert.equal(b.calls.filter((call) => call[1] === 'edit').length, 1);
+  assert.equal(b.calls.filter((call) => call[0] === 'UPLOAD').length, 1);
+  assert.equal(b.calls.filter((call) => call[0] === 'PATCH').length, 1);
   assert.equal(release.draft, false);
   assert.equal(readFileSync(join(b.out, 'binary'), 'utf8'), 'verified bytes');
 });
@@ -56,47 +61,40 @@ test('public missing/starter assets and completed foreign bytes are never overwr
   for (const release of [
     { draft: false, assets: [] },
     { draft: false, assets: [{ name: 'binary', state: 'starter', size: 0, id: 7 }] },
-    { draft: true, corrupt: true, assets: [{ name: 'binary', state: 'uploaded', size: 14, id: 7 }] },
+    { draft: true, assets: [{ name: 'binary', state: 'uploaded', size: 14, digest: 'sha256:' + '0'.repeat(64), id: 7 }] },
   ]) {
     const b = boundary({ tag_name: identity.tag, prerelease: false, ...release });
     await assert.rejects(publishGitHub(identity, sha, b.out, ['binary'], b));
-    assert.equal(b.calls.some((call) => call[0] === 'DELETE' || call[1] === 'upload' || call[1] === 'edit'), false);
+    assert.equal(b.calls.some((call) => ['DELETE', 'UPLOAD', 'PATCH'].includes(call[0])), false);
   }
 });
 
-test('new draft is discovered through release listing when tag lookup returns 404', async () => {
+test('existing draft is discovered through release listing when tag lookup returns 404', async () => {
   const release = { tag_name: identity.tag, prerelease: false, draft: true, assets: [] };
   const b = boundary(release);
-  let created = false;
   const api = async (method, path, body, statuses) => {
     if (path === '/releases/tags/' + identity.tag) {
       b.calls.push([method, path]);
-      return created && !release.draft
-        ? { status: 200, body: structuredClone(release) }
-        : { status: 404, body: null };
+      return release.draft ? { status: 404, body: null } : { status: 200, body: structuredClone(release) };
     }
     if (path.startsWith('/releases?')) {
       b.calls.push([method, path]);
-      return { status: 200, body: created ? [structuredClone(release)] : [] };
+      return { status: 200, body: [structuredClone(release)] };
     }
     return b.api(method, path, body, statuses);
   };
-  const execute = (binary, args) => {
-    if (args[1] === 'create') created = true;
-    b.execute(binary, args);
-  };
+  await publishGitHub(identity, sha, b.out, ['binary'], { ...b, api });
+  await publishGitHub(identity, sha, b.out, ['binary'], { ...b, api });
 
-  await publishGitHub(identity, sha, b.out, ['binary'], { api, execute });
-  await publishGitHub(identity, sha, b.out, ['binary'], { api, execute });
-
-  assert.equal(b.calls.filter((call) => call[1] === 'create').length, 1);
-  assert.equal(b.calls.filter((call) => call[1] === 'upload').length, 1);
-  assert.equal(b.calls.filter((call) => call[1] === 'edit').length, 1);
+  assert.equal(b.calls.filter((call) => call[0] === 'POST').length, 0);
+  assert.equal(b.calls.filter((call) => call[0] === 'UPLOAD').length, 1);
+  assert.equal(b.calls.filter((call) => call[0] === 'PATCH').length, 1);
   assert.equal(release.draft, false);
 });
 
 test('retry finds an existing draft without creating or replacing its assets', async () => {
-  const release = { tag_name: identity.tag, prerelease: false, draft: true, assets: [{ name: 'binary', state: 'uploaded', size: 14, id: 7 }] };
+  const digest = createHash('sha256').update('verified bytes').digest('hex');
+  const release = { tag_name: identity.tag, prerelease: false, draft: true, assets: [{ name: 'binary', state: 'uploaded', size: 14, digest: 'sha256:' + digest, id: 7 }] };
   const b = boundary(release);
   const api = async (method, path, body, statuses) => {
     if (path === '/releases/tags/' + identity.tag) return { status: 404, body: null };
@@ -106,7 +104,64 @@ test('retry finds an existing draft without creating or replacing its assets', a
 
   await publishGitHub(identity, sha, b.out, ['binary'], { ...b, api });
 
-  assert.equal(b.calls.filter((call) => call[1] === 'create' || call[1] === 'upload').length, 0);
-  assert.equal(b.calls.filter((call) => call[1] === 'download').length, 1);
+  assert.equal(b.calls.filter((call) => call[0] === 'POST' || call[0] === 'UPLOAD').length, 0);
+  assert.equal(b.calls.filter((call) => call[0] === 'PATCH').length, 1);
   assert.equal(release.draft, false);
+});
+
+test('new draft publishes from the create response even when both lookups remain empty', async () => {
+  const release = { id: 42, tag_name: identity.tag, target_commitish: sha, prerelease: false, draft: true, assets: [] };
+  const b = boundary(release);
+  const api = async (method, path, body) => {
+    b.calls.push([method, path]);
+    if (path.includes('/git/ref/')) return { status: 200, body: { object: { type: 'commit', sha } } };
+    if (path === '/releases/tags/' + identity.tag) return { status: 404, body: null };
+    if (path.startsWith('/releases?')) return { status: 200, body: [] };
+    if (method === 'POST' && path === '/releases') {
+      assert.equal(body.target_commitish, sha);
+      return { status: 201, body: structuredClone(release) };
+    }
+    if (method === 'PATCH' && path === '/releases/42') {
+      release.draft = body.draft;
+      return { status: 200, body: structuredClone(release) };
+    }
+    throw new Error('Unexpected API request: ' + method + ' ' + path);
+  };
+  const upload = async (id, name, file) => {
+    assert.equal(id, 42);
+    assert.equal(name, 'binary');
+    release.assets.push({ id: 7, name, state: 'uploaded', size: statSync(file).size, digest: 'sha256:' + sha256(file) });
+    return release.assets.at(-1);
+  };
+
+  await publishGitHub(identity, sha, b.out, ['binary'], { api, upload });
+
+  assert.equal(b.calls.filter((call) => call[0] === 'POST').length, 1);
+  assert.equal(b.calls.filter((call) => call[0] === 'PATCH').length, 1);
+  assert.equal(b.calls.filter((call) => call[0] === 'GET' && call[1].startsWith('/releases')).length, 2);
+  assert.equal(release.draft, false);
+});
+
+test('an existing draft from another commit cannot be reused after a tag is recreated', async () => {
+  const release = { id: 42, tag_name: identity.tag, target_commitish: 'b'.repeat(40), prerelease: false, draft: true, assets: [] };
+  const b = boundary(release);
+  await assert.rejects(publishGitHub(identity, sha, b.out, ['binary'], b), /release identity mismatch/i);
+  assert.equal(b.calls.some((call) => Array.isArray(call) && ['DELETE', 'PATCH'].includes(call[0])), false);
+  assert.equal(b.calls.some((call) => call[0] === 'UPLOAD'), false);
+});
+
+test('an old draft is rejected before a replacement tag can be created', async () => {
+  const release = { id: 42, tag_name: identity.tag, target_commitish: 'b'.repeat(40), prerelease: false, draft: true, assets: [] };
+  const b = boundary(release);
+  const api = async (method, path, body) => {
+    b.calls.push([method, path]);
+    if (path === '/releases/tags/' + identity.tag) return { status: 404, body: null };
+    if (path.startsWith('/releases?')) return { status: 200, body: [structuredClone(release)] };
+    if (path === '/git/ref/tags/' + identity.tag) return { status: 404, body: null };
+    if (method === 'POST' && path === '/git/refs') return { status: 201, body: { object: { type: 'commit', sha } } };
+    throw new Error('Unexpected API request: ' + method + ' ' + path);
+  };
+
+  await assert.rejects(publishGitHub(identity, sha, b.out, ['binary'], { ...b, api }), /release identity mismatch/i);
+  assert.equal(b.calls.some((call) => call[0] === 'POST'), false);
 });

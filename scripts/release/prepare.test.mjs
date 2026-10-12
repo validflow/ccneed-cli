@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { prepare } from './prepare.mjs';
+import { prepare, prepareRetry } from './prepare.mjs';
 
 test('real Git revisions distinguish initial scaffold, ordinary commits and release commits', () => {
   const cwd = mkdtempSync(join(tmpdir(), 'ccneed-release-git-'));
@@ -28,6 +28,11 @@ test('real Git revisions distinguish initial scaffold, ordinary commits and rele
   git('add', 'README'); git('commit', '-m', 'feature');
   const ordinary = git('rev-parse', 'HEAD');
   assert.deepEqual(prepare(release, ordinary, cwd), { release: false });
+  assert.deepEqual(prepareRetry('0.1.0', 'refs/heads/main', ordinary, cwd), {
+    release: true, version: '0.1.0', tag: 'v0.1.0', channel: 'latest',
+  });
+  assert.throws(() => prepareRetry('0.1.1', 'refs/heads/main', ordinary, cwd), /requested version/i);
+  assert.throws(() => prepareRetry('0.1.0', 'refs/heads/feature', ordinary, cwd), /main branch/i);
   assert.throws(() => prepare(release, base, cwd), /checkout/);
   assert.throws(() => prepare('f'.repeat(40), ordinary, cwd));
 });

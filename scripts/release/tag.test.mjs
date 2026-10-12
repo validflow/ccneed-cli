@@ -54,3 +54,20 @@ test('authenticated release listing permits only the fixed release API path', as
     globalThis.fetch = originalFetch;
   }
 });
+
+test('release creation can use the same fixed-repository API and returns its ID', async () => {
+  const originalFetch = globalThis.fetch;
+  let requested;
+  globalThis.fetch = async (url, options) => {
+    requested = { url, options };
+    return { status: 201, json: async () => ({ id: 42 }) };
+  };
+  try {
+    const api = githubAPI('test-token');
+    assert.deepEqual((await api('POST', '/releases', { tag_name: 'v0.1.1' }, [201])).body, { id: 42 });
+    assert.equal(requested.url, 'https://api.github.com/repos/validflow/ccneed-cli/releases');
+    assert.equal(JSON.parse(requested.options.body).tag_name, 'v0.1.1');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

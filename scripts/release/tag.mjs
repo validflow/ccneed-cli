@@ -1,8 +1,3 @@
-import { pathToFileURL } from 'node:url';
-import { readFileSync } from 'node:fs';
-import { git } from './git.mjs';
-import { validateManifest } from './version.mjs';
-
 /** ensureTag 创建精确提交的轻量 tag，重试仅接受已经指向同一提交的 tag。
  * Args:
  *   api: 只允许固定仓库 REST 路径的 API 调用函数。
@@ -36,7 +31,7 @@ export async function ensureTag(api, tag, sha) {
  */
 export function githubAPI(token) {
   return async (method, path, body = null, statuses = [200]) => {
-    if (!token || !/^\/(git|releases)(\/|\?)/.test(path)) throw new Error('Invalid release API request');
+    if (!token || !/^\/(git|releases)(\/|\?|$)/.test(path)) throw new Error('Invalid release API request');
     const response = await fetch('https://api.github.com/repos/validflow/ccneed-cli' + path, {
       method, redirect: 'error', signal: AbortSignal.timeout(30_000),
       headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
@@ -45,17 +40,4 @@ export function githubAPI(token) {
     if (!statuses.includes(response.status)) throw new Error('Release API failed with status ' + response.status);
     return { status: response.status, body: response.status === 204 ? null : await response.json() };
   };
-}
-
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  try {
-    const manifest = JSON.parse(readFileSync('package.json', 'utf8'));
-    const { tag } = validateManifest(manifest, process.env.RELEASE_TAG);
-    const sha = process.env.GITHUB_SHA;
-    if (!/^[a-f0-9]{40}$/.test(sha) || git(['rev-parse', 'HEAD']) !== sha || git(['status', '--porcelain'])) throw new Error('Tag requires a clean exact main checkout');
-    await ensureTag(githubAPI(process.env.GH_TOKEN), tag, sha);
-  } catch (error) {
-    console.error(error.message);
-    process.exitCode = 1;
-  }
 }
