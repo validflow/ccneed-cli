@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/ccneed-logo.png" alt="CCNeed：拿着放大镜的白色小河马" width="320">
   <h1>CCNeed CLI</h1>
-  <p>在 Codex、WorkBuddy 或终端里使用 CCNeed。</p>
+  <p>在你自己的 Agent 或终端中使用 CCNeed。</p>
   <p>
     <a href="https://ccneed.ai">官网</a> ·
     <a href="INSTALL.md">安装指南</a> ·
@@ -11,22 +11,18 @@
   </p>
 </div>
 
-把研究任务交给 CCNeed 云端执行，在你常用的 Agent 里查看进度、回答确认问题、拿回报告。
+把研究任务交给 CCNeed 云端执行，继续在你自己的 Agent 里查看进度、回答确认问题、拿回报告。
 
-> 🚧 当前为 `0.1.0-rc.1` 待验收源码，仓库仍是私有的，npm 尚未发布。以下安装命令是首发后的用法，**现在不要执行，也不要安装同名的非官方包**。
+第一版源码已完成。npm 包尚未发布；下面是首发后的安装方式。现在需要从源码使用，可参阅 [安装指南](INSTALL.md)。
 
 ## 安装
 
-需要 Node.js 22.14+ 和 npm；正式发布后无需安装 Go 或编译源码。
+需要 Node.js 22.14+ 和 npm；通过 npm 安装时无需安装 Go 或编译源码。
 
-选择你使用的 Agent，一次安装 CLI 和 Skill：
+在自己的电脑上一次安装 CLI 和配套 Skill。将 `AGENT` 换成你使用的 Agent 类型（`codex`、`workbuddy` 或 `claude`）：
 
 ```bash
-# Codex
-npx @validflow/ccneed-cli@latest install --agent codex
-
-# WorkBuddy
-npx @validflow/ccneed-cli@latest install --agent workbuddy
+npx @validflow/ccneed-cli@latest install --agent AGENT
 ```
 
 安装完成后，直接使用：
@@ -35,15 +31,16 @@ npx @validflow/ccneed-cli@latest install --agent workbuddy
 ccneed --help
 ```
 
-安装器会把 CLI 装为全局 `ccneed` 命令，并把同版本 Skill 链接到所选 Agent 的用户目录；不会修改当前项目。两个 Agent 都用，可指定 `--agent codex,workbuddy`；Claude Code 使用 `--agent claude`。安装后重新打开 Agent，详见 [安装指南](INSTALL.md)。
+安装器会把 CLI 装为全局 `ccneed` 命令，并把同版本 Skill 接入你选择的 Agent；不会修改当前项目。使用多个 Agent 时，可用逗号分隔类型。安装后重新打开 Agent，详见 [安装指南](INSTALL.md)。
 
 ### 让 Agent 帮你安装
 
-也可以直接把这句话发给 Codex 或 WorkBuddy：
+也可以把这句话发给你正在使用的 Agent：
 
 ```text
 请阅读 https://github.com/validflow/ccneed-cli 的 INSTALL.md，
-确认官方正式版已发布后，帮我安装 CCNeed CLI 和当前 Agent 的 Skill。
+确认官方 npm 包已发布、当前 Agent 在支持列表中后，
+帮我在这台电脑上安装 CCNeed CLI 和对应的 Skill；不支持时先告诉我。
 登录时把官网授权链接发给我，由我完成授权。
 ```
 
@@ -69,7 +66,7 @@ ccneed account credits
 
 ## 使用
 
-💬 安装 Skill 并登录后，在你的 Agent 里直接说：
+💬 安装并登录后，在你自己的 Agent 里直接说：
 
 ```text
 使用 CCNeed，先让我选择知识库和文件，
@@ -118,7 +115,7 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 
 ## 更新
 
-🔄 正式发布后，重新执行上面的安装命令即可更新。CLI 和已接入的 Skill 一起升级，不需要分别下载；更新后重新打开 Agent。更新提醒不会替你自动升级。
+🔄 以后重新执行安装命令即可更新。CLI 和已接入的 Skill 一起升级，不需要分别下载；更新后重新打开 Agent。更新提醒不会替你自动升级。
 
 ## 反馈与贡献
 
@@ -126,4 +123,4 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 
 [安装与排障](INSTALL.md) · [开发与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)
 
-仓库尚未公开，也尚未授予开源许可证；公开和 npm 首发是后续独立步骤。开发者联调与源码构建见 [贡献指南](CONTRIBUTING.md)。
+源码构建与开发联调见 [贡献指南](CONTRIBUTING.md)；npm 首发和仓库公开将单独进行。
