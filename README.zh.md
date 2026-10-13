@@ -63,81 +63,40 @@ ccneed --help
 ccneed auth login
 # 打开返回的链接，核对确认码，在网页上同意授权。
 ccneed auth login --complete --timeout 60s
-ccneed auth status --verify
-ccneed account credits
 ```
 
 不额外指定参数时，所有命令默认连接正式线上服务 `https://ccneed.ai`。普通用户不需要设置 `--api-url`；只有获授权的开发者才能用它连接 staging，并使用 staging 测试账号联调。测试和正式环境的凭证必须隔离。
 
-## 使用 CCNeed
+## 能做什么
 
-你可以直接对自己的 Agent 说：
+- 📚 创建和查看知识库、上传文件，并将这些资料绑定到会话。
+- 💬 创建或继续会话，把研究任务交给 CCNeed 云端 Agent。
+- ⏳ 查看任务进度，遇到需要确认的问题时由你来选择。
+- 📄 查看 findings 和报告，下载 Markdown 或导出 PDF。
+- 💳 查询积分和订阅。
+
+例如，直接告诉自己的 Agent：
 
 ```text
 使用我在 CCNeed 的知识库，研究 iPhone 18 的相关讨论，并把 PDF 报告交给我。
 需要我确认的地方，请先问我。
 ```
 
-也可以在终端使用。每次开启新研究会话时，绑定一个知识库、一个已上传的文件，或两者都绑定。下面的 ID 请替换成命令返回的真实值。
-
-### 使用知识库开始
-
-需要新知识库时，打开第一条命令返回的官网链接，在网页上完成创建；已有知识库则直接查看列表：
+也可以试试两个 CLI 示例。要创建知识库，运行命令后打开返回的官网链接：
 
 ```bash
 ccneed kb create
-ccneed kb list
 ```
 
-选好知识库后，创建会话并提交研究任务：
+要基于知识库开启会话，把 `KB_ID` 换成列表中的 ID，`THREAD_UUID` 换成创建会话时返回的 ID：
 
 ```bash
+ccneed kb list
 ccneed threads create --title "iPhone 18 研究" --kb-id KB_ID
 ccneed run "研究 iPhone 18 并生成报告" --thread-id THREAD_UUID
 ```
 
-### 或使用自己的文件
-
-先上传文件，再用返回的文件 ID 创建会话：
-
-```bash
-ccneed files upload ./research-brief.pdf
-ccneed threads create --title "资料分析" --file-id FILE_UUID
-ccneed run "分析这份资料" --thread-id THREAD_UUID
-```
-
-同一个 `threads create` 命令也可以同时指定 `--kb-id` 和 `--file-id`。只上传文件不会自动绑定到会话；创建会话也不会启动研究，提交任务才会开始执行。任务可能消耗官网积分。
-
-`run` 返回后，研究仍在云端执行。可以继续观察同一轮、回答确认问题并取回结果：
-
-```bash
-ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s
-ccneed artifacts list --thread-id THREAD_UUID
-ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.pdf
-```
-
-需要可编辑的 Markdown 原文时，改为下载：
-
-```bash
-ccneed artifacts download --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.md
-```
-
-`watch` 超时不会取消云端任务，稍后可以继续查看。更多参数见命令帮助，Agent 调用规则见 [Skill](skills/ccneed/SKILL.md)。
-
-### 功能速览
-
-| 想做什么 | 命令 |
-| --- | --- |
-| 💳 查看积分、订阅 | `ccneed account credits` / `ccneed account overview` |
-| 💬 查看会话 | `ccneed threads list` |
-| 📚 查看知识库 | `ccneed kb list` |
-| ➕ 在网页创建知识库 | `ccneed kb create` |
-| 📎 查看、上传自己的文件 | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
-| 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
-| 🕘 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
-| 🚪 退出登录 | `ccneed auth logout` |
-
-知识库和文件绑定只追加、不解绑。具体参数可用 `ccneed <命令> --help` 查看。
+提交后，任务会继续在云端执行。你也可以改用已上传的文件开启会话。上传与绑定文件、跟进任务、处理确认和取回报告的具体命令，都由 [Agent Skill](skills/ccneed/SKILL.md) 说明。
 
 ## 更新与反馈
 

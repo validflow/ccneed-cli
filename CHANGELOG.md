@@ -4,8 +4,8 @@ English · [中文](CHANGELOG.zh.md)
 
 ## 0.1.4
 
-- Simplified the research-source examples in both READMEs: create or choose a knowledge base, or upload a file, then bind it to a conversation.
-- Put CLI examples in separate Bash blocks and removed internal data-format details from user-facing instructions.
+- Shortened both READMEs to a capability overview and two CLI examples; detailed task, file, and report workflows remain in the Agent Skill.
+- Removed internal data-format details from user-facing instructions.
 
 ## 0.1.3
 
