@@ -1,6 +1,6 @@
 {
   "name": "@validflow/ccneed-cli",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
   "description": "CCNeed cloud agent command-line integration",
   "license": "MIT",

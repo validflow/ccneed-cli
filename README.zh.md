@@ -78,17 +78,35 @@ ccneed account credits
 需要我确认的地方，请先问我。
 ```
 
-也可以在终端执行。每次开启新的研究会话，先选择已有知识库，**或**上传自己的文件，再把选中的资料绑定到新会话；两者也可以同时绑定。下面的 ID 要换成命令返回的真实值：
+也可以在终端使用。每次开启新研究会话时，绑定一个知识库、一个已上传的文件，或两者都绑定。下面的 ID 请替换成命令返回的真实值。
+
+### 使用知识库开始
+
+需要新知识库时，打开第一条命令返回的官网链接，在网页上完成创建；已有知识库则直接查看列表：
 
 ```bash
+ccneed kb create
 ccneed kb list
-ccneed threads create --title "iPhone 18 研究" --kb-id 7
-ccneed run "分析已绑定知识库中的 iPhone 18 讨论并生成报告" --thread-id THREAD_UUID
 ```
 
-如果需要新知识库，运行 `ccneed kb create`，在返回的官网页面配置并确认采集，再通过 `ccneed kb list` / `ccneed kb get --kb-id 7` 找到可用的 ID。采集、清洗和供分析使用的数据准备由 CCNeed 云端完成；用户不需要管理内部 CSV 文件。
+选好知识库后，创建会话并提交研究任务：
 
-如果改用自己的文件开始，先运行 `ccneed files upload ./research-brief.pdf`，再运行 `ccneed threads create --title "资料分析" --file-id FILE_UUID`。上传本身不会自动绑定。创建会话不会启动研究，`run` 才会提交任务；任务可能消耗官网积分。
+```bash
+ccneed threads create --title "iPhone 18 研究" --kb-id KB_ID
+ccneed run "研究 iPhone 18 并生成报告" --thread-id THREAD_UUID
+```
+
+### 或使用自己的文件
+
+先上传文件，再用返回的文件 ID 创建会话：
+
+```bash
+ccneed files upload ./research-brief.pdf
+ccneed threads create --title "资料分析" --file-id FILE_UUID
+ccneed run "分析这份资料" --thread-id THREAD_UUID
+```
+
+同一个 `threads create` 命令也可以同时指定 `--kb-id` 和 `--file-id`。只上传文件不会自动绑定到会话；创建会话也不会启动研究，提交任务才会开始执行。任务可能消耗官网积分。
 
 `run` 返回后，研究仍在云端执行。可以继续观察同一轮、回答确认问题并取回结果：
 
@@ -98,7 +116,13 @@ ccneed artifacts list --thread-id THREAD_UUID
 ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.pdf
 ```
 
-需要可编辑的 Markdown 原文时，改用 `ccneed artifacts download`。`watch` 超时不会取消云端任务，稍后可以继续查看。完整参数用 `ccneed <命令> --help` 查询，Agent 调用规则见 [Skill](skills/ccneed/SKILL.md)。
+需要可编辑的 Markdown 原文时，改为下载：
+
+```bash
+ccneed artifacts download --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.md
+```
+
+`watch` 超时不会取消云端任务，稍后可以继续查看。更多参数见命令帮助，Agent 调用规则见 [Skill](skills/ccneed/SKILL.md)。
 
 ### 功能速览
 

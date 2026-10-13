@@ -78,17 +78,35 @@ Use my CCNeed knowledge base to research iPhone 18 discussions and bring me a PD
 Ask me before making any choice that needs my confirmation.
 ```
 
-Or use the CLI directly. For each new research conversation, choose an existing knowledge base **or** upload your own file, then bind the chosen resource when creating the conversation. You can bind both. Replace example IDs with values returned by your commands:
+Or use the CLI directly. Start each new research conversation with a knowledge base, an uploaded file, or both. Replace the example IDs below with values returned by your commands.
+
+### Start with a knowledge base
+
+If you need a new knowledge base, open the website URL returned by the first command and complete its creation there. Otherwise, choose one you already have:
 
 ```bash
+ccneed kb create
 ccneed kb list
-ccneed threads create --title "iPhone 18 research" --kb-id 7
-ccneed run "Analyze iPhone 18 discussions in the bound knowledge base and prepare a report" --thread-id THREAD_UUID
 ```
 
-If you need a new knowledge base, run `ccneed kb create`, complete the crawl setup on the returned website, then use `ccneed kb list` / `ccneed kb get --kb-id 7` to find an available ID. CCNeed handles collection, cleaning, and analysis-ready data in the cloud; you do not need to manage its internal CSV files.
+Create a conversation with the selected knowledge base, then submit your task:
 
-If you want to start from your own file instead, run `ccneed files upload ./research-brief.pdf`, then `ccneed threads create --title "Brief analysis" --file-id FILE_UUID`. Uploading alone does not bind the file. Creating a conversation does not start a task; `run` does. A task may use your CCNeed credits.
+```bash
+ccneed threads create --title "iPhone 18 research" --kb-id KB_ID
+ccneed run "Research iPhone 18 and prepare a report" --thread-id THREAD_UUID
+```
+
+### Or start with your own file
+
+Upload the file first, then bind its returned ID when creating the conversation:
+
+```bash
+ccneed files upload ./research-brief.pdf
+ccneed threads create --title "Brief analysis" --file-id FILE_UUID
+ccneed run "Analyze this brief" --thread-id THREAD_UUID
+```
+
+You can pass both `--kb-id` and `--file-id` to the same `threads create` command. Uploading alone does not bind a file. Creating a conversation does not start a task; `run` does. A task may use your CCNeed credits.
 
 `run` returns immediately while the cloud task continues. You can watch the same turn, respond to a confirmation request, and retrieve its results:
 
@@ -98,7 +116,13 @@ ccneed artifacts list --thread-id THREAD_UUID
 ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.pdf
 ```
 
-For an editable Markdown report, use `ccneed artifacts download` instead. `watch` timing out does not cancel the cloud task; you can check again later. For all options, run `ccneed <command> --help` or read the [Skill](skills/ccneed/SKILL.md).
+For an editable Markdown report, download it instead:
+
+```bash
+ccneed artifacts download --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.md
+```
+
+A `watch` timeout does not cancel the cloud task; you can check again later. See command help or the [Skill](skills/ccneed/SKILL.md) for more options.
 
 ### At a glance
 

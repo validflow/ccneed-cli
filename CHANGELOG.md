@@ -2,9 +2,14 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.4
+
+- Simplified the research-source examples in both READMEs: create or choose a knowledge base, or upload a file, then bind it to a conversation.
+- Put CLI examples in separate Bash blocks and removed internal data-format details from user-facing instructions.
+
 ## 0.1.3
 
-- Clarified that each new research conversation binds a knowledge base, an uploaded user file, or both; cloud-generated analysis CSVs are not user uploads.
+- Clarified that each new research conversation binds a knowledge base, an uploaded user file, or both.
 - Made public repository guides English by default, with matching `.zh.md` translations; the bundled Agent Skill remains in Chinese.
 
 ## 0.1.2
