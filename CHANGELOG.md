@@ -1,24 +1,31 @@
 # Changelog
 
+English · [中文](CHANGELOG.zh.md)
+
+## 0.1.3
+
+- Clarified that each new research conversation binds a knowledge base, an uploaded user file, or both; cloud-generated analysis CSVs are not user uploads.
+- Made public repository guides English by default, with matching `.zh.md` translations; the bundled Agent Skill remains in Chinese.
+
 ## 0.1.2
 
-- 更新中英文 README、安装、贡献、发布与安全文档，补充官方社媒入口。
-- 明确 CLI 默认连接生产环境；staging 仅供获授权的开发者联调。
-- 更新随包分发的 Skill 指引，与当前正式发行状态保持一致。
-- 正式版通过 GitHub 与 npm 核验后，触发 Multica 发送版本通知；RC 不通知生产群。
+- Updated English and Chinese README, installation, contribution, release, and security guidance with official social links.
+- Clarified that the CLI targets production by default; staging is only for authorized developer integration tests.
+- Updated the bundled Skill guidance to match the released product.
+- Added a Multica notification after a stable GitHub and npm release is verified; release candidates do not notify the production group.
 
 ## 0.1.1
 
-- 修复首次发布草稿 Release 时的查询失败，支持从中断处安全重试。
-- 保持 CLI 命令和服务接口不变。
+- Fixed the first-release draft lookup failure and allowed safe recovery after interrupted publishing.
+- Kept CLI commands and service contracts unchanged.
 
 ## 0.1.0
 
-首个正式版，提供 CCNeed CLI 与配套 Skill 的统一安装入口。
+First stable release of CCNeed CLI and its companion Skill through one installation entry point.
 
-- 使用官网账号进行浏览器授权登录，查询积分与账户信息。
-- 管理知识库、文件、会话和云端任务；处理确认问题，查看进度与历史。
-- 下载 Markdown 报告，或通过 CCNeed 服务导出 PDF。
-- 提供 Linux、macOS、Windows 的 amd64/arm64 可执行文件。
+- Added website authorization with the existing CCNeed account, credit and account queries.
+- Added knowledge-base, file, conversation, and cloud-task management, user confirmations, progress, and history.
+- Added Markdown report download and PDF export through the CCNeed service.
+- Provided Linux, macOS, and Windows binaries for amd64/arm64.
 
-CLI 已可独立发行；连接正式服务的部分能力取决于 Club 接口部署进度。此版本通过 npm `latest` 安装。
+The CLI can be released independently; some production capabilities depend on Club service deployment. The stable version is installed through npm `latest`.

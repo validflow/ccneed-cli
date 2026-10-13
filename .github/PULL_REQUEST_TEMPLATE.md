@@ -1,17 +1,17 @@
-## 目的与范围
+## Purpose and scope
 
-说明解决什么问题；关联对应 issue，不随意引用无关 identifier。
+Explain the problem and the change. Link the relevant issue; do not add unrelated identifiers. [中文模板](PULL_REQUEST_TEMPLATE.zh.md)
 
-## 验证
+## Verification
 
-- [ ] `make check` 或 `bash scripts/check.sh` 通过。
-- [ ] 新增行为有实际失败再通过的测试证据。
-- [ ] 注释、模块边界、错误与输出契约符合 CODE_STYLE.md。
-- [ ] 完成正确性、架构、安全和需求一致性 review。
-- [ ] 必需的 `quality` 检查通过；若本地另做了 CX Review，附上报告并处理确认的问题（自动 CX Review 当前暂停）。
+- [ ] `make check` or `bash scripts/check.sh` passed.
+- [ ] New behavior has evidence of a failing test that passes after the change.
+- [ ] Comments, module boundaries, errors, and output contracts follow `CODE_STYLE.md`.
+- [ ] Correctness, architecture, security, and requirement fit were reviewed.
+- [ ] Required `quality` passed. If a local CX Review was also run, attach its report and resolve confirmed findings; automated CX Review is currently paused.
 
-若涉及真实服务：填写 Club 部署 SHA、CLI SHA、staging 地址与闭环验证结果；不填写凭证。
+For real-service changes, record the deployed Club SHA, CLI SHA, staging origin, and end-to-end result without credentials.
 
-## 风险与上线验证
+## Risk and release verification
 
-说明用户影响、回退方式、上线后如何确认正常。无运行时影响时明确说明原因；不能把本地替身测试写成生产验证。
+Explain user impact, rollback, and how the result will be verified after release. If there is no runtime impact, say why. Do not present local test-double results as production verification.
