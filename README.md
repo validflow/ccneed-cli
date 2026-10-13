@@ -1,8 +1,13 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="CCNeed mascot holding a magnifying glass" width="320">
+  <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="CCNeed mascot holding a magnifying glass" width="280">
   <h1>CCNeed CLI</h1>
   <p>Run research with CCNeed from your own AI agent or terminal.</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
+  <p>
+    <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed__ai-111111?logo=x&amp;logoColor=white" alt="Follow CCNeed on X"></a>
+    <a href="https://medium.com/@ccneedai"><img src="https://img.shields.io/badge/Medium-CCNeed-111111?logo=medium&amp;logoColor=white" alt="Read CCNeed on Medium"></a>
+    <a href="https://dev.to/cc_need_be7954bac5ca859e1"><img src="https://img.shields.io/badge/DEV-CCNeed-111111?logo=devdotto&amp;logoColor=white" alt="Read CCNeed on DEV"></a>
+  </p>
   <p>
     <a href="https://ccneed.ai">Website</a> ·
     <a href="INSTALL.md">Installation guide</a> ·
@@ -62,7 +67,7 @@ ccneed auth status --verify
 ccneed account credits
 ```
 
-The default service is `https://ccneed.ai`. Developers can explicitly target staging with `--api-url`; staging and production credentials must stay separate.
+Without extra flags, every command connects to the production service at `https://ccneed.ai`. Regular users should not set `--api-url`. Only authorized developers may use it to connect to staging with a staging test account; staging and production credentials must stay separate.
 
 ## Work with CCNeed
 
@@ -114,5 +119,7 @@ Knowledge-base and file bindings can be added, but not removed. Use `ccneed <com
 Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update both the CLI and linked Skill. Reload your agent afterward; update notifications never install software without your action.
 
 Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues) with your OS, CLI version, and a redacted error message. Never post credentials or private files.
+
+For product news and guides, follow [X](https://x.com/CCNeed_ai), [Medium](https://medium.com/@ccneedai), or [DEV](https://dev.to/cc_need_be7954bac5ca859e1).
 
 [Installation](INSTALL.md) · [Contributing](CONTRIBUTING.md) · [Code style](CODE_STYLE.md) · [Security](SECURITY.md) · [Releasing](RELEASING.md)

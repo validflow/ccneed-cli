@@ -2,14 +2,14 @@
 
 默认全局安装 CLI，Skill 接入所选 Agent 的**当前用户目录**。不同项目复用同一套版本，不改用户项目。安装与升级共用一个入口；登录仍由用户在官网明确授权。
 
-> 首个正式版为 `0.1.0`。先确认 npm 已发布 `@validflow/ccneed-cli@latest`，再执行安装。配套云端接口尚未完成正式部署验收，部分命令可能暂不可用。
+> 官方 npm 包已经发布；普通用户使用 `@latest`，无需记住具体版本号。部分云端命令仍取决于对应服务接口在正式环境中的上线进度。
 
 ## 正式版：一次安装，也用于升级
 
 确认官方来源、发行状态及用户同意后，选择宿主：
 
 ```bash
-# 正式版发布后执行；同一命令用于后续升级
+# 同一命令用于首次安装和后续升级
 npx @validflow/ccneed-cli@latest install --agent codex
 
 # 使用 WorkBuddy；或指定 codex,workbuddy 一起接入
@@ -18,7 +18,7 @@ npx @validflow/ccneed-cli@latest install --agent workbuddy
 
 需要 Node 22.14.0+ 和 npm。CLI 安装在 npm 全局命令目录；该目录必须在宿主实际执行环境的 PATH 中。本机安装不会自动提供给远程沙箱，不默认申请管理员权限。安装器不读取账号、创建任务或修改宿主安全配置。
 
-正式版发布成功后使用 `@latest`；也可显式指定 `@0.1.0`。安装器会全局安装同一精确版本的 CLI 与 Skill。
+`@latest` 指向 npm 当前稳定版；若需复现特定版本，可将它替换为明确的版本号。安装器会全局安装同一精确版本的 CLI 与 Skill。
 
 宿主入口按明确的 `--agent` 选择建立：
 
@@ -52,7 +52,7 @@ ccneed --help
 
 核对 CLI 版本、全局命令 PATH 与所选宿主 Skill 加载状态。安装器的 `restart_required` 表示需重新加载；`auth: not_started` 表示没有登录。不能把目录存在当成加载成功。
 
-配套服务已部署、用户要求登录后，默认连接 `https://ccneed.ai`：
+用户要求登录后，CLI 默认连接正式线上服务 `https://ccneed.ai`；普通用户不需要设置 `--api-url`：
 
 ```bash
 ccneed auth login
@@ -61,9 +61,9 @@ ccneed auth login --complete --timeout 60s
 ccneed auth status --verify
 ```
 
-不代点同意、不输出秘密、不读取浏览器 Cookie。开发联调在每条命令上显式使用同一个 `--api-url`；远程 HTTP 还需 `--allow-insecure-http` 和 staging 测试账号。staging 凭证不能回退正式环境，详见 [贡献指南](CONTRIBUTING.md)。
+不代点同意、不输出秘密、不读取浏览器 Cookie。`--api-url` 仅供**获授权的开发者**连接 staging 联调：每条命令都显式使用同一个 staging 地址和测试账号；远程 HTTP 还需 `--allow-insecure-http`。staging 凭证不能回退正式环境，详见 [贡献指南](CONTRIBUTING.md)。CLI 参数本身不授予 staging 权限，服务端仍须验证账号是否获准访问。
 
-## 当前开发安装
+## 从源码构建（开发者）
 
 用户同意使用源码后，在新的干净目录：
 
@@ -75,7 +75,7 @@ go install ./cmd/ccneed
 
 需要 Git、Go 1.25+。将 `go env GOBIN` 返回目录加入 PATH；为空时使用 GOPATH 下的 bin。记录 checkout SHA，使用该 checkout 的完整 `skills/ccneed`。这条开发路径不是 npm 联动升级路径；源码 CLI 和独立技能要人工保持同一 revision，不能声称可自动同步。
 
-仓库内可离线查看安装器帮助：`node scripts/npm/run.mjs install --help`。源码采用 MIT 许可；公开 npm 包与真实宿主加载仍需发行后验收，不要把源码构建当作正式发行产物。
+仓库内可离线查看安装器帮助：`node scripts/npm/run.mjs install --help`。源码采用 MIT 许可；不要把源码构建当作正式 npm 发行产物，也不要把目录链接存在误认为宿主已成功加载 Skill。
 
 ## 宿主官方说明
 

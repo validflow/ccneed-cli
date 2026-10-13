@@ -1,8 +1,13 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="拿着放大镜的 CCNeed 小河马" width="320">
+  <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="拿着放大镜的 CCNeed 小河马" width="280">
   <h1>CCNeed CLI</h1>
   <p>在你熟悉的 Agent 或终端里使用 CCNeed。</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
+  <p>
+    <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed__ai-111111?logo=x&amp;logoColor=white" alt="关注 CCNeed 的 X 账号"></a>
+    <a href="https://medium.com/@ccneedai"><img src="https://img.shields.io/badge/Medium-CCNeed-111111?logo=medium&amp;logoColor=white" alt="阅读 CCNeed 的 Medium 文章"></a>
+    <a href="https://dev.to/cc_need_be7954bac5ca859e1"><img src="https://img.shields.io/badge/DEV-CCNeed-111111?logo=devdotto&amp;logoColor=white" alt="阅读 CCNeed 的 DEV 文章"></a>
+  </p>
   <p>
     <a href="https://ccneed.ai">官网</a> ·
     <a href="INSTALL.md">安装指南</a> ·
@@ -62,7 +67,7 @@ ccneed auth status --verify
 ccneed account credits
 ```
 
-默认连接 `https://ccneed.ai`。开发者可用 `--api-url` 显式连接 staging；测试和正式环境的凭证必须隔离。
+不额外指定参数时，所有命令默认连接正式线上服务 `https://ccneed.ai`。普通用户不需要设置 `--api-url`；只有获授权的开发者才能用它连接 staging，并使用 staging 测试账号联调。测试和正式环境的凭证必须隔离。
 
 ## 使用 CCNeed
 
@@ -114,5 +119,7 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 重新运行 `npx @validflow/ccneed-cli@latest install --agent ...`，就能一起更新 CLI 和已接入的 Skill。更新后重新打开 Agent；更新提醒不会自动替你安装。
 
 遇到问题请 [提交 Issue](https://github.com/validflow/ccneed-cli/issues)，附上操作系统、CLI 版本和脱敏后的错误。不要上传凭证或私人文件。
+
+产品动态和使用文章可关注 [X](https://x.com/CCNeed_ai)、[Medium](https://medium.com/@ccneedai) 或 [DEV](https://dev.to/cc_need_be7954bac5ca859e1)。
 
 [安装与排障](INSTALL.md) · [参与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)

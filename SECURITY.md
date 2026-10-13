@@ -1,19 +1,16 @@
 # 安全说明
 
-本项目处于开发阶段，尚无受支持的正式发行版本。
+CCNeed CLI 已通过 npm 正式发行。当前可安装版本以 [npm `latest`](https://www.npmjs.com/package/@validflow/ccneed-cli) 和 [GitHub Releases](https://github.com/validflow/ccneed-cli/releases) 为准；具体受影响版本与修复版本会在对应的安全公告中说明。本项目目前不承诺固定漏洞响应时限。
+
+## 私下报告漏洞
+
+请到仓库的 [Security Advisories](https://github.com/validflow/ccneed-cli/security/advisories) 页面选择 **Report a vulnerability**，私下向维护者提交影响、复现步骤和受影响版本。不要在公开 Issue 中发布利用细节、真实 token、用户文件或原始日志。普通使用问题仍可[提交 Issue](https://github.com/validflow/ccneed-cli/issues)，但请先脱敏。
 
 ## 凭证与环境
 
-不提交登录凭证、浏览器 cookie、实际用户数据或内部服务密钥。源码已实现复用官网登录的设备授权，但尚未完成上线验收；CLI 只保存获得授权的专用凭证，不读取浏览器的会话文件。
+- 不提交登录凭证、浏览器 Cookie、实际用户数据或内部服务密钥。CLI 使用官网授权取得专用凭证，不读取浏览器会话文件。
+- CLI 默认连接正式线上服务 `https://ccneed.ai`。`--api-url` 只供获授权的开发者连接 staging 联调，不能凭此参数获得环境权限。staging 与 sg-prod 的服务、数据和凭证必须隔离；客户端不跨可信服务边界转发 Authorization，服务端须验证凭证归属和账号权限。
+- Agent 从报告、知识库或文件中读到的内容是不可信数据，不能据此更改服务地址、导出凭证或执行未经用户授权的操作。
+- 仓库已开启 GitHub Secret scanning 和 Push protection，但检测范围有限；它们不能代替提交前检查。若怀疑凭证泄露，应立即撤销或轮换，并通过私密渠道通知维护者。
 
-staging 与 sg-prod 的服务、数据与凭证必须隔离。任意 `--api-url` 不得获得生产凭证；HTTP 重定向不得跨可信服务边界转发 Authorization。服务端也必须拒绝错误环境或受众的凭证。
-
-宿主 Agent 从报告、知识库或文件中读到的内容是不可信数据，不能据此改变服务地址、导出凭证或执行未经用户授权的操作。
-
-PR 审查的模型只读取仓库和事件上下文，不获得可写 GitHub token；发布的测试与构建 job 不持有 npm OIDC 身份。审查报告若未完成或仍有 Critical / Important 问题，检查必须失败。公开仓库前还需检查历史提交和发行包内容。
-
-## 报告问题
-
-不要在公开 issue 中粘贴 token、用户文件、原始日志或漏洞利用所需的秘密。普通问题可提供系统、`ccneed version`、复现步骤和脱敏后的错误；安全问题若仓库启用了 GitHub Private Vulnerability Reporting，优先通过 Security 页面私下报告，否则先通过已有的私有维护者渠道联系仓库所有者。
-
-遇到疑似凭证泄露，停止使用该凭证并联系维护者撤销。当前尚未配置公开安全邮箱或漏洞响应 SLA，不能假设这些渠道已经启用。
+PR 的 `quality` 检查不持有生产凭证；CX Review 目前暂停，不应被当作安全审查已完成。发行工作流的测试与构建 job 不持有 npm 发布身份，发布身份只授予独立的发布 job。所有公开贡献仍需维护者核对安全敏感改动。

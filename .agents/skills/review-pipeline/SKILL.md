@@ -5,7 +5,7 @@ description: Review a CCNeed CLI pull request with four Codex review passes, sec
 
 # CCNeed CLI Code Review Pipeline
 
-Invoke this Skill with `$review-pipeline` from the CX Review workflow or during a local PR review. The workflow follows the same Codex CLI review flow as `usight_agent`; use CCNeed CLI's own conventions when judging the diff.
+Invoke this Skill with `$review-pipeline` during an authorized local PR review. The automatic CX Review job is currently disabled for this public repository; if it is re-enabled later, the same Skill can run in its workflow. Use CCNeed CLI's own conventions when judging the diff.
 
 ## Collect context
 
