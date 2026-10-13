@@ -10,7 +10,7 @@
   </p>
   <p>
     <a href="https://ccneed.ai">官网</a> ·
-    <a href="INSTALL.md">安装指南</a> ·
+    <a href="INSTALL.zh.md">安装指南</a> ·
     <a href="skills/ccneed/SKILL.md">Agent Skill</a> ·
     <a href="https://github.com/validflow/ccneed-cli/issues">反馈</a>
   </p>
@@ -45,7 +45,7 @@ go install ./cmd/ccneed
 ccneed --help
 ```
 
-这条路径只构建开发版 CLI。源码 Skill 位于 `skills/ccneed`，不会随 `go install` 自动安装或更新。要让 CLI 与 Skill 同步升级，使用上面的 npm 安装方式。PATH 与源码构建说明见[安装指南](INSTALL.md)。
+这条路径只构建开发版 CLI。源码 Skill 位于 `skills/ccneed`，不会随 `go install` 自动安装或更新。要让 CLI 与 Skill 同步升级，使用上面的 npm 安装方式。PATH 与源码构建说明见[安装指南](INSTALL.zh.md)。
 
 ### 让 Agent 帮你安装
 
@@ -74,20 +74,21 @@ ccneed account credits
 你可以直接对自己的 Agent 说：
 
 ```text
-使用 CCNeed 分析我的 posts.csv，筛选高价值博主，并把 PDF 报告交给我。
+使用我在 CCNeed 的知识库，研究 iPhone 18 的相关讨论，并把 PDF 报告交给我。
 需要我确认的地方，请先问我。
 ```
 
-也可以在终端执行。下面的 ID 要换成命令返回的真实值：
+也可以在终端执行。每次开启新的研究会话，先选择已有知识库，**或**上传自己的文件，再把选中的资料绑定到新会话；两者也可以同时绑定。下面的 ID 要换成命令返回的真实值：
 
 ```bash
 ccneed kb list
-ccneed files upload ./posts.csv
-ccneed threads create --title "博主分析" --kb-id 7 --file-id FILE_UUID
-ccneed run "分析已绑定资料并生成报告" --thread-id THREAD_UUID
+ccneed threads create --title "iPhone 18 研究" --kb-id 7
+ccneed run "分析已绑定知识库中的 iPhone 18 讨论并生成报告" --thread-id THREAD_UUID
 ```
 
-上传文件后还需要绑定到会话；创建会话不会启动研究，`run` 才会提交任务。任务可能消耗官网积分。
+如果需要新知识库，运行 `ccneed kb create`，在返回的官网页面配置并确认采集，再通过 `ccneed kb list` / `ccneed kb get --kb-id 7` 找到可用的 ID。采集、清洗和供分析使用的数据准备由 CCNeed 云端完成；用户不需要管理内部 CSV 文件。
+
+如果改用自己的文件开始，先运行 `ccneed files upload ./research-brief.pdf`，再运行 `ccneed threads create --title "资料分析" --file-id FILE_UUID`。上传本身不会自动绑定。创建会话不会启动研究，`run` 才会提交任务；任务可能消耗官网积分。
 
 `run` 返回后，研究仍在云端执行。可以继续观察同一轮、回答确认问题并取回结果：
 
@@ -107,7 +108,7 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 | 💬 查看会话 | `ccneed threads list` |
 | 📚 查看知识库 | `ccneed kb list` |
 | ➕ 在网页创建知识库 | `ccneed kb create` |
-| 📎 查看、上传文件 | `ccneed files list` / `ccneed files upload ./posts.csv` |
+| 📎 查看、上传自己的文件 | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
 | 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
 | 🕘 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
 | 🚪 退出登录 | `ccneed auth logout` |
@@ -122,4 +123,4 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 
 产品动态和使用文章可关注 [X 上的 CCNeed](https://x.com/CCNeed_ai)、[Medium 上的 Ccneedai](https://medium.com/@ccneedai) 或 [DEV 上的 CC Need](https://dev.to/cc_need_be7954bac5ca859e1)。
 
-[安装与排障](INSTALL.md) · [参与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)
+[安装与排障](INSTALL.zh.md) · [参与贡献](CONTRIBUTING.zh.md) · [代码规范](CODE_STYLE.zh.md) · [安全说明](SECURITY.zh.md) · [版本发布](RELEASING.zh.md) · [更新记录](CHANGELOG.zh.md)

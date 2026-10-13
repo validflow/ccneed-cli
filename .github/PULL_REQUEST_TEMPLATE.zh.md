@@ -1,0 +1,19 @@
+## 目的与范围
+
+中文模板；默认英文模板见 [PULL_REQUEST_TEMPLATE.md](PULL_REQUEST_TEMPLATE.md)。
+
+说明解决什么问题；关联对应 issue，不随意引用无关 identifier。
+
+## 验证
+
+- [ ] `make check` 或 `bash scripts/check.sh` 通过。
+- [ ] 新增行为有实际失败再通过的测试证据。
+- [ ] 注释、模块边界、错误与输出契约符合 [代码规范](../CODE_STYLE.zh.md)。
+- [ ] 完成正确性、架构、安全和需求一致性 review。
+- [ ] 必需的 `quality` 检查通过；若本地另做了 CX Review，附上报告并处理确认的问题（自动 CX Review 当前暂停）。
+
+若涉及真实服务：填写 Club 部署 SHA、CLI SHA、staging 地址与闭环验证结果；不填写凭证。
+
+## 风险与上线验证
+
+说明用户影响、回退方式、上线后如何确认正常。无运行时影响时明确说明原因；不能把本地替身测试写成生产验证。

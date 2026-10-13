@@ -18,12 +18,12 @@ ccneed kb create
 
 ```bash
 ccneed files list --limit 200
-ccneed files upload ./posts.csv
+ccneed files upload ./research-brief.pdf
 ```
 
 列表 `--limit` 范围 1–500，关注 `has_more_possible`，不宣称完整历史。上传只接受非空普通支持文件，最大 100 MiB，不跟随符号链接；支持 csv、txt、md、json、ipynb、pdf、docx、xlsx 及 png/jpg/jpeg/webp/gif。
 
-成功返回 `library_file_id`、`display_name`、`size_bytes`、`status`，**尚未绑定会话或启动任务**。接收未知先查 `files list`/网站核对，不自动重传制造重复资料。
+这里上传的是用户自己的文件；知识库爬取后用于云端分析的内部 CSV 不需要用户提供。成功返回 `library_file_id`、`display_name`、`size_bytes`、`status`，**尚未绑定会话或启动任务**。接收未知先查 `files list`/网站核对，不自动重传制造重复资料。
 
 初始绑定在创建会话时选择已有资源：
 

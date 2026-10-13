@@ -16,7 +16,7 @@
   </p>
 </div>
 
-CCNeed runs long research tasks in the cloud. Its CLI lets you submit work, follow progress, answer questions, and bring reports back into the agent you already use. The CLI and its companion Skill are installed together.
+CCNeed runs long research tasks in the cloud. Its CLI lets you prepare research sources, submit work, follow progress, answer questions, and bring reports back into the agent you already use. The CLI and its companion Skill are installed together.
 
 > Some cloud commands depend on the corresponding CCNeed service APIs being available in production.
 
@@ -74,20 +74,21 @@ Without extra flags, every command connects to the production service at `https:
 In your agent, you can ask:
 
 ```text
-Use CCNeed to analyze my posts.csv, find high-value creators, and bring me a PDF report.
+Use my CCNeed knowledge base to research iPhone 18 discussions and bring me a PDF report.
 Ask me before making any choice that needs my confirmation.
 ```
 
-Or use the CLI directly. Replace example IDs with values returned by your commands:
+Or use the CLI directly. For each new research conversation, choose an existing knowledge base **or** upload your own file, then bind the chosen resource when creating the conversation. You can bind both. Replace example IDs with values returned by your commands:
 
 ```bash
 ccneed kb list
-ccneed files upload ./posts.csv
-ccneed threads create --title "Creator research" --kb-id 7 --file-id FILE_UUID
-ccneed run "Analyze the attached data and prepare a report" --thread-id THREAD_UUID
+ccneed threads create --title "iPhone 18 research" --kb-id 7
+ccneed run "Analyze iPhone 18 discussions in the bound knowledge base and prepare a report" --thread-id THREAD_UUID
 ```
 
-Uploading a file does not bind it to a conversation automatically. Creating a conversation does not start a task; `run` does. A task may use your CCNeed credits.
+If you need a new knowledge base, run `ccneed kb create`, complete the crawl setup on the returned website, then use `ccneed kb list` / `ccneed kb get --kb-id 7` to find an available ID. CCNeed handles collection, cleaning, and analysis-ready data in the cloud; you do not need to manage its internal CSV files.
+
+If you want to start from your own file instead, run `ccneed files upload ./research-brief.pdf`, then `ccneed threads create --title "Brief analysis" --file-id FILE_UUID`. Uploading alone does not bind the file. Creating a conversation does not start a task; `run` does. A task may use your CCNeed credits.
 
 `run` returns immediately while the cloud task continues. You can watch the same turn, respond to a confirmation request, and retrieve its results:
 
@@ -107,7 +108,7 @@ For an editable Markdown report, use `ccneed artifacts download` instead. `watch
 | 💬 Find conversations | `ccneed threads list` |
 | 📚 Explore knowledge bases | `ccneed kb list` |
 | ➕ Create a knowledge base in the browser | `ccneed kb create` |
-| 📎 List or upload files | `ccneed files list` / `ccneed files upload ./posts.csv` |
+| 📎 List or upload your own files | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
 | 🗂️ View or add conversation resources | `ccneed threads resources` / `ccneed threads append` |
 | 🕘 Review task history | `ccneed tasks list --thread-id THREAD_UUID` |
 | 🚪 Sign out | `ccneed auth logout` |
@@ -122,4 +123,4 @@ Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues)
 
 For product news and guides, follow [CCNeed on X](https://x.com/CCNeed_ai), [Ccneedai on Medium](https://medium.com/@ccneedai), or [CC Need on DEV](https://dev.to/cc_need_be7954bac5ca859e1).
 
-[Installation](INSTALL.md) · [Contributing](CONTRIBUTING.md) · [Code style](CODE_STYLE.md) · [Security](SECURITY.md) · [Releasing](RELEASING.md)
+[Installation](INSTALL.md) · [Contributing](CONTRIBUTING.md) · [Code style](CODE_STYLE.md) · [Security](SECURITY.md) · [Releasing](RELEASING.md) · [Changelog](CHANGELOG.md)
