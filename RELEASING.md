@@ -1,43 +1,37 @@
-# CLI 发行
+# 发布 CCNeed CLI
 
-维护者决定版本号；版本变更经 PR 合入 main 后，CI 自动执行后续步骤。普通功能合并不发版，不按 feat/fix、分支名或提交数量计算版本。
+CLI、npm 包和配套 Skill 使用同一个版本。维护者决定何时发行、发行什么版本；普通功能 PR 可以先合到 `main` 积累，**不要提前改 `package.json.version`**。不按 PR 标题、分支名、提交数量或日期自动计算版本。
 
-维护者在发布 PR 中确定版本并更新 `package.json`、锁文件和变更记录。审查通过、Squash 合入 main 后，Action 先在**无发布权限**的 job 中预检、测试、构建六个平台产物及同版本 npm/Skill 包；全部通过后，独立发布 job 才获得短时发布身份，下载这次构建的产物，打不可移动的 Git tag，发布 GitHub Release 和 npm 包，最后验证 npm 通道。中途失败不会伪装成发布成功。
+只有版本变更经 PR Squash 合入 `main`，才会产生自动发行计划。Action 先在无发布权限的 job 中预检、测试并构建六个平台产物与同版本 npm/Skill 包；全部通过后，独立发布 job 才打 Git tag、发布 GitHub Release 和 npm 包，并核对 npm 安装通道。Git tag 存在不代表 npm 已发布成功。
 
-Git tag 不等于 npm 已发布。用户通过 npm registry 安装，不直接读取 GitHub main。发行通过一个工作流连续执行；不依赖 GitHub token 创建的 tag 再触发第二个工作流。
+## 当前状态与发布前检查
 
-## 首次启用前
+首个正式版 `0.1.0` 已发布，`0.1.1` 已修复首次发行流程；npm 包、MIT 许可和公开仓库均已就位。不要再执行首包手工引导流程。后续发布使用现有 [Release 工作流](.github/workflows/release.yml)；仓库变量 `CCNEED_RELEASE_ENABLED` 必须保持 `true`。npm Trusted Publisher 应绑定 `validflow/ccneed-cli`、`release.yml` 和 `npm-release` 环境，并允许 `npm publish` 与 `npm dist-tag`；下一版首次全自动发布时仍需核对 OIDC 是否生效。工作流使用 Node 24 和固定版本的 npm，在 GitHub-hosted runner 上发布，不放长期 npm token。
 
-首个正式版使用 `0.1.0` 与 MIT 许可。解除 `private` 后由发布工作流构建并打 tag；是否可安装仍以 GitHub Release、npm 包和 `latest` 通道全部验证成功为准。
+发布前确认：
 
-私有包更新版本只记录源码，不生成发行计划。只有明确解除 `private` 禁发、通过包身份/许可/材料预检并开启发行开关后才进入发行；首次启用可以使用同一版本，但须校验既有 tag 绑定的提交，若源码已经变化则使用新版本。发行后的 RC 可通过 npm `next` 明确试装，安装器仍会全局安装同一精确版本的 CLI 与 Skill；私有源码里程碑不可试装。
-
-1. 完成真实 staging 联调。CLI 可以先于 Club 的 sg-prod 兼容接口发行，但必须说明服务侧尚未完成的验收；CLI 发行不部署 Club。
-2. GitHub 仓库保持 public，让公开 npm 包的安装器能够下载 GitHub Release 二进制；发行预检会在仓库仍为 private 时拒绝打 tag。确认 npm 包名、版本、MIT 许可、`CHANGELOG.md` 与 `skills/ccneed/SKILL.md`。
-3. 确认本次 PR 的 CX Review 和质量检查成功。若 GitHub 尚未把检查设为必需状态，合并前由维护者人工核对；仅存在 workflow 文件不代表检查已生效。
-4. 先解决**首包引导**：npm 的 trusted publisher 设置在已有包的设置页；`npm trust` 也要求包已存在。因此 `@validflow/ccneed-cli` 尚未建立时，不能只打开 Action 就期待 OIDC 完成首发。首次 npm 发布已经所有者授权；仍须核对精确版本与产物，不得临时把长期 npm token 塞进 CI。首包建好后，再在 npm 包设置中配置 trusted publisher：组织 `validflow`、仓库 `ccneed-cli`、工作流 `release.yml`、环境 `npm-release`，分别允许 `npm publish` 和 `npm dist-tag`。
-5. GitHub 的 `npm-release` 环境仅允许 main；若希望全自动，不设置每次发布都需人工批准的 environment reviewer。生产资源凭证不进入此环境。
-6. 首包正式版的 PR 检查通过、准备合并时，将仓库变量 `CCNEED_RELEASE_ENABLED` 设为 `true`。合并后 Action 构建精确产物、打 tag 并发布 GitHub Release；由于 npm 包尚不存在，首次 npm 发布可能因缺少 trusted publisher 而失败。此时不能宣称发行成功：维护者从该次 Action 下载原始 npm tarball，核对版本和 SHA-512 后，在已登录的公司设备上以 2FA 执行 `npm publish <tarball> --access public --tag latest --ignore-scripts`，再重跑同一次工作流验证精确包内容和通道。不要重新打包或重新编译。首包建立后配置 trusted publisher；下一次新版本由 Action 通过 OIDC 完成发布。新建 trusted publisher 配置须在 2 天内完成首次成功发布，不要提前配置后搁置。Club 生产兼容是完整可用能力的验收项，不阻止已明确披露限制的 CLI 发行。详见 [npm 官方 Trusted Publishing 文档](https://docs.npmjs.com/trusted-publishers/)。
-
-npm OIDC 要求受支持的 Node/npm 与 GitHub-hosted runner；`dist-tag` 的 OIDC 恢复至少需要 npm 11.21.0（12.x 至少 12.2.0）。工作流使用 Node 24 并固定 npm 11.21.0，不依赖 Node 自带的 npm 版本。发行要求 GitHub 仓库已公开；满足条件时 trusted publishing 自动生成 provenance，无须在命令里强制 `--provenance`。npm 页面上的 `npm publish` 和 `npm dist-tag` 是独立授权，缺一个都可能导致恢复失败。
+1. 本次 PR 的必需 `quality` 检查通过；CX Review 当前暂停，不作为合并或发行门禁。维护者核对版本变更、变更记录和风险。
+2. `package.json`、`package-lock.json` 根版本与 `CHANGELOG.md` 一致；Skill、安装入口和对应平台产物随同一版本发布。
+3. 获授权的开发者使用 staging 测试账号完成真实联调。若 Club 正式服务尚未提供对应接口，在发行说明中明确限制；CLI 发行本身不会部署 Club，普通用户默认仍连接 `https://ccneed.ai`。
+4. `npm-release` 环境仅允许 `main`，不配置每次发行都需要手工批准的 reviewer。保持仓库公开，发行二进制才能被安装器下载。
 
 ## 每次发行
 
-在新功能分支中执行，不直接修改 main：
+从最新 `main` 新建发行分支；将下面的版本示例换成维护者选定的**新版本**，不要直接改 `main` 或手工打 tag：
 
 ```bash
-# 仅更新 manifest/锁文件，不在本地打 tag
-npm version 0.1.1 --no-git-tag-version --ignore-scripts
+# 示例版本；发行时替换为本次选定的版本
+npm version 0.1.3 --no-git-tag-version --ignore-scripts
 # 同步 CHANGELOG.md 后检查
 npm test
 bash scripts/check.sh
 ```
 
-发布 PR 经审查后 Squash 合并。CI 对该合并提交先执行预检、测试与构建，成功后才打 tag、发布并验证。保持一次发行完成后再合下一次版本 PR；GitHub concurrency 只串行化发布 job，不将它当作无限队列。
+发布 PR 的 `quality` 通过且维护者确认后 Squash 合并。Release Action 会对该合并提交重新执行发行门禁，成功后才打 tag、发布并验证。上一版完成或明确失败前，不合入下一版的版本 PR。
 
-版本唯一来源是 `package.json.version`。锁文件根版本及根包版本要同步，二进制注入同一版本/提交/包名。稳定发行使用 `vX.Y.Z` 与 npm `latest`；预发布使用 `vX.Y.Z-rc.N` 与 npm `next`，不进入普通用户更新提醒。`latest` / `next` 是 npm 的可移动安装入口，不是 Git tag；Action 通过 `npm publish --tag` 明确选择，不能只凭版本号后缀期待 npm 自动分流。不兼容变更的版本选择由维护者审查，0.x 的具体约定待首发前确认。
+版本唯一来源是 `package.json.version`。锁文件根版本及根包版本要同步，二进制注入同一版本/提交/包名。稳定发行使用 `vX.Y.Z` 与 npm `latest`；预发布使用 `vX.Y.Z-rc.N` 与 npm `next`，不进入普通用户更新提醒。`latest` / `next` 是 npm 的可移动安装入口，不是 Git tag；Action 通过 `npm publish --tag` 明确选择，不能只凭版本号后缀期待 npm 自动分流。不兼容变更由维护者明确标注并说明升级影响。
 
-普通功能 PR 可以积累一周，不触发发行。准备发行时由维护者单独提交版本 PR：需要试装才先发 `X.Y.Z-rc.1`，修复后递增 RC 序号；验收完成再发 `X.Y.Z` 正式版。RC 不是必经步骤。`npm version X.Y.Z --no-git-tag-version --ignore-scripts` 同步修改 manifest 与锁文件，合并后 Action 才自动打 Git tag、构建及发布 npm；仅改 `package.json` 而遗漏锁文件会被发行预检拒绝。合并时不自动计算版本号，也不按周定时强制发布。
+普通功能 PR 可以积累一批，不触发发行。需要试装才先发 `X.Y.Z-rc.1`，修复后递增 RC 序号；验收完成再发 `X.Y.Z` 正式版。RC 不是必经步骤。仅改 `package.json` 而遗漏锁文件会被发行预检拒绝；`package.json.version` 不变的普通合并不会重打已有 tag，也不会重发 npm。合并时不自动计算版本号，也不按周定时强制发布。
 
 产物支持 Linux、macOS、Windows 的 amd64/arm64。每个平台提供独立可执行文件，npm 安装器按自身精确版本下载，校验 SHA-256 后才安装；不要求用户安装 Go，也不解压不可信归档。npm 包含同一源码版本的完整 Skill 和统一安装器模块；校验和另包含 Skill 完整文件摘要。统一入口全局安装精确版本 CLI，将所选宿主的用户级目录链接到同包 Skill，并校验程序实际版本和 Skill 摘要。已有宿主入口随全局包一起更新，不维护独立复制件；真实宿主加载仍需验收。
 
@@ -54,3 +48,9 @@ bash scripts/check.sh
 - GitHub 已公开、npm 未完成：npm 安装渠道不会因 GitHub tag 单独提醒更新。修复权限/网络后恢复该发行，不向用户宣告成功。
 
 发布成功以 GitHub 产物、npm 版本内容及目标通道均校验通过为准。更新检查按 npm 稳定 latest，缓存 24 小时、请求最多 2 秒，失败不阻塞命令且提示不写 stdout。提醒不会静默升级；用户同意后运行统一安装入口，CLI 与已接入宿主的 Skill 同包换版。旧 Skill 修改会阻止统一升级，客户端需重载，手工复制或界面上传不在联动范围；完整规则见 [安装指南](INSTALL.md)。此机制的源码测试通过不代表 npm 已发行。
+
+## 正式版群通知
+
+仅当 `publish` job 已验证 Git tag、GitHub Release、npm 包内容及 `latest` 后，独立的 `notify` job 才通过仓库 Secret `MULTICA_CLI_RELEASE_WEBHOOK_URL` 触发 Multica Autopilot。每个稳定版使用固定幂等键 `ccneed-cli:vX.Y.Z`，重试不会重复启动通知；RC 和未改版本的普通合并不通知。Webhook URL 是凭证，只存 GitHub Secret，不写入仓库或日志。
+
+Autopilot 独立复核公开发行状态，再向「上线即开奖」发送版本、tag、npm `latest` 与 Release 链接，并原生 @所有人。Webhook 返回 `accepted` 只表示 Multica 接收，**不代表飞书消息送达**；需要在 Autopilot 运行记录核对实际消息回执。若 `notify` 失败而 `publish` 成功，发行已经完成，不要重打 tag 或重发 npm，只修复通知并重跑通知 job；群通知失败不能回滚已发行版本。

@@ -1,6 +1,6 @@
 # 资源与产出
 
-以下命令已实现并有本地契约验证，尚未完成 staging/生产验收或发行。示例 `THREAD_UUID`、`FILE_UUID`、`ARTIFACT_UUID`、`VERSION` 必须换成服务实际返回值；知识库用正整数 ID，文件/会话/产出用真实 UUID。
+以下命令已随 CLI 发行并有本地契约测试；具体云端能力仍取决于正式服务接口是否上线。示例 `THREAD_UUID`、`FILE_UUID`、`ARTIFACT_UUID`、`VERSION` 必须换成服务实际返回值；知识库用正整数 ID，文件/会话/产出用真实 UUID。
 
 ## 知识库：查询与网页创建
 
