@@ -4,9 +4,9 @@
   <p>在你熟悉的 Agent 或终端里使用 CCNeed。</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
-    <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/CCNeed-16181C?style=for-the-badge&amp;logo=x&amp;logoColor=white" alt="X：CCNeed"></a>
-    <a href="https://medium.com/@ccneedai"><img src="https://img.shields.io/badge/Ccneedai-00AB6C?style=for-the-badge&amp;logo=medium&amp;logoColor=white" alt="Medium：Ccneedai"></a>
-    <a href="https://dev.to/cc_need_be7954bac5ca859e1"><img src="https://img.shields.io/badge/CC%20Need-3B49DF?style=for-the-badge&amp;logo=devdotto&amp;logoColor=white" alt="DEV：CC Need"></a>
+    <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed-333840?style=flat&amp;logo=x&amp;logoColor=white&amp;labelColor=15171A" alt="X：CCNeed"></a>
+    <a href="https://medium.com/@ccneedai"><img src="https://img.shields.io/badge/Medium-Ccneedai-259B75?style=flat&amp;logo=medium&amp;logoColor=white&amp;labelColor=14684F" alt="Medium：Ccneedai"></a>
+    <a href="https://dev.to/cc_need_be7954bac5ca859e1"><img src="https://img.shields.io/badge/DEV-CC%20Need-5666CE?style=flat&amp;logo=devdotto&amp;logoColor=white&amp;labelColor=303C98" alt="DEV：CC Need"></a>
   </p>
   <p>
     <a href="https://ccneed.ai">官网</a> ·
