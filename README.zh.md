@@ -4,9 +4,9 @@
   <p>在你熟悉的 Agent 或终端里使用 CCNeed。</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
-    <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed__ai-111111?logo=x&amp;logoColor=white" alt="关注 CCNeed 的 X 账号"></a>
-    <a href="https://medium.com/@ccneedai"><img src="https://img.shields.io/badge/Medium-CCNeed-111111?logo=medium&amp;logoColor=white" alt="阅读 CCNeed 的 Medium 文章"></a>
-    <a href="https://dev.to/cc_need_be7954bac5ca859e1"><img src="https://img.shields.io/badge/DEV-CCNeed-111111?logo=devdotto&amp;logoColor=white" alt="阅读 CCNeed 的 DEV 文章"></a>
+    <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed-333840?style=flat&amp;logo=x&amp;logoColor=white&amp;labelColor=15171A" alt="X：CCNeed"></a>
+    <a href="https://medium.com/@ccneedai"><img src="https://img.shields.io/badge/Medium-Ccneedai-259B75?style=flat&amp;logo=medium&amp;logoColor=white&amp;labelColor=14684F" alt="Medium：Ccneedai"></a>
+    <a href="https://dev.to/cc_need_be7954bac5ca859e1"><img src="https://img.shields.io/badge/DEV-CC%20Need-5666CE?style=flat&amp;logo=devdotto&amp;logoColor=white&amp;labelColor=303C98" alt="DEV：CC Need"></a>
   </p>
   <p>
     <a href="https://ccneed.ai">官网</a> ·
@@ -120,6 +120,6 @@ ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID 
 
 遇到问题请 [提交 Issue](https://github.com/validflow/ccneed-cli/issues)，附上操作系统、CLI 版本和脱敏后的错误。不要上传凭证或私人文件。
 
-产品动态和使用文章可关注 [X](https://x.com/CCNeed_ai)、[Medium](https://medium.com/@ccneedai) 或 [DEV](https://dev.to/cc_need_be7954bac5ca859e1)。
+产品动态和使用文章可关注 [X 上的 CCNeed](https://x.com/CCNeed_ai)、[Medium 上的 Ccneedai](https://medium.com/@ccneedai) 或 [DEV 上的 CC Need](https://dev.to/cc_need_be7954bac5ca859e1)。
 
 [安装与排障](INSTALL.md) · [参与贡献](CONTRIBUTING.md) · [代码规范](CODE_STYLE.md) · [安全说明](SECURITY.md) · [版本发布](RELEASING.md)

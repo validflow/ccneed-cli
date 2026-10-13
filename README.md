@@ -4,9 +4,9 @@
   <p>Run research with CCNeed from your own AI agent or terminal.</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
-    <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed__ai-111111?logo=x&amp;logoColor=white" alt="Follow CCNeed on X"></a>
-    <a href="https://medium.com/@ccneedai"><img src="https://img.shields.io/badge/Medium-CCNeed-111111?logo=medium&amp;logoColor=white" alt="Read CCNeed on Medium"></a>
-    <a href="https://dev.to/cc_need_be7954bac5ca859e1"><img src="https://img.shields.io/badge/DEV-CCNeed-111111?logo=devdotto&amp;logoColor=white" alt="Read CCNeed on DEV"></a>
+    <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed-333840?style=flat&amp;logo=x&amp;logoColor=white&amp;labelColor=15171A" alt="X: CCNeed"></a>
+    <a href="https://medium.com/@ccneedai"><img src="https://img.shields.io/badge/Medium-Ccneedai-259B75?style=flat&amp;logo=medium&amp;logoColor=white&amp;labelColor=14684F" alt="Medium: Ccneedai"></a>
+    <a href="https://dev.to/cc_need_be7954bac5ca859e1"><img src="https://img.shields.io/badge/DEV-CC%20Need-5666CE?style=flat&amp;logo=devdotto&amp;logoColor=white&amp;labelColor=303C98" alt="DEV: CC Need"></a>
   </p>
   <p>
     <a href="https://ccneed.ai">Website</a> ·
@@ -120,6 +120,6 @@ Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to u
 
 Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues) with your OS, CLI version, and a redacted error message. Never post credentials or private files.
 
-For product news and guides, follow [X](https://x.com/CCNeed_ai), [Medium](https://medium.com/@ccneedai), or [DEV](https://dev.to/cc_need_be7954bac5ca859e1).
+For product news and guides, follow [CCNeed on X](https://x.com/CCNeed_ai), [Ccneedai on Medium](https://medium.com/@ccneedai), or [CC Need on DEV](https://dev.to/cc_need_be7954bac5ca859e1).
 
 [Installation](INSTALL.md) · [Contributing](CONTRIBUTING.md) · [Code style](CODE_STYLE.md) · [Security](SECURITY.md) · [Releasing](RELEASING.md)
