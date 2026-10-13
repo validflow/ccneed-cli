@@ -84,10 +84,11 @@ Before creating a research conversation, choose a knowledge base. If you need a 
 ccneed kb create
 ```
 
-Start the conversation with your first question and the knowledge-base ID:
+Start the conversation with your first question and the knowledge-base ID. To bind a file too, upload it first and use the returned file ID:
 
 ```bash
-ccneed run "Research iPhone 18 discussions and prepare a report" --kb-id KB_ID
+ccneed files upload ./research-brief.pdf
+ccneed run "Research iPhone 18 discussions and prepare a report" --kb-id KB_ID --file-id FILE_ID
 ```
 
 The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, including tasks, files, confirmations, and reports.

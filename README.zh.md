@@ -84,10 +84,11 @@ ccneed account credits
 ccneed kb create
 ```
 
-选好知识库后，带上第一句话开启会话：
+选好知识库后，带上第一句话开启会话。如果还要绑定文件，先上传，再使用返回的文件 ID：
 
 ```bash
-ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID
+ccneed files upload ./research-brief.pdf
+ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --file-id FILE_ID
 ```
 
 提交任务、文件绑定、进度跟进、确认和报告的具体命令，交给 [Agent Skill](skills/ccneed/SKILL.md) 说明。
