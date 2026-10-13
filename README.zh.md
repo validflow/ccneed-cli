@@ -84,10 +84,10 @@ ccneed account credits
 ccneed kb create
 ```
 
-然后使用知识库 ID 创建会话，同时完成绑定：
+选好知识库后，带上第一句话开启会话：
 
 ```bash
-ccneed threads create --title "iPhone 18 研究" --kb-id KB_ID
+ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID
 ```
 
 提交任务、文件绑定、进度跟进、确认和报告的具体命令，交给 [Agent Skill](skills/ccneed/SKILL.md) 说明。
@@ -98,6 +98,7 @@ ccneed threads create --title "iPhone 18 研究" --kb-id KB_ID
 | --- | --- |
 | 💳 查看积分、订阅 | `ccneed account credits` / `ccneed account overview` |
 | 💬 查看会话 | `ccneed threads list` |
+| 🚀 开启研究 | `ccneed run "你的研究问题" --kb-id KB_ID` |
 | 📚 查看知识库 | `ccneed kb list` |
 | ➕ 在网页创建知识库 | `ccneed kb create` |
 | 📎 查看、上传自己的文件 | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |

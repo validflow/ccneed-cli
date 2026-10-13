@@ -119,6 +119,27 @@ func (c *Client) Create(ctx context.Context, selection resources.Selection, titl
 	return result, nil
 }
 
+// DeleteEmpty reclaims a newly created shell only if no turn was admitted.
+//
+// Args:
+//
+//	ctx: Request context.
+//	threadID: Root conversation created for the first message.
+//
+// Returns:
+//
+// An error when the guarded cleanup request fails.
+func (c *Client) DeleteEmpty(ctx context.Context, threadID string) error {
+	if !resources.ValidUUID(threadID) {
+		return &api.Error{Code: "invalid_input"}
+	}
+	query := url.Values{"only_if_empty": {"true"}}
+	var result struct {
+		Deleted bool `json:"deleted"`
+	}
+	return c.api.DoJSON(ctx, http.MethodDelete, "/api/v1/usight-agent/threads/"+threadID, query, nil, &result)
+}
+
 // ValidateList 校验列表参数，防止拼接未公布查询。
 //
 // Args:

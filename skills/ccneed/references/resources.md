@@ -25,10 +25,10 @@ ccneed files upload ./research-brief.pdf
 
 这里上传的是用户自己的文件；知识库爬取后用于云端分析的内部 CSV 不需要用户提供。成功返回 `library_file_id`、`display_name`、`size_bytes`、`status`，**尚未绑定会话或启动任务**。接收未知先查 `files list`/网站核对，不自动重传制造重复资料。
 
-初始绑定在创建会话时选择已有资源：
+开启会话时用第一句话绑定已有资源：
 
 ```bash
-ccneed threads create --kb-id 7 --file-id FILE_UUID
+ccneed run "分析这些资料并生成报告" --kb-id 7 --file-id FILE_UUID
 ```
 
 `--kb-id` 和 `--file-id` 可重复或逗号分隔；不要把本地文件路径传给 `--file-id`。先确认用户要分析的资料，不按同名文件自动绑定。

@@ -84,10 +84,10 @@ Before creating a research conversation, choose a knowledge base. If you need a 
 ccneed kb create
 ```
 
-Then create a conversation and bind the knowledge base by its ID:
+Start the conversation with your first question and the knowledge-base ID:
 
 ```bash
-ccneed threads create --title "iPhone 18 research" --kb-id KB_ID
+ccneed run "Research iPhone 18 discussions and prepare a report" --kb-id KB_ID
 ```
 
 The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, including tasks, files, confirmations, and reports.
@@ -98,6 +98,7 @@ The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, includi
 | --- | --- |
 | 💳 Check credits and subscription | `ccneed account credits` / `ccneed account overview` |
 | 💬 Find conversations | `ccneed threads list` |
+| 🚀 Start research | `ccneed run "Your question" --kb-id KB_ID` |
 | 📚 Explore knowledge bases | `ccneed kb list` |
 | ➕ Create a knowledge base in the browser | `ccneed kb create` |
 | 📎 List or upload your own files | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |

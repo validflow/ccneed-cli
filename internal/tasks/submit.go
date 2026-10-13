@@ -83,6 +83,19 @@ func ValidateSubmission(threadID, requestID, message string) error {
 	if requestID != "" && !identifier.MatchString(requestID) {
 		return &api.Error{Code: "invalid_input"}
 	}
+	return ValidateMessage(message)
+}
+
+// ValidateMessage checks the first or subsequent user message before any network write.
+//
+// Args:
+//
+//	message: User input to submit to a cloud turn.
+//
+// Returns:
+//
+// An invalid_input error for empty, malformed, or oversized input.
+func ValidateMessage(message string) error {
 	if !utf8.ValidString(message) || strings.TrimSpace(message) == "" || utf8.RuneCountInString(message) > 20000 {
 		return &api.Error{Code: "invalid_input"}
 	}

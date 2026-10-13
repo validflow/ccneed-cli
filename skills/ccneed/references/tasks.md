@@ -2,24 +2,24 @@
 
 以下命令已随 CLI 发行并有本地契约测试；具体云端能力仍取决于正式服务接口是否上线。示例中的 `THREAD_UUID`、`TURN_UUID`、`REQUEST_UUID`、`ACTION_ID` 必须替换成当前环境真实返回的标识，不能照抄或从会话标题推导。
 
-## 选择或创建会话
+## 开启或选择会话
 
 ```bash
 ccneed threads list --view active --limit 50
-ccneed threads create --title "博主分析"
+ccneed run "分析已选资料并生成报告" --kb-id KB_ID
 ```
 
 `--view` 为 `active` 或 `archived`，`--limit` 范围 1–200，仅显示近期窗口。标题用来帮助用户选择，后续调用以真实 `thread_id` 为准；同名会话有歧义时问用户。
 
-创建可以附加已有 `--kb-id`、`--file-id`，详见 [资源与产出](resources.md)。创建本身不启动任务；用户要求新会话才创建。创建接收状态未知时先查列表/网站，不能盲目再创建。
+开启新会话时把第一句话和已有 `--kb-id`、`--file-id` 一起交给 `run`；`--title` 可选，未指定时服务端取首句作为标题。也可只绑定已上传文件，详见 [资源与产出](resources.md)。接收状态未知时先查列表/网站，不能盲目再开启。
 
-## 异步提交一轮
+## 在已有会话提交一轮
 
 ```bash
 ccneed run "分析已绑定资料并生成报告" --thread-id THREAD_UUID
 ```
 
-输入是用户此次明确委托的内容。返回 `status: accepted`、`cloud_status`、`thread_id`、`turn_id`、`client_request_id`、`conversation_turn_idx`、`existing`，即云端已接收，不是分析完成。保存公开标识以继续观察同一回合；后续消息可在同一会话提交新回合，HITL 回答则用 `tasks reply` 而不是新建回合。
+输入是用户此次明确委托的内容。首次 `run` 和后续 `run --thread-id` 都返回 `status: accepted`、`cloud_status`、`thread_id`、`turn_id`、`client_request_id`、`conversation_turn_idx`、`existing`，即云端已接收，不是分析完成。保存公开标识以继续观察同一回合；后续消息可在同一会话提交新回合，HITL 回答则用 `tasks reply` 而不是新建回合。
 
 CLI 在单次提交前保存按 origin/thread 隔离的不可变 request ID 与输入摘要，不保存输入正文或凭证。
 
