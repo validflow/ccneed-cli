@@ -4,12 +4,11 @@ English · [中文](CHANGELOG.zh.md)
 
 ## 0.1.4
 
-- Shortened both READMEs to a capability overview and two CLI examples; detailed task, file, and report workflows remain in the Agent Skill.
-- Removed internal data-format details from user-facing instructions.
+- Shortened the knowledge-base conversation example in both READMEs; detailed CLI workflows remain in the Agent Skill.
 
 ## 0.1.3
 
-- Clarified that each new research conversation binds a knowledge base, an uploaded user file, or both.
+- Clarified that each new research conversation binds a knowledge base, an uploaded user file, or both; cloud-generated analysis CSVs are not user uploads.
 - Made public repository guides English by default, with matching `.zh.md` translations; the bundled Agent Skill remains in Chinese.
 
 ## 0.1.2

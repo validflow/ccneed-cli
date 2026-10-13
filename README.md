@@ -63,40 +63,49 @@ Use your existing CCNeed account. The CLI opens a website authorization flow; it
 ccneed auth login
 # Open the URL, check the confirmation code, and approve in your browser.
 ccneed auth login --complete --timeout 60s
+ccneed auth status --verify
+ccneed account credits
 ```
 
 Without extra flags, every command connects to the production service at `https://ccneed.ai`. Regular users should not set `--api-url`. Only authorized developers may use it to connect to staging with a staging test account; staging and production credentials must stay separate.
 
-## What you can do
+## Work with CCNeed
 
-- 📚 Create and explore knowledge bases, upload files, and bind either or both to a conversation.
-- 💬 Start or revisit conversations and send research tasks to CCNeed's cloud agent.
-- ⏳ Follow progress and answer questions when the agent needs your confirmation.
-- 📄 Read findings and reports, download Markdown, or export a PDF.
-- 💳 Check your credits and subscription.
-
-For example, ask your own agent:
+In your agent, you can ask:
 
 ```text
 Use my CCNeed knowledge base to research iPhone 18 discussions and bring me a PDF report.
 Ask me before making any choice that needs my confirmation.
 ```
 
-Or try two CLI examples. To create a knowledge base, open the website URL returned by:
+Before creating a research conversation, choose a knowledge base. If you need a new one, this command returns a website link to create it:
 
 ```bash
 ccneed kb create
 ```
 
-To start a conversation, replace `KB_ID` with an ID from the list and `THREAD_UUID` with the ID returned when the conversation is created:
+Then create a conversation and bind the knowledge base by its ID:
 
 ```bash
-ccneed kb list
 ccneed threads create --title "iPhone 18 research" --kb-id KB_ID
-ccneed run "Research iPhone 18 and prepare a report" --thread-id THREAD_UUID
 ```
 
-Tasks continue in the cloud after submission. You can also start with an uploaded file instead of a knowledge base. For commands to upload and bind files, follow tasks, handle confirmations, and retrieve reports, see the [Agent Skill](skills/ccneed/SKILL.md).
+The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, including tasks, files, confirmations, and reports.
+
+### At a glance
+
+| What you need | Command |
+| --- | --- |
+| 💳 Check credits and subscription | `ccneed account credits` / `ccneed account overview` |
+| 💬 Find conversations | `ccneed threads list` |
+| 📚 Explore knowledge bases | `ccneed kb list` |
+| ➕ Create a knowledge base in the browser | `ccneed kb create` |
+| 📎 List or upload your own files | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
+| 🗂️ View or add conversation resources | `ccneed threads resources` / `ccneed threads append` |
+| 🕘 Review task history | `ccneed tasks list --thread-id THREAD_UUID` |
+| 🚪 Sign out | `ccneed auth logout` |
+
+Knowledge-base and file bindings can be added, but not removed. Use `ccneed <command> --help` for the required arguments.
 
 ## Update and contribute
 
