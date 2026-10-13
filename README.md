@@ -78,27 +78,20 @@ Use my CCNeed knowledge base to research iPhone 18 discussions and bring me a PD
 Ask me before making any choice that needs my confirmation.
 ```
 
-Or use the CLI directly. For each new research conversation, choose an existing knowledge base **or** upload your own file, then bind the chosen resource when creating the conversation. You can bind both. Replace example IDs with values returned by your commands:
+Before creating a research conversation, choose a knowledge base. If you need a new one, this command returns a website link to create it:
 
 ```bash
-ccneed kb list
-ccneed threads create --title "iPhone 18 research" --kb-id 7
-ccneed run "Analyze iPhone 18 discussions in the bound knowledge base and prepare a report" --thread-id THREAD_UUID
+ccneed kb create
 ```
 
-If you need a new knowledge base, run `ccneed kb create`, complete the crawl setup on the returned website, then use `ccneed kb list` / `ccneed kb get --kb-id 7` to find an available ID. CCNeed handles collection, cleaning, and analysis-ready data in the cloud; you do not need to manage its internal CSV files.
-
-If you want to start from your own file instead, run `ccneed files upload ./research-brief.pdf`, then `ccneed threads create --title "Brief analysis" --file-id FILE_UUID`. Uploading alone does not bind the file. Creating a conversation does not start a task; `run` does. A task may use your CCNeed credits.
-
-`run` returns immediately while the cloud task continues. You can watch the same turn, respond to a confirmation request, and retrieve its results:
+Start the conversation with your first question and the knowledge-base ID. To bind a file too, upload it first and use the returned file ID:
 
 ```bash
-ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s
-ccneed artifacts list --thread-id THREAD_UUID
-ccneed artifacts export-pdf --thread-id THREAD_UUID --artifact-id ARTIFACT_UUID --output ./report.pdf
+ccneed files upload ./research-brief.pdf
+ccneed run "Research iPhone 18 discussions and prepare a report" --kb-id KB_ID --file-id FILE_ID
 ```
 
-For an editable Markdown report, use `ccneed artifacts download` instead. `watch` timing out does not cancel the cloud task; you can check again later. For all options, run `ccneed <command> --help` or read the [Skill](skills/ccneed/SKILL.md).
+The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, including tasks, files, confirmations, and reports.
 
 ### At a glance
 
@@ -106,6 +99,7 @@ For an editable Markdown report, use `ccneed artifacts download` instead. `watch
 | --- | --- |
 | 💳 Check credits and subscription | `ccneed account credits` / `ccneed account overview` |
 | 💬 Find conversations | `ccneed threads list` |
+| 🚀 Start research | `ccneed run "Your question" --kb-id KB_ID` |
 | 📚 Explore knowledge bases | `ccneed kb list` |
 | ➕ Create a knowledge base in the browser | `ccneed kb create` |
 | 📎 List or upload your own files | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |

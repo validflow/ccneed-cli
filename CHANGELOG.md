@@ -2,6 +2,10 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.4
+
+- Shortened the knowledge-base conversation example in both READMEs; detailed CLI workflows remain in the Agent Skill.
+
 ## 0.1.3
 
 - Clarified that each new research conversation binds a knowledge base, an uploaded user file, or both; cloud-generated analysis CSVs are not user uploads.

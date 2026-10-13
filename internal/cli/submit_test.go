@@ -40,6 +40,91 @@ func submitArgs(message string) []string {
 	return []string{"run", message, "--thread-id", taskThread, "--request-id", submitRequest}
 }
 
+func TestRunStartsConversationWithFirstMessageAndBoundResources(t *testing.T) {
+	var createCalls, turnCalls atomic.Int32
+	run := submitRunner(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/v1/usight-agent/threads":
+			createCalls.Add(1)
+			checkInitialBinding(t, r)
+			_, _ = fmt.Fprintf(w, `{"thread_id":%q,"kb_ids":[7],"library_file_ids":[%q],"metadata_version":"0","resource_window_state":"initial","title":null}`, taskThread, taskTurn)
+		case "/api/v1/usight-agent/threads/" + taskThread + "/turns":
+			turnCalls.Add(1)
+			_, _ = fmt.Fprintf(w, `{"thread_id":%q,"turn_id":%q,"conversation_turn_idx":1,"status":"pending","existing":false}`, taskThread, taskTurn)
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL)
+		}
+	})
+	code, output := run("run", "Analyze iPhone 18", "--kb-id", "7", "--file-id", taskTurn)
+	if code != 0 || createCalls.Load() != 1 || turnCalls.Load() != 1 || !strings.Contains(output, taskThread) || !strings.Contains(output, taskTurn) {
+		t.Fatalf("exit=%d create=%d turn=%d output=%s", code, createCalls.Load(), turnCalls.Load(), output)
+	}
+}
+
+func TestRunReclaimsEmptyConversationAfterDefiniteTurnRejection(t *testing.T) {
+	var deleted atomic.Int32
+	run := submitRunner(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method + " " + r.URL.Path {
+		case "POST /api/v1/usight-agent/threads":
+			_, _ = fmt.Fprintf(w, `{"thread_id":%q,"kb_ids":[],"library_file_ids":[],"metadata_version":"0","resource_window_state":"initial"}`, taskThread)
+		case "POST /api/v1/usight-agent/threads/" + taskThread + "/turns":
+			w.WriteHeader(http.StatusPaymentRequired)
+			_, _ = fmt.Fprint(w, `{"detail":{"code":"insufficient_credits"}}`)
+		case "DELETE /api/v1/usight-agent/threads/" + taskThread:
+			if r.URL.Query().Get("only_if_empty") != "true" {
+				t.Errorf("cleanup is not guarded: %s", r.URL)
+			}
+			deleted.Add(1)
+			_, _ = fmt.Fprintf(w, `{"ok":true,"thread_id":%q,"deleted":true}`, taskThread)
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL)
+		}
+	})
+	code, output := run("run", "Analyze iPhone 18")
+	if code == 0 || deleted.Load() != 1 || !strings.Contains(output, "request_failed") {
+		t.Fatalf("exit=%d deleted=%d output=%s", code, deleted.Load(), output)
+	}
+}
+
+func TestRunDoesNotDeleteConversationWhenTurnAcceptanceIsUnknown(t *testing.T) {
+	var deleted atomic.Int32
+	run := submitRunner(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			if r.URL.Path == "/api/v1/usight-agent/threads" {
+				_, _ = fmt.Fprintf(w, `{"thread_id":%q,"kb_ids":[],"library_file_ids":[],"metadata_version":"0","resource_window_state":"initial"}`, taskThread)
+				return
+			}
+			_, _ = fmt.Fprint(w, "lost acknowledgement")
+		case http.MethodDelete:
+			deleted.Add(1)
+		}
+	})
+	code, output := run("run", "Analyze iPhone 18")
+	if code == 0 || deleted.Load() != 0 || !strings.Contains(output, "acceptance_unknown") || !strings.Contains(output, taskThread) {
+		t.Fatalf("exit=%d deleted=%d output=%s", code, deleted.Load(), output)
+	}
+}
+
+func TestRunRejectsInvalidFirstTurnSelectionBeforeConnecting(t *testing.T) {
+	for _, args := range [][]string{
+		{"run", "Analyze", "--kb-id", "0"},
+		{"run", "Analyze", "--file-id", "../bad"},
+		{"run", "Analyze", "--thread-id", taskThread, "--kb-id", "7"},
+		{"run", "Analyze", "--request-id", submitRequest},
+	} {
+		var calls atomic.Int32
+		var stdout, stderr bytes.Buffer
+		code := Run(context.Background(), args, Options{Stdout: &stdout, Stderr: &stderr, Connect: func(context.Context, string) (*api.Client, error) {
+			calls.Add(1)
+			return nil, &api.Error{Code: "unexpected"}
+		}})
+		if code == 0 || calls.Load() != 0 || !strings.Contains(stdout.String(), "invalid_input") {
+			t.Fatalf("exit=%d calls=%d output=%s", code, calls.Load(), stdout.String())
+		}
+	}
+}
+
 func TestRunSubmitsOneTurnAndReturnsPublicAcknowledgement(t *testing.T) {
 	var calls atomic.Int32
 	run := submitRunner(t, func(w http.ResponseWriter, r *http.Request) {
