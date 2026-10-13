@@ -129,6 +129,10 @@ func (c *Client) Create(ctx context.Context, selection resources.Selection, titl
 // Returns:
 //
 // An error when the guarded cleanup request fails.
+//
+// Errors:
+//
+// Returns invalid_input for a malformed ID or the server error from guarded cleanup.
 func (c *Client) DeleteEmpty(ctx context.Context, threadID string) error {
 	if !resources.ValidUUID(threadID) {
 		return &api.Error{Code: "invalid_input"}
