@@ -7,10 +7,13 @@
 ```bash
 ccneed kb list
 ccneed kb get --kb-id 7
+ccneed kb stats --kb-id 7
 ccneed kb create
 ```
 
 `list/get` 显示归属当前用户的采集状态、已发布数据和可选择性。绑定前检查 `can_select`；不可选时说明 `disabled_reason` 或采集状态，不自行猜测可用。
+
+`stats` 只返回已发布、可分析内容的总数、平台与情绪分布、最多八个主话题，以及同环境的 `web_url`。它不返回帖子正文、单条来源或批量数据。用于选库和判断覆盖范围；如果用户要研究结论，仍需 `ccneed run ... --kb-id 7` 交给 CCNeed 云端分析。需要在网页浏览具体内容时，把 `web_url` 交给用户，不通过其他网页接口绕过 CLI 的聚合边界。采集中的数据尚未发布时，统计可能暂时为零，不把零解释为采集失败。
 
 `kb create` 只返回 `status: website_required` 和当前 origin 的官网入口 `url`，**没有创建知识库或启动采集**。向用户展示链接，把意图优化、平台/配额选择和确认交给网页；完成后重新 `kb list/get` 获取真实 ID 和状态，不伪造知识库。
 
@@ -23,7 +26,7 @@ ccneed files upload ./research-brief.pdf
 
 列表 `--limit` 范围 1–500，关注 `has_more_possible`，不宣称完整历史。上传只接受非空普通支持文件，最大 100 MiB，不跟随符号链接；支持 csv、txt、md、json、ipynb、pdf、docx、xlsx 及 png/jpg/jpeg/webp/gif。
 
-这里上传的是用户自己的文件；知识库爬取后用于云端分析的内部 CSV 不需要用户提供。成功返回 `library_file_id`、`display_name`、`size_bytes`、`status`，**尚未绑定会话或启动任务**。接收未知先查 `files list`/网站核对，不自动重传制造重复资料。
+这里上传的是用户自己的文件。成功返回 `library_file_id`、`display_name`、`size_bytes`、`status`，**尚未绑定会话或启动任务**。接收未知先查 `files list`/网站核对，不自动重传制造重复资料。
 
 开启会话时用第一句话绑定已有资源：
 

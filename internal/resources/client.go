@@ -82,6 +82,42 @@ func (c *Client) KnowledgeBaseStatus(ctx context.Context, id int64) (KnowledgeBa
 	return KnowledgeBase{}, &api.Error{Code: "not_found"}
 }
 
+// KnowledgeBaseStatistics 读取用户知识库的已发布聚合，不请求帖子正文。
+//
+// Args:
+//
+//	ctx: 本地请求上下文。
+//	id: 已有知识库正整数标识。
+//
+// Returns:
+//
+//	平台、情绪和有限主话题分布，或错误。
+//
+// Errors:
+//
+//	参数、鉴权、传输或响应不合法时失败关闭。
+func (c *Client) KnowledgeBaseStatistics(ctx context.Context, id int64) (KnowledgeBaseStats, error) {
+	if id <= 0 {
+		return KnowledgeBaseStats{}, &api.Error{Code: "invalid_input"}
+	}
+	var stats KnowledgeBaseStats
+	path := "/api/v1/usight-agent/kbs/" + strconv.FormatInt(id, 10) + "/stats"
+	if err := c.api.DoJSON(ctx, http.MethodGet, path, nil, nil, &stats); err != nil {
+		return KnowledgeBaseStats{}, err
+	}
+	if stats.KBID != id || stats.AvailablePostCount < 0 || len(stats.TopTopics) > 8 {
+		return KnowledgeBaseStats{}, &api.Error{Code: "invalid_response"}
+	}
+	for _, group := range [][]KBDistribution{stats.Platforms, stats.Sentiments, stats.TopTopics} {
+		for _, bucket := range group {
+			if bucket.Label == "" || bucket.Count < 0 || bucket.Count > stats.AvailablePostCount {
+				return KnowledgeBaseStats{}, &api.Error{Code: "invalid_response"}
+			}
+		}
+	}
+	return stats, nil
+}
+
 // ValidateFileLimit 校验现有文件列表服务端数量上限。
 //
 // Args:

@@ -20,6 +20,43 @@ func kbCommand(connection *connectionConfig) *cobra.Command {
 	command := commandGroup("kb", "Read knowledge bases; create through the website")
 	command.AddCommand(kbListCommand(connection), kbCreateCommand(connection))
 	command.AddCommand(kbGetCommand(connection))
+	command.AddCommand(kbStatsCommand(connection))
+	return command
+}
+
+// kbStatsCommand 返回知识库的有限聚合和同环境网页入口。
+//
+// Args:
+//
+//	connection: 当前 origin 的认证连接。
+//
+// Returns:
+//
+//	知识库统计命令。
+func kbStatsCommand(connection *connectionConfig) *cobra.Command {
+	var id int64
+	command := &cobra.Command{Use: "stats", Short: "Read published KB counts and distributions", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		if id <= 0 {
+			return &api.Error{Code: "invalid_input"}
+		}
+		origin, err := connection.selectedOrigin()
+		if err != nil {
+			return err
+		}
+		client, err := connection.client(cmd.Context())
+		if err != nil {
+			return err
+		}
+		stats, err := resources.New(client).KnowledgeBaseStatistics(cmd.Context(), id)
+		if err != nil {
+			return err
+		}
+		return json.NewEncoder(cmd.OutOrStdout()).Encode(struct {
+			resources.KnowledgeBaseStats
+			WebURL string `json:"web_url"`
+		}{stats, origin.String() + "/insightflow/kb"})
+	}}
+	command.Flags().Int64Var(&id, "kb-id", 0, "Existing owned knowledge-base numeric ID")
 	return command
 }
 

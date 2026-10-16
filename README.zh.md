@@ -101,6 +101,7 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 | 💬 查看会话 | `ccneed threads list` |
 | 🚀 开启研究 | `ccneed run "你的研究问题" --kb-id KB_ID` |
 | 📚 查看知识库 | `ccneed kb list` |
+| 📊 查看知识库数据分布 | `ccneed kb stats --kb-id KB_ID` |
 | ➕ 在网页创建知识库 | `ccneed kb create` |
 | 📎 查看、上传自己的文件 | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
 | 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
