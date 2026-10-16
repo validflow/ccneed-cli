@@ -2,6 +2,11 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.5
+
+- Added `ccneed kb stats` for aggregate knowledge-base counts and limited distributions, with a link to inspect the knowledge base on the selected website. Post bodies are not returned.
+- Added paginated cloud turn progress to `ccneed tasks get`; `tasks watch` now includes the conversation link while preserving task status and confirmation requests.
+
 ## 0.1.4
 
 - Shortened the knowledge-base conversation example in both READMEs; detailed CLI workflows remain in the Agent Skill.
