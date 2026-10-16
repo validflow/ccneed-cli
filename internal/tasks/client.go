@@ -16,9 +16,10 @@ var identifier = regexp.MustCompile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
 
 // PageOptions selects a bounded, exclusive progress page within one turn.
 type PageOptions struct {
-	Limit     int
-	BeforeSeq int64
-	AfterSeq  int64
+	Limit       int
+	BeforeSeq   int64
+	AfterSeq    int64
+	AfterSeqSet bool
 }
 
 // ValidatePageOptions rejects inconsistent cursors before a network request.
@@ -35,8 +36,9 @@ type PageOptions struct {
 //
 //	Returns invalid_input for out-of-range limits or inconsistent cursors.
 func ValidatePageOptions(options PageOptions) error {
+	afterSelected := options.AfterSeqSet || options.AfterSeq > 0
 	if options.Limit < 1 || options.Limit > 100 || options.BeforeSeq < 0 || options.AfterSeq < 0 ||
-		(options.BeforeSeq != 0 && options.AfterSeq != 0) {
+		(options.BeforeSeq != 0 && afterSelected) {
 		return &api.Error{Code: "invalid_input"}
 	}
 	return nil
@@ -123,7 +125,7 @@ func (c *Client) GetPage(ctx context.Context, threadID, turnID string, options P
 	if options.BeforeSeq > 0 {
 		query.Set("before_seq", strconv.FormatInt(options.BeforeSeq, 10))
 	}
-	if options.AfterSeq > 0 {
+	if options.AfterSeqSet || options.AfterSeq > 0 {
 		query.Set("after_seq", strconv.FormatInt(options.AfterSeq, 10))
 	}
 	var result Detail

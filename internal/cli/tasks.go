@@ -47,7 +47,7 @@ func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
 	}
 	command := &cobra.Command{Use: name, Short: "Read a public turn snapshot", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			page := tasks.PageOptions{Limit: limit, BeforeSeq: beforeSeq, AfterSeq: afterSeq}
+			page := tasks.PageOptions{Limit: limit, BeforeSeq: beforeSeq, AfterSeq: afterSeq, AfterSeqSet: cmd.Flags().Changed("after-seq")}
 			if err := validateTaskReadOptions(cmd, threadID, turnID, page, timeout, watch); err != nil {
 				return err
 			}
@@ -108,7 +108,6 @@ func validateTaskReadOptions(cmd *cobra.Command, threadID, turnID string, page t
 		return tasks.ValidateTimeout(timeout)
 	}
 	if (cmd.Flags().Changed("before-seq") && page.BeforeSeq == 0) ||
-		(cmd.Flags().Changed("after-seq") && page.AfterSeq == 0) ||
 		(cmd.Flags().Changed("before-seq") && cmd.Flags().Changed("after-seq")) {
 		return &api.Error{Code: "invalid_input"}
 	}

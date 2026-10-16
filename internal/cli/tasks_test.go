@@ -62,6 +62,18 @@ func TestTasksGetPaginatesOnlyRequestedTurn(t *testing.T) {
 	}
 }
 
+func TestTasksGetZeroAfterCursorRequestsInitialChronologicalPage(t *testing.T) {
+	code, output := runTaskCommand(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("after_seq") != "0" {
+			t.Errorf("expected explicit initial cursor, got %s", r.URL.RawQuery)
+		}
+		_, _ = fmt.Fprintf(w, `{"thread_id":%q,"turn_id":%q,"conversation_turn_idx":1,"status":"running","cloud_status":"running","artifacts":[],"progress":{"events":[{"seq":1,"stage":"work","state":"started","summary":"Research started"}],"has_more":false,"next_after_seq":1}}`, taskThread, taskTurn)
+	}, append(taskArgs("get"), "--after-seq", "0")...)
+	if code != 0 || !strings.Contains(output, `"next_after_seq":1`) {
+		t.Fatalf("exit=%d output=%s", code, output)
+	}
+}
+
 func TestTasksWatchReturnsWaitingUserWithoutPollingAgain(t *testing.T) {
 	var calls atomic.Int32
 	body := fmt.Sprintf(`{"thread_id":%q,"turn_id":%q,"conversation_turn_idx":1,"status":"waiting_user","cloud_status":"paused","pending_action":{"action_id":"choice-one","action_type":"ask_user","reason":"选择平台","resume_schema":{"type":"object","required":["platform"]},"suggested":{"options":["rednote","douyin"]}},"artifacts":[],"progress":{"events":[{"seq":12,"stage":"work","state":"waiting_user","summary":"Work step waiting user."}],"has_more":false,"next_after_seq":12}}`, taskThread, taskTurn)
@@ -120,7 +132,6 @@ func TestTasksValidateArgumentsBeforeConnection(t *testing.T) {
 		append(taskArgs("get"), "--limit", "0"),
 		append(taskArgs("get"), "--before-seq", "7", "--after-seq", "8"),
 		append(taskArgs("get"), "--after-seq", "-1"),
-		append(taskArgs("get"), "--after-seq", "0"),
 	} {
 		var calls atomic.Int32
 		var stdout, stderr bytes.Buffer
