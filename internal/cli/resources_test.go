@@ -21,6 +21,18 @@ func TestKBListDisplaysSelectionAndCollectionStatus(t *testing.T) {
 	}
 }
 
+func TestKBStatsDisplaysOnlyAggregatesAndWebsiteEntry(t *testing.T) {
+	code, output := runTaskCommand(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/usight-agent/kbs/7/stats" || r.Method != "GET" {
+			t.Errorf("unexpected %s %s", r.Method, r.URL)
+		}
+		_, _ = fmt.Fprint(w, `{"kb_id":7,"available_post_count":4,"platforms":[{"label":"xhs","count":3}],"sentiments":[{"label":"POSITIVE","count":2}],"top_topics":[{"label":"PRODUCT_FUNCTION","count":2}],"private_post_body":"never expose"}`)
+	}, "kb", "stats", "--kb-id", "7")
+	if code != 0 || !strings.Contains(output, `"available_post_count":4`) || !strings.Contains(output, `"label":"xhs"`) || !strings.Contains(output, `"web_url":`) || !strings.Contains(output, "/insightflow/kb") || strings.Contains(output, "private_post_body") {
+		t.Fatalf("exit=%d output=%s", code, output)
+	}
+}
+
 func TestKBCreationReturnsWebsiteHandoffWithoutStartingCollection(t *testing.T) {
 	var calls atomic.Int32
 	code, output := runTaskCommand(t, func(http.ResponseWriter, *http.Request) { calls.Add(1) }, "kb", "create")
@@ -99,6 +111,7 @@ func TestResourcesInvalidParametersNeverWrite(t *testing.T) {
 		{"threads", "append", "--thread-id", taskThread, "--file-id", taskTurn},
 		{"threads", "append", "--thread-id", taskThread, "--expected-version", "3"},
 		{"threads", "resources", "--thread-id", "bad"},
+		{"kb", "stats", "--kb-id", "0"},
 		{"files", "list", "--limit", "501"},
 		{"artifacts", "list", "--thread-id", "../bad"},
 	} {

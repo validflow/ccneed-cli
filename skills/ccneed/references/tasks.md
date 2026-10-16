@@ -50,7 +50,18 @@ ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID
 ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s
 ```
 
-两者返回目标回合的 `status`、`cloud_status`、公开 `answer`、`answer_truncated`、`pending_action`、`artifacts`、`artifacts_has_more`，并保留会话/回合标识。`watch` 额外返回 `stop_reason`。
+两者返回目标回合的 `status`、`cloud_status`、公开 `answer`、`answer_truncated`、`pending_action`、`artifacts`、`artifacts_has_more`、`progress` 和 `web_url`，并保留会话/回合标识。`watch` 额外返回 `stop_reason`。`web_url` 是当前登录环境中这个会话的网页入口；用户想仔细查看完整分析过程时，优先建议打开这个链接。
+
+`progress.events` 只含本轮的安全里程碑（`seq`、时间、阶段、状态、固定摘要），不含原始工具输入输出、知识库正文或思维链。`get` 默认返回最近 20 条，按 `seq` 升序展示；如需从首条顺序读取，用 `--after-seq 0`；需要更多历史时，用返回的 `next_before_seq` 继续向前翻页；只要新增进度时，记住最新的 `next_after_seq`，稍后再查询。两个游标不能同时使用，`--limit` 范围 1–100：
+
+```bash
+ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID --limit 20
+ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID --after-seq 0
+ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID --before-seq 120
+ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID --after-seq 140
+```
+
+没有新增事件时，`progress.events` 可以为空；仍以同一响应的 `status`、`pending_action` 和产出判断任务当前状态，不把空事件误认为完成。`after-seq` 返回空页时保留原游标，下次继续查；多轮会话先用 `tasks list --thread-id` 选定 `turn_id`，不要跨轮复用游标。`watch` 返回截止时最近的一页进度，不是持续向宿主 Agent 推送的事件流。
 
 - `waiting_user`：立即把待确认项交给用户，不继续等待。
 - `completed`：交付这一轮的公开回答与关联产出；`answer_truncated` 为真时不能声称回答完整。

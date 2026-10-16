@@ -22,6 +22,21 @@ type KnowledgeListing struct {
 	KnowledgeBases []KnowledgeBase `json:"knowledge_bases"`
 }
 
+// KBDistribution 只携带分类标签和聚合数量，不包含单条内容。
+type KBDistribution struct {
+	Label string `json:"label"`
+	Count int64  `json:"count"`
+}
+
+// KnowledgeBaseStats 是当前账号的已发布 KB 概览，不提供帖子明细。
+type KnowledgeBaseStats struct {
+	KBID               int64            `json:"kb_id"`
+	AvailablePostCount int64            `json:"available_post_count"`
+	Platforms          []KBDistribution `json:"platforms"`
+	Sentiments         []KBDistribution `json:"sentiments"`
+	TopTopics          []KBDistribution `json:"top_topics"`
+}
+
 // UserFile 表示独立上传后可用于绑定的文件，不含存储 object key。
 type UserFile struct {
 	ID          string  `json:"library_file_id"`

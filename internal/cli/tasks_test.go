@@ -50,14 +50,38 @@ func TestTasksGetUsesOwnedPublicSnapshot(t *testing.T) {
 	}
 }
 
+func TestTasksGetPaginatesOnlyRequestedTurn(t *testing.T) {
+	code, output := runTaskCommand(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("limit") != "2" || r.URL.Query().Get("after_seq") != "7" {
+			t.Errorf("unexpected progress query: %s", r.URL.RawQuery)
+		}
+		_, _ = fmt.Fprintf(w, `{"thread_id":%q,"turn_id":%q,"conversation_turn_idx":1,"status":"running","cloud_status":"running","artifacts":[],"progress":{"events":[{"seq":8,"at":"2026-10-16T00:00:00Z","stage":"analysis","state":"started","summary":"Analyzing data"}],"has_more":false,"next_after_seq":8}}`, taskThread, taskTurn)
+	}, append(taskArgs("get"), "--limit", "2", "--after-seq", "7")...)
+	if code != 0 || !strings.Contains(output, `"next_after_seq":8`) || !strings.Contains(output, `"web_url":`) || !strings.Contains(output, taskThread) {
+		t.Fatalf("exit=%d output=%s", code, output)
+	}
+}
+
+func TestTasksGetZeroAfterCursorRequestsInitialChronologicalPage(t *testing.T) {
+	code, output := runTaskCommand(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("after_seq") != "0" {
+			t.Errorf("expected explicit initial cursor, got %s", r.URL.RawQuery)
+		}
+		_, _ = fmt.Fprintf(w, `{"thread_id":%q,"turn_id":%q,"conversation_turn_idx":1,"status":"running","cloud_status":"running","artifacts":[],"progress":{"events":[{"seq":1,"stage":"work","state":"started","summary":"Research started"}],"has_more":false,"next_after_seq":1}}`, taskThread, taskTurn)
+	}, append(taskArgs("get"), "--after-seq", "0")...)
+	if code != 0 || !strings.Contains(output, `"next_after_seq":1`) {
+		t.Fatalf("exit=%d output=%s", code, output)
+	}
+}
+
 func TestTasksWatchReturnsWaitingUserWithoutPollingAgain(t *testing.T) {
 	var calls atomic.Int32
-	body := fmt.Sprintf(`{"thread_id":%q,"turn_id":%q,"conversation_turn_idx":1,"status":"waiting_user","cloud_status":"paused","pending_action":{"action_id":"choice-one","action_type":"ask_user","reason":"选择平台","resume_schema":{"type":"object","required":["platform"]},"suggested":{"options":["rednote","douyin"]}},"artifacts":[]}`, taskThread, taskTurn)
+	body := fmt.Sprintf(`{"thread_id":%q,"turn_id":%q,"conversation_turn_idx":1,"status":"waiting_user","cloud_status":"paused","pending_action":{"action_id":"choice-one","action_type":"ask_user","reason":"选择平台","resume_schema":{"type":"object","required":["platform"]},"suggested":{"options":["rednote","douyin"]}},"artifacts":[],"progress":{"events":[{"seq":12,"stage":"work","state":"waiting_user","summary":"Work step waiting user."}],"has_more":false,"next_after_seq":12}}`, taskThread, taskTurn)
 	code, output := runTaskCommand(t, func(w http.ResponseWriter, _ *http.Request) {
 		calls.Add(1)
 		_, _ = fmt.Fprint(w, body)
 	}, append(taskArgs("watch"), "--timeout", "1s")...)
-	if code != 0 || calls.Load() != 1 || !strings.Contains(output, `"stop_reason":"waiting_user"`) || !strings.Contains(output, `"action_id":"choice-one"`) {
+	if code != 0 || calls.Load() != 1 || !strings.Contains(output, `"stop_reason":"waiting_user"`) || !strings.Contains(output, `"action_id":"choice-one"`) || !strings.Contains(output, `"next_after_seq":12`) {
 		t.Fatalf("exit=%d calls=%d output=%s", code, calls.Load(), output)
 	}
 }
@@ -90,11 +114,24 @@ func TestTasksRejectWrongIdentityAndMalformedState(t *testing.T) {
 	}
 }
 
+func TestTasksGetDoesNotExposeDeniedTurnResponse(t *testing.T) {
+	code, output := runTaskCommand(t, func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = fmt.Fprint(w, `{"detail":"private-turn-secret"}`)
+	}, taskArgs("get")...)
+	if code == 0 || !strings.Contains(output, `"code":"not_found"`) || strings.Contains(output, "private-turn-secret") {
+		t.Fatalf("exit=%d output=%s", code, output)
+	}
+}
+
 func TestTasksValidateArgumentsBeforeConnection(t *testing.T) {
 	for _, args := range [][]string{
 		{"tasks", "get", "--thread-id", "../bad", "--turn-id", taskTurn},
 		append(taskArgs("watch"), "--timeout", "0s"),
 		append(taskArgs("watch"), "--timeout", "11m"),
+		append(taskArgs("get"), "--limit", "0"),
+		append(taskArgs("get"), "--before-seq", "7", "--after-seq", "8"),
+		append(taskArgs("get"), "--after-seq", "-1"),
 	} {
 		var calls atomic.Int32
 		var stdout, stderr bytes.Buffer

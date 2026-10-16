@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/validflow/ccneed-cli/internal/api"
 	"github.com/validflow/ccneed-cli/internal/tasks"
 )
 
@@ -37,6 +38,8 @@ func tasksCommand(connection *connectionConfig) *cobra.Command {
 //	单个查询或观察命令。
 func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
 	var threadID, turnID string
+	var limit int
+	var beforeSeq, afterSeq int64
 	timeout := 60 * time.Second
 	name := "get"
 	if watch {
@@ -44,13 +47,9 @@ func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
 	}
 	command := &cobra.Command{Use: name, Short: "Read a public turn snapshot", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if err := tasks.ValidateIDs(threadID, turnID); err != nil {
+			page := tasks.PageOptions{Limit: limit, BeforeSeq: beforeSeq, AfterSeq: afterSeq, AfterSeqSet: cmd.Flags().Changed("after-seq")}
+			if err := validateTaskReadOptions(cmd, threadID, turnID, page, timeout, watch); err != nil {
 				return err
-			}
-			if watch {
-				if err := tasks.ValidateTimeout(timeout); err != nil {
-					return err
-				}
 			}
 			client, err := connection.client(cmd.Context())
 			if err != nil {
@@ -64,7 +63,7 @@ func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
 				}
 				return json.NewEncoder(cmd.OutOrStdout()).Encode(result)
 			}
-			result, err := service.Get(cmd.Context(), threadID, turnID)
+			result, err := service.GetPage(cmd.Context(), threadID, turnID, page)
 			if err != nil {
 				return err
 			}
@@ -75,6 +74,42 @@ func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
 	command.Flags().StringVar(&turnID, "turn-id", "", "Durable conversation turn UUID")
 	if watch {
 		command.Flags().DurationVar(&timeout, "timeout", timeout, "Local observation deadline (1s–10m); does not cancel the cloud task")
+	} else {
+		command.Flags().IntVar(&limit, "limit", 20, "Progress milestones to return (1-100)")
+		command.Flags().Int64Var(&beforeSeq, "before-seq", 0, "Older progress before this exclusive sequence")
+		command.Flags().Int64Var(&afterSeq, "after-seq", 0, "New progress after this exclusive sequence")
 	}
 	return command
+}
+
+// validateTaskReadOptions rejects invalid pagination and watch arguments before connecting.
+//
+// Args:
+//
+//	cmd: Active command, used to distinguish an explicit zero cursor from omission.
+//	threadID: Root conversation UUID.
+//	turnID: Durable turn UUID.
+//	page: Requested progress page for a one-shot get.
+//	timeout: Local watch deadline.
+//	watch: Whether this command observes for a bounded period.
+//
+// Returns:
+//
+//	An input error, or nil.
+//
+// Errors:
+//
+//	Returns invalid_input for malformed IDs, cursors, limits, or timeouts.
+func validateTaskReadOptions(cmd *cobra.Command, threadID, turnID string, page tasks.PageOptions, timeout time.Duration, watch bool) error {
+	if err := tasks.ValidateIDs(threadID, turnID); err != nil {
+		return err
+	}
+	if watch {
+		return tasks.ValidateTimeout(timeout)
+	}
+	if (cmd.Flags().Changed("before-seq") && page.BeforeSeq == 0) ||
+		(cmd.Flags().Changed("before-seq") && cmd.Flags().Changed("after-seq")) {
+		return &api.Error{Code: "invalid_input"}
+	}
+	return tasks.ValidatePageOptions(page)
 }
