@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.md) · 中文
 
+## 0.1.5
+
+- 新增 `ccneed kb stats`，查看知识库汇总数量和有限的分布信息，并提供当前环境的网页入口；不返回正文。
+- `ccneed tasks get` 支持分页查看云端回合进度；`tasks watch` 增加会话链接，同时保留任务状态与确认请求。
+
 ## 0.1.4
 
 - 收短中英文 README 的知识库会话示例；详细 CLI 流程仍由 Agent Skill 说明。
