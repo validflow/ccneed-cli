@@ -105,6 +105,8 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 | 📎 查看、上传自己的文件 | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
 | 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
 | 🕘 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
+| 🔎 查看本轮研究进度 | `ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID` |
+| ⏳ 等待本轮结果或确认 | `ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s` |
 | 🚪 退出登录 | `ccneed auth logout` |
 
 知识库和文件绑定只追加、不解绑。具体参数可用 `ccneed <命令> --help` 查看。

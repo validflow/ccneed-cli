@@ -73,7 +73,11 @@ func (c *Client) Watch(ctx context.Context, threadID, turnID string, timeout tim
 //
 //	网络、权限、协议或宿主取消时返回错误。
 func (c *Client) observe(ctx, observation context.Context, threadID, turnID string) (WatchResult, error) {
-	last := Detail{ThreadID: threadID, TurnID: turnID, Status: "unknown", CloudStatus: "unknown", Artifacts: []Artifact{}}
+	last := Detail{
+		ThreadID: threadID, TurnID: turnID, Status: "unknown", CloudStatus: "unknown",
+		Artifacts: []Artifact{}, Progress: ProgressPage{Events: []ProgressEvent{}},
+		WebURL: c.api.Origin() + "/insightflow/" + threadID,
+	}
 	for {
 		result, err := c.Get(observation, threadID, turnID)
 		if err != nil {

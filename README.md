@@ -105,6 +105,8 @@ The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, includi
 | 📎 List or upload your own files | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
 | 🗂️ View or add conversation resources | `ccneed threads resources` / `ccneed threads append` |
 | 🕘 Review task history | `ccneed tasks list --thread-id THREAD_UUID` |
+| 🔎 Follow a research turn | `ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID` |
+| ⏳ Wait for a result or question | `ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s` |
 | 🚪 Sign out | `ccneed auth logout` |
 
 Knowledge-base and file bindings can be added, but not removed. Use `ccneed <command> --help` for the required arguments.
