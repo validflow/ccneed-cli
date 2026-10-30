@@ -2,6 +2,14 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.6
+
+- Fixed GitHub binary downloads during npm installation and recovery on Node.js 22 to honor existing `HTTPS_PROXY`, `HTTP_PROXY`, and `NO_PROXY` settings, including lowercase forms.
+- Added actionable proxy download errors without exposing the original network error or credentials; retained trusted redirects, bounded streaming, and SHA-256 verification.
+- Updated installation guidance and installed locked npm dependencies without lifecycle scripts before CI tests, builds, and publication.
+
+Website device authorization still depends on the deployed CCNeed service. This CLI update does not deploy the separate website authorization fix.
+
 ## 0.1.5
 
 - Added `ccneed kb stats` for aggregate knowledge-base counts and limited distributions, with a link to inspect the knowledge base on the selected website. Post bodies are not returned.
