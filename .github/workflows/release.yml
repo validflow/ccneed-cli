@@ -62,6 +62,8 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Pin npm for deterministic release gates
         run: npm install --global npm@11.21.0 --ignore-scripts --no-audit --no-fund
+      - name: Install locked installer dependencies without downloading release binaries
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Deterministic release gates
         env:
           REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
@@ -107,6 +109,8 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Pin npm with OIDC publishing and dist-tag support
         run: npm install --global npm@11.21.0 --ignore-scripts --no-audit --no-fund
+      - name: Install locked installer dependencies without downloading release binaries
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Download the exact gated build
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:

@@ -4,9 +4,38 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createServer } from 'node:http';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { assetName, installBinary, downloadAsset } from './install.mjs';
 const bytes = Buffer.from('verified fixture executable');
 const hash = createHash('sha256').update(bytes).digest('hex');
+
+for (const variable of ['HTTPS_PROXY', 'HTTP_PROXY']) {
+  test(`release downloader uses ${variable} for HTTPS without requiring a newer Node runtime`, { timeout: 10_000 }, async (t) => {
+    const authorities = [];
+    const proxy = createServer();
+    proxy.on('connect', (request, socket) => {
+      authorities.push(request.url);
+      socket.end('HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\nConnection: close\r\n\r\n');
+    });
+    await new Promise(resolve => proxy.listen(0, '127.0.0.1', resolve));
+    t.after(() => new Promise(resolve => proxy.close(resolve)));
+    const environment = Object.fromEntries(Object.entries(process.env).filter(([name]) => !/^(https?_proxy|all_proxy|no_proxy)$/i.test(name)));
+    environment[variable] = `http://127.0.0.1:${proxy.address().port}`;
+    environment.NO_PROXY = '';
+    const script = `import { downloadAsset } from ${JSON.stringify(new URL('./install.mjs', import.meta.url).href)};
+      try { await downloadAsset('https://github.com/validflow/ccneed-cli/releases/download/v0.1.5/not-a-real-asset'); process.exitCode = 2; }
+      catch { console.log('download rejected'); }`;
+    let result;
+    try {
+      result = await promisify(execFile)(process.execPath, ['--input-type=module', '-e', script], { env: environment, timeout: 4_000, windowsHide: true });
+    } catch (error) { result = error; }
+    assert.ok(authorities.length > 0, `${variable} must route the HTTPS request through the configured proxy`);
+    assert.ok(authorities.every(authority => authority === 'github.com:443'));
+    assert.equal(result.stdout.trim(), 'download rejected');
+  });
+}
 
 test('real downloader follows only trusted HTTPS redirects and returns a stream', async (t) => {
   const requests = [];
@@ -32,6 +61,17 @@ test('foreign, plaintext and credentialed redirects stop before following them',
     assert.equal(calls, 1);
     t.mock.restoreAll();
   }
+});
+
+test('download failures explain proxy configuration without exposing the original network error', async (t) => {
+  const privateDetail = 'http://private-user:private-password@proxy.invalid';
+  t.mock.method(globalThis, 'fetch', async () => { throw new Error(privateDetail); });
+  await assert.rejects(downloadAsset('https://github.com/fixture'), error => {
+    assert.match(error.message, /HTTPS_PROXY\/HTTP_PROXY/);
+    assert.match(error.message, /GitHub/);
+    assert.equal(error.message.includes(privateDetail), false);
+    return true;
+  });
 });
 
 test('stream errors remove temporary data and preserve the previous executable', async () => {

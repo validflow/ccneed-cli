@@ -20,6 +20,8 @@ npx @validflow/ccneed-cli@latest install --agent workbuddy
 
 需要 Node 22.14.0+ 和 npm。CLI 安装在 npm 全局命令目录；该目录必须在宿主实际执行环境的 PATH 中。本机安装不会自动提供给远程沙箱，不默认申请管理员权限。安装器不读取账号、创建任务或修改宿主安全配置。
 
+如果访问 GitHub 需要代理，请在安装所在终端设置 `HTTPS_PROXY`（或 `HTTP_PROXY`）。二进制下载会遵循这些变量及 `NO_PROXY`，也支持小写形式；包内不预设个人代理地址或端口。
+
 `@latest` 指向 npm 当前稳定版；若需复现特定版本，可将它替换为明确的版本号。安装器会全局安装同一精确版本的 CLI 与 Skill。
 
 宿主入口按明确的 `--agent` 选择建立：

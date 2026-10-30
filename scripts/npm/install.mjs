@@ -4,10 +4,12 @@ import { pipeline } from 'node:stream/promises';
 import { createHash, randomUUID } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
+import { EnvHttpProxyAgent } from 'undici';
 
 const versionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-rc\.(0|[1-9][0-9]*))?$/;
 const hosts = new Set(['github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com']);
 export const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+let downloadDispatcher;
 
 /** assetName 将受支持的平台映射到精确版本的二进制名称。
  * Args:
@@ -29,7 +31,7 @@ export function assetName(version, platform, arch) {
 
 /** downloadAsset 下载公开 GitHub 产物，限制重定向来源、响应大小和总耗时。
  * Args:
- *   address: 安装器生成的固定 Release 下载地址，不来自服务端用户输入。
+ *   address: 安装器生成的固定 Release 下载地址；代理来自用户既有 HTTP_PROXY、HTTPS_PROXY 和 NO_PROXY 配置。
  * Returns:
  *   共享下载超时的响应流；安装器在写入时限制为 64 MiB。
  * Errors:
@@ -40,7 +42,13 @@ export async function downloadAsset(address) {
   let url = new URL(address);
   for (let hop = 0; hop < 4; hop++) {
     if (url.protocol !== 'https:' || url.username || url.password || url.port || !hosts.has(url.hostname)) throw new Error('Untrusted release redirect');
-    const response = await fetch(url, { redirect: 'manual', signal });
+    downloadDispatcher ??= new EnvHttpProxyAgent();
+    let response;
+    try {
+      response = await fetch(url, { redirect: 'manual', signal, dispatcher: downloadDispatcher });
+    } catch {
+      throw new Error('Release download failed. Check HTTPS_PROXY/HTTP_PROXY settings and access to GitHub.');
+    }
     if ([301, 302, 303, 307, 308].includes(response.status)) {
       await response.body?.cancel();
       const location = response.headers.get('location');

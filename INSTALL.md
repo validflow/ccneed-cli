@@ -17,6 +17,8 @@ npx @validflow/ccneed-cli@latest install --agent codex
 
 Requires Node.js 22.14+ and npm. The installer places `ccneed` in npm's global command directory, which must be on the Agent's PATH. A local install does not automatically make it available inside a remote sandbox. The installer does not read CCNeed account data, create tasks, or change Agent security settings.
 
+If GitHub downloads require a proxy, set `HTTPS_PROXY` (or `HTTP_PROXY`) in the terminal before installing. The binary downloader honors these variables and `NO_PROXY`, including their lowercase forms; no machine-specific proxy address is built into the package.
+
 `@latest` is npm's current stable release; replace it with an exact version if reproducibility matters. The installer globally installs that exact CLI and Skill version. Selected hosts receive links to the one installed Skill directory:
 
 | Host | Current-user Skill path |
