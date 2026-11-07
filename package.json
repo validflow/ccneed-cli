@@ -9,7 +9,7 @@
   "dependencies": { "undici": "7.30.1" },
   "repository": { "type": "git", "url": "git+https://github.com/validflow/ccneed-cli.git" },
   "bin": { "ccneed": "scripts/npm/run.mjs" },
-  "files": ["scripts/npm/install.mjs", "scripts/npm/run.mjs", "scripts/npm/setup.mjs", "scripts/npm/skills.mjs", "scripts/npm/plugin.mjs", "hooks/*.mjs", "checksums.json", "skills/", "assets/", "README.md", "INSTALL.md"],
+  "files": ["scripts/npm/install.mjs", "scripts/npm/run.mjs", "scripts/npm/setup.mjs", "scripts/npm/skills.mjs", "scripts/npm/plugin.mjs", "hooks/", ".claude-plugin/", ".codex-plugin/", ".codebuddy-plugin/", ".agents/plugins/", "checksums.json", "skills/", "assets/", "README.md", "INSTALL.md"],
   "scripts": {
     "postinstall": "node scripts/npm/install.mjs",
     "test": "node --test scripts/release/*.test.mjs scripts/npm/*.test.mjs scripts/review/*.test.mjs"

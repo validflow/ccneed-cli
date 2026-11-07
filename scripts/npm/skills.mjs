@@ -193,3 +193,49 @@ export function attachSkillLinks(plans, createLink = symlinkSync) {
     throw error;
   }
 }
+
+/** prepareLegacySkillCleanup 只识别旧安装器指向同一全局包的技能入口。
+ * Args:
+ *   home: 明确的用户目录，测试使用隔离目录。
+ *   agents: 本次明确选择的宿主。
+ *   root: 稳定的全局 npm 包目录。
+ * Returns:
+ *   可以删除的自有链接；不注册第二份独立技能。
+ * Errors:
+ *   自定义同名技能、非法宿主或父目录链接使预检失败，不更改文件。
+ */
+export function prepareLegacySkillCleanup(home, agents, root) {
+  if (!isAbsolute(home) || !isAbsolute(root)) throw new Error('Installation directories must be absolute');
+  const source = join(resolve(root), 'skills', 'ccneed');
+  return agents.flatMap(agent => {
+    if (!Object.hasOwn(hosts, agent)) throw new Error('Unsupported agent');
+    const directories = agent === 'workbuddy' ? [hosts[agent], '.codebuddy'] : [hosts[agent]];
+    return directories.flatMap(directory => {
+      const parents = [resolve(home), join(home, directory), join(home, directory, 'skills')];
+      checkParents(parents);
+      const target = join(parents[2], 'ccneed');
+      if (statOrMissing(target) && !sameLink(target, source)) throw new Error('Existing custom Skill must be resolved before native installation: ' + target);
+      return sameLink(target, source) ? [{ agent, parents, target, source }] : [];
+    });
+  });
+}
+
+/** removeLegacySkillLinks 移除仍然属于安装器的旧链接，不递归删除技能内容。
+ * Args:
+ *   plans: 已核对来源的旧技能链接。
+ * Returns:
+ *   实际移除的链接路径。
+ * Errors:
+ *   父目录或链接在预检后改变时停止，保留未知文件。
+ */
+export function removeLegacySkillLinks(plans) {
+  const removed = [];
+  for (const plan of plans) {
+    checkParents(plan.parents);
+    if (!statOrMissing(plan.target)) continue;
+    if (!sameLink(plan.target, plan.source)) throw new Error('Legacy Skill changed during installation');
+    unlinkSync(plan.target);
+    removed.push(plan.target);
+  }
+  return removed;
+}

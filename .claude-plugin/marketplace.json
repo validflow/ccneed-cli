@@ -1,0 +1,13 @@
+{
+  "name": "ccneed",
+  "description": "CCNeed data collection and cloud research integration.",
+  "owner": { "name": "CCNeed" },
+  "plugins": [
+    {
+      "name": "ccneed",
+      "description": "Collect data for your agent or request CCNeed cloud research.",
+      "source": "./",
+      "version": "0.1.6"
+    }
+  ]
+}

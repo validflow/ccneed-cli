@@ -1,61 +1,61 @@
-# Install CCNeed CLI and Skill
+﻿# Install CCNeed
 
 English · [中文](INSTALL.zh.md)
 
-The CLI is installed globally and links its companion Skill into the selected host's user configuration. This guide also describes the upcoming collection hooks and native ask rules, subject to the release requirements below. Website login still requires explicit user approval.
+The global CLI runs commands. A native plugin supplies the shared Skill and collection hooks to Claude Code, Codex or WorkBuddy desktop; each host manages its plugin cache and lifecycle.
 
-> Release status: this branch keeps version 0.1.6 without publishing it again. The new `kb plan`, `kb start`, `kb export` and collection plugin require a new CLI release containing these changes and deployment of the matching Club APIs. `@latest` installs the published stable package, not unreleased branch changes. Keep the CLI, Skill and hooks on the same package version; merging code does not publish npm automatically.
+> Release status: this branch keeps version 0.1.6 without publishing it again. Native plugins, `kb plan`, `kb start` and `kb export` require a new CLI release containing these changes and deployment of matching Club APIs. Published `@latest` does not include unreleased changes. Merging code does not publish npm.
 
 ## Install or update
 
-After checking the official source and asking the user to approve installation, choose the Agent host:
+Requires Node.js 22.14+, npm and the selected host. After reviewing the official source and obtaining permission to install:
 
 ```bash
-npx @validflow/ccneed-cli@latest install --agent codex
-# Or: --agent workbuddy, --agent claude, or --agent codex,workbuddy
+npx @validflow/ccneed-cli@latest install --agent claude
+# Or: --agent codex, --agent workbuddy, --agent claude,codex,workbuddy
 ```
 
-Requires Node.js 22.14+ and npm. The installer places `ccneed` in npm's global command directory, which must be on the Agent's PATH. A local install does not automatically make it available inside a remote sandbox. In the new release described above, it also adds collection hooks and ask rules only for selected hosts, preserves unrelated settings, and does not change the host's permission mode, read account data or create tasks.
+The installer installs the exact global CLI version and coordinates native registration only for named hosts. Include every host you want to update. It does not start login or cloud tasks. Keep npm's global command directory on the Agent's PATH; local installation does not install commands inside a remote sandbox.
 
-If GitHub downloads require a proxy, set `HTTPS_PROXY` (or `HTTP_PROXY`) in the terminal before installing. The binary downloader honors these variables and `NO_PROXY`, including their lowercase forms; no machine-specific proxy address is built into the package.
-
-`@latest` is npm's current stable release; replace it with an exact version if reproducibility matters. The installer globally installs that exact CLI and Skill version. Selected hosts receive links to the one installed Skill directory:
-
-| Host | Current-user Skill path |
-| --- | --- |
-| Codex | `~/.agents/skills/ccneed` |
-| WorkBuddy desktop | `~/.workbuddy/skills/ccneed` |
-| Claude Code | `~/.claude/skills/ccneed` |
-
-These are directory links, not copies: Windows uses junctions; other systems use symlinks. Updating the global package updates already-linked hosts too, even if the update command names only one host. Restart or reload the host afterward; an existing Agent conversation may retain the old Skill in memory.
-
-The package includes the Chinese Skill, references and collection hooks. Release and installation validate the Skill and CLI binary. A directory link alone is not proof of successful host loading. Earlier `.codebuddy/skills/ccneed` links are preserved; WorkBuddy desktop now uses its actual `.workbuddy` directory.
-
-## Collection approval setup
-
-This setup applies to the new coordinated release described above. Check the installed version and command help first; the published 0.1.6 package does not include these collection hooks.
-
-| Host | Configuration added | Required mode |
+| Host | Native registration | Additional approval configuration |
 | --- | --- | --- |
-| Claude Code | `~/.claude/settings.json`: PreToolUse/PostToolUse hooks and ask rules | Interactive default/acceptEdits; no automatic approvals |
-| Codex | `~/.codex/hooks.json` and `~/.codex/rules/ccneed.rules` | `on-request`, `approvals_reviewer = "user"`; hooks and rules enabled |
-| WorkBuddy desktop | `~/.workbuddy/settings.json`: hooks, ask rules and `sandbox.commandSafety.ask` | Default permission; paid collection through native Bash; allow once |
+| Claude Code | Claude marketplace/plugin commands; verified user-scope version and enabled state | Plugin PreToolUse requests native `ask` |
+| Codex | Codex marketplace/plugin commands; verified installed version and enabled state | `~/.codex/rules/ccneed.rules` prompts for paid prefixes |
+| WorkBuddy desktop | Complete the native marketplace/plugin steps returned by the installer | `~/.workbuddy/settings.json`: compatible ask rules and `sandbox.commandSafety.ask` |
 
-Restart each selected host and review/trust its new hooks. A plan command must display the research requirement, platform keywords/quotas, credit estimate and balance. Starting the same prepared plan must show a native permission prompt; reject it during acceptance testing and verify no collection starts. Unit tests and files on disk do not prove this UI acceptance passed.
+The package provides a local marketplace named `ccneed`; the plugin is `ccneed@ccneed`. Native managers load the bundled Skill and hooks without a second global Skill or user-level hook registration. Native caches can contain copies: rerun this installer rather than assuming `npm install -g` refreshes every host.
 
-WorkBuddy collection requires its native Bash tool (Git Bash on Windows). The installer preserves the sandbox and existing safety rules. Its current PowerShell sandbox wrapper does not reliably match collection prefixes, so paid PowerShell calls are blocked with instructions to use Bash in the same host. Choose **allow once** each time. Choosing a session-wide approval actively disables repeated confirmation for that prefix; start a new host session to restore it.
+Check `plugins[]` in the JSON result. `installed` means the native manager reported the requested version enabled; hooks still require trust and a running session may need reloading. `action_required` or `failed` means integration is incomplete. WorkBuddy desktop currently has no verified public CLI registration command, so it remains pending until native desktop installation is completed. CodeBuddy CLI registration does not establish WorkBuddy desktop integration.
 
-Use a standalone `ccneed kb start ...` command. Do not wrap it in another script or hide plan output through shell redirection. Codex needs absolute plan/answer paths because current hooks do not receive an overridden command working directory. Its PreToolUse hook cannot return `ask`; the installed native command policy supplies the prompt. Commands are rejected in known bypass/never/auto-review modes. Disabling hooks/rules or overriding approval settings invalidates this supported configuration.
+Restart the host, review/trust hooks and confirm the Skill loads. Installation trust is separate from permission to start each collection. Use native plugin controls for enable, disable and removal. Removing a plugin does not uninstall the global CLI or automatically remove extra Codex/WB permission rules. Retain those conservative rules until deliberately removing the corresponding CCNeed entries; preserve unrelated rules.
 
-Host protocols were checked against official [Claude hooks](https://code.claude.com/docs/en/hooks), [Codex hooks](https://learn.chatgpt.com/docs/hooks) and [rules](https://learn.chatgpt.com/docs/agent-configuration/rules), plus the installed WorkBuddy 5.3.8 desktop runtime. WorkBuddy desktop [permission modes](https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes) distinguish default from full access. Actual per-host native prompt acceptance still needs to be recorded on the deployed revisions.
+If downloads require a proxy, set `HTTPS_PROXY` or `HTTP_PROXY`; the downloader also honors `NO_PROXY` and lowercase forms. Use an exact version instead of `@latest` for reproducibility. RC releases use `@next`.
 
-## Existing files and update failures
+## Collection confirmation
 
-- The installer never overwrites a custom Skill or unrelated link at the same path. If an official Skill was locally modified, preserve the customization elsewhere before upgrading.
-- Missing links fail explicitly; the installer does not leave behind a copied Skill that will silently go stale. It changes only explicitly selected hosts, not every host in an npm `postinstall` hook.
-- Failed network, checksum, or link validation must not be reported as success. A link-stage failure rolls back only links created during that attempt; npm package replacement is not promised to be transactional.
-- A changed npm prefix or Node installation may change the global package path. The installer stops on a conflicting old link instead of rewriting an unknown location.
-- The installed package's Skill is npm-managed. Store custom instructions under a different Skill name instead of editing the installed one.
+1. The Agent prepares a plan; CCNeed validates it and compares estimated credits with balance.
+2. The plugin displays the research requirement, each platform's entity/other keywords, total platform quota, credits and balance. Internal T1/T2/T3 allocation stays out of the user summary.
+3. Starting that exact plan requires native tool permission. Changed or expired plans must be prepared and displayed again. Conversation HITL approvals use the same protections.
+
+| Host | Supported collection mode |
+| --- | --- |
+| Claude Code | Interactive default/acceptEdits, manual approvals |
+| Codex | `on-request`, `approvals_reviewer = "user"`, hooks/rules enabled |
+| WorkBuddy desktop | Default permission, native Bash, **allow once** |
+
+Codex PreToolUse cannot return `ask`; native command rules supply confirmation. WorkBuddy's current PowerShell sandbox wrapper does not reliably match paid prefixes, so paid PowerShell calls are blocked. Use Bash, including Git Bash on Windows. Session-wide approval suppresses later confirmations for that prefix; open a fresh session to restore them. Known bypass/never/automatic-review modes are rejected.
+
+Use a standalone `ccneed kb start ...`, without script wrappers, composite commands or redirects. Codex plan/answer paths must be absolute because hooks do not receive an overridden command working directory. Disabling hooks, rules or manual approvals invalidates this supported configuration.
+
+For acceptance, prepare a plan and verify its display; deny the native start prompt and confirm no collection starts, then approve a fresh attempt. Repeat for conversation HITL. Unit tests and files on disk do not establish desktop UI acceptance.
+
+## Existing files and failures
+
+The installer preserves unrelated settings and custom Skills. It migrates only recognized installer-owned legacy Skill links/hooks; unknown or edited files require manual resolution. A modified npm-managed Skill blocks replacement until its customization is preserved elsewhere. Keep custom instructions under another Skill name.
+
+Native failures are reported per host after CLI installation, never as overall success. Fix the reported cause and retry. npm replacement and native managers are not one transaction. Conflicting same-name marketplaces are not redirected. Ordinary npm `postinstall` does not modify host configuration.
+
+Non-default `CODEX_HOME` or `CLAUDE_CONFIG_DIR` is reported as requiring manual profile setup; the installer does not register plugins or write approval rules into a different profile. Use the default profile for coordinated installation, or configure and verify the native plugin and its permission rules together in your chosen profile.
 
 ## Verify and authorize
 
@@ -63,18 +63,16 @@ Host protocols were checked against official [Claude hooks](https://code.claude.
 ccneed version --no-update-check
 ccneed --help
 ccneed auth login
-# Show the returned website link and confirmation code to the user.
+# Show the website link and confirmation code; the user approves in the browser.
 ccneed auth login --complete --timeout 60s
 ccneed auth status --verify
 ```
 
-Verify the CLI version, PATH, and actual Skill loading in the selected host. `restart_required` means the host needs a reload; `auth: not_started` means login has not happened. Never approve website access on the user's behalf, read browser cookies, or print secrets.
+`auth: not_started` means login has not happened. Never approve website access for the user, read browser cookies or print secrets. Commands default to production `https://ccneed.ai`; only authorized developers use `--api-url` with isolated staging accounts. See [Contributing](CONTRIBUTING.md).
 
-By default the CLI uses production at `https://ccneed.ai`; ordinary users do not need `--api-url`. Only authorized developers may use that flag with a staging test account, passing the same origin on every command. Remote HTTP additionally requires `--allow-insecure-http` and exposes credentials over plaintext; never use it for production. The server must independently enforce staging access. See [Contributing](CONTRIBUTING.md).
+## Build from source
 
-## Build from source (developers)
-
-In a new, clean directory with Git and Go 1.25+:
+With Git and Go 1.25+:
 
 ```bash
 git clone https://github.com/validflow/ccneed-cli.git
@@ -82,8 +80,6 @@ cd ccneed-cli
 go install ./cmd/ccneed
 ```
 
-Put `go env GOBIN` on PATH, or GOPATH's `bin` when GOBIN is empty. Record the checked-out revision. This builds the development CLI only: `go install` does not install or update the companion Skill. If linking it manually, keep the source Skill at the same revision. Use npm for coordinated CLI + Skill updates. A source build is not an official npm release.
+Put `go env GOBIN` on PATH, or GOPATH's `bin` when empty. This builds the development command only; it does not register native plugins. Record the revision and keep plugin source at that revision. Offline installer help: `node scripts/npm/run.mjs install --help`.
 
-You can inspect installer help locally with `node scripts/npm/run.mjs install --help`.
-
-Official host references: [Codex Skills](https://developers.openai.com/codex/skills) · [WorkBuddy settings](https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Setting) · [Claude Code Skills](https://code.claude.com/docs/en/skills). A separate client-imported Skill is outside npm-linked updates.
+References: [Claude plugins](https://code.claude.com/docs/en/plugins-reference), [Codex plugin hooks](https://learn.chatgpt.com/docs/hooks#plugin-bundled-hooks), [Codex rules](https://learn.chatgpt.com/docs/agent-configuration/rules), [WorkBuddy permissions](https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes). Protocol checks used Claude Code 2.1.193, Codex 0.165.0 and WorkBuddy desktop 5.3.8; host updates still require acceptance testing.

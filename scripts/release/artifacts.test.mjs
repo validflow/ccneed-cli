@@ -24,7 +24,18 @@ function fixture() {
   mkdirSync(join(root, 'skills', 'ccneed', 'references'));
   for (const name of ['auth', 'account', 'tasks', 'resources']) writeFileSync(join(root, 'skills', 'ccneed', 'references', name + '.md'), 'fixture reference');
   mkdirSync(join(root, 'scripts', 'npm'), { recursive: true });
-  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
+  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
+  mkdirSync(join(root, 'hooks'));
+  writeFileSync(join(root, 'hooks', 'acquisition.mjs'), 'fixture shared hook');
+  for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
+    mkdirSync(join(root, directory));
+    writeFileSync(join(root, directory, 'plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', hooks: './hooks/' + host + '.json' }));
+    writeFileSync(join(root, 'hooks', host + '.json'), JSON.stringify({ hooks: { SessionStart: [], PreToolUse: [], PostToolUse: [] } }));
+  }
+  for (const directory of ['.claude-plugin', '.codebuddy-plugin', '.agents/plugins']) {
+    mkdirSync(join(root, directory), { recursive: true });
+    writeFileSync(join(root, directory, 'marketplace.json'), JSON.stringify({ name: 'ccneed', plugins: [{ name: 'ccneed', source: './', version: manifest.version }] }));
+  }
   const out = join(root, 'dist');
   mkdirSync(out);
   for (const target of targets('0.1.0')) writeFileSync(join(out, target.asset), Buffer.from(target.asset));
@@ -51,6 +62,26 @@ test('staging fails when matching Skill is unavailable; never publishes CLI alon
   unlinkSync(join(root, 'skills', 'ccneed', 'SKILL.md'));
   assert.throws(() => stagePackage(root, out, manifest), /ENOENT/);
   assert.throws(() => stagePackage(root, out, { ...manifest, version: '0.2.0' }), /version mismatch/);
+});
+
+test('release staging includes installer imports and all native plugin payloads', () => {
+  const { root, out, manifest } = fixture();
+  const staged = stagePackage(root, out, manifest);
+  assert.equal(readFileSync(join(staged, 'scripts/npm/plugin.mjs'), 'utf8'), 'fixture source');
+  assert.equal(readFileSync(join(staged, 'hooks/acquisition.mjs'), 'utf8'), 'fixture shared hook');
+  for (const directory of ['.claude-plugin', '.codex-plugin', '.codebuddy-plugin']) {
+    assert.equal(JSON.parse(readFileSync(join(staged, directory, 'plugin.json'), 'utf8')).version, manifest.version);
+  }
+  assert.equal(JSON.parse(readFileSync(join(staged, '.agents/plugins/marketplace.json'), 'utf8')).name, 'ccneed');
+});
+
+test('mismatched native plugin versions and missing hook payloads block publication', () => {
+  const { root, out, manifest } = fixture();
+  writeFileSync(join(root, '.codex-plugin/plugin.json'), JSON.stringify({ name: 'ccneed', version: '0.0.1', skills: './skills', hooks: './hooks/codex.json' }));
+  assert.throws(() => stagePackage(root, out, manifest), /plugin.*version/i);
+  writeFileSync(join(root, '.codex-plugin/plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', hooks: './hooks/codex.json' }));
+  unlinkSync(join(root, 'hooks/acquisition.mjs'));
+  assert.throws(() => stagePackage(root, out, manifest));
 });
 
 test('npm retry is idempotent only when published version and exact tarball match', () => {

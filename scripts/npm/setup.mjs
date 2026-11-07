@@ -1,11 +1,11 @@
 import { readFileSync, lstatSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, isAbsolute, join, parse } from 'node:path';
+import { dirname, isAbsolute, join, parse, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { installBinary, packageRoot } from './install.mjs';
-import { prepareSkillLinks, attachSkillLinks, parseAgents, validateBundledSkill } from './skills.mjs';
-import { preparePluginIntegration, attachPluginIntegration } from './plugin.mjs';
+import { prepareLegacySkillCleanup, removeLegacySkillLinks, parseAgents, validateBundledSkill } from './skills.mjs';
+import { preparePluginIntegration, attachPluginIntegration, installNativePlugin, runNative } from './plugin.mjs';
 
 const exec = promisify(execFile);
 const officialPackage = '@validflow/ccneed-cli';
@@ -98,23 +98,50 @@ function newerVersion(current, desired) {
   return BigInt(left[4]) > BigInt(right[4]);
 }
 
-/** installIntegration 全局安装精确版本 CLI，并将所选宿主指向同包技能。
+/** customNativeProfile 识别无法与默认权限配置一起自动安装的宿主 profile。
  * Args:
- *   options: 包来源、明确宿主、用户目录及可替换的 npm/程序验证边界。
+ *   host: 本次选择的宿主。
+ *   home: 安装器使用的用户目录。
+ *   env: 原生进程实际继承的环境，测试可随 native 边界注入。
  * Returns:
- *   版本、宿主路径和需要重新加载的真实安装结果。
- * Errors:
- *   自定义技能冲突在 npm 写入前失败；npm/版本/验证失败不会报告成功。
+ *   非默认 profile 的环境变量名，默认 profile 返回 null。
  */
-export async function installIntegration({ root = packageRoot, agents, home = homedir(), npm = runNpm, verify = verifyInstalledBinary }) {
+function customNativeProfile(host, home, env) {
+  const variable = { codex: 'CODEX_HOME', claude: 'CLAUDE_CONFIG_DIR' }[host];
+  const value = variable && env?.[variable];
+  if (!value) return null;
+  if (typeof value !== 'string') return variable;
+  const clean = path => path.replace(/^\\\\\?\\UNC\\/i, '\\\\').replace(/^\\\\\?\\/, '');
+  if (!isAbsolute(clean(value))) return variable;
+  const actual = resolve(clean(value));
+  const expected = resolve(join(home, host === 'codex' ? '.codex' : '.claude'));
+  const same = process.platform === 'win32' ? actual.toLowerCase() === expected.toLowerCase() : actual === expected;
+  return same ? null : variable;
+}
+
+/** installIntegration 全局安装精确版本 CLI，再逐宿主验证原生插件生命周期。
+ * Args:
+ *   options: 包来源、宿主、用户目录和可替换的 npm/程序/native(host,args)/env 边界。
+ * Returns:
+ *   CLI 版本、各宿主实际版本及信任、重启或自定义 profile 的手动设置要求。
+ * Errors:
+ *   npm/CLI 完整性错误直接失败；原生宿主失败返回真实的逐宿主部分结果。
+ */
+export async function installIntegration({ root = packageRoot, agents, home = homedir(), npm = runNpm, verify = verifyInstalledBinary, native = runNative, env = process.env }) {
   const desired = releaseManifest(root);
   const selected = parseAgents(agents);
+  // The real runner inherits process.env; injected runners may supply their
+  // own environment snapshot without changing the installer's process.
+  const nativeEnv = native === runNative ? process.env : env;
+  const customProfiles = new Map(selected.map(host => [host, customNativeProfile(host, home, nativeEnv)]));
+  const automatic = selected.filter(host => !customProfiles.get(host));
+  if (native === runNative && resolve(home) !== resolve(homedir()) && automatic.some(host => host !== 'workbuddy')) throw new Error('A custom home requires an injected native process boundary');
   validateBundledSkill(root);
   const globalRoot = (await npm(['root', '--global'])).trim();
   if (!isAbsolute(globalRoot) || globalRoot === parse(globalRoot).root || /[\r\n]/.test(globalRoot)) throw new Error('Invalid global npm directory');
   const globalPackage = join(globalRoot, '@validflow', 'ccneed-cli');
-  const plans = prepareSkillLinks(home, selected, globalPackage);
-  const pluginPlans = preparePluginIntegration(home, selected, globalPackage);
+  prepareLegacySkillCleanup(home, automatic, globalPackage);
+  preparePluginIntegration(home, automatic, globalPackage);
   const current = existingManifest(globalPackage);
   if (current) validateBundledSkill(globalPackage);
   if (current && newerVersion(current.version, desired.version)) throw new Error('Refusing to downgrade; use the current official installer');
@@ -125,9 +152,29 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
   if (releaseManifest(globalPackage).version !== desired.version) throw new Error('Global package version mismatch');
   validateBundledSkill(globalPackage);
   await verify(globalPackage, desired.version);
-  const pluginPaths = attachPluginIntegration(pluginPlans);
-  const paths = attachSkillLinks(plans);
-  return { status: 'installed', version: desired.version, agents: selected, skill_targets: paths, plugin_targets: pluginPaths, restart_required: true, hook_trust_required: true, manual_approval_required: true, auth: 'not_started' };
+  const plugins = [];
+  for (const host of selected) {
+    const variable = customProfiles.get(host);
+    if (variable) {
+      plugins.push({ host, plugin_id: 'ccneed@ccneed', requested_version: desired.version, version: null, status: 'action_required', error: 'custom_profile', next_steps: [variable + ' selects a nondefault native profile; automatic registration, default-profile rules and legacy cleanup were not performed for this host', 'Use that profile’s native plugin manager to register ' + globalPackage + ' and install/enable ccneed@ccneed version ' + desired.version, 'Set up the required native permission rules in the same active profile, review and trust the hooks, and restart the host before collection'] });
+      continue;
+    }
+    const result = await installNativePlugin(native, host, globalPackage, desired.version);
+    if (result.status === 'installed' || (host === 'workbuddy' && result.status === 'action_required')) {
+      try {
+        // Native managers can update settings during registration. Re-read
+        // rather than overwriting their enabledPlugins or marketplace state.
+        result.configuration_targets = attachPluginIntegration(preparePluginIntegration(home, [host], globalPackage));
+        result.removed_legacy_skill_links = removeLegacySkillLinks(prepareLegacySkillCleanup(home, [host], globalPackage));
+      } catch {
+        result.status = 'action_required';
+        result.error = 'legacy_integration_cleanup_required';
+        result.next_steps = ['Native registration or manual import is not sufficient yet: review the retained custom or concurrently changed legacy configuration, then retry the installer'];
+      }
+    }
+    plugins.push(result);
+  }
+  return { status: plugins.every(plugin => plugin.status === 'installed') ? 'installed' : 'action_required', version: desired.version, agents: selected, plugins, restart_required: true, hook_trust_required: true, manual_approval_required: true, auth: 'not_started' };
 }
 
 /** installerMain 提供安装与更新共用的明确入口，帮助和参数错误不触发网络。
@@ -140,7 +187,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
  */
 export async function installerMain(args) {
   if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
-    return 'Install or update CLI + same-version Skill, crawl hooks and native ask rules globally.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nRC: npx @validflow/ccneed-cli@next install --agent codex,workbuddy\nHosts: codex, workbuddy, claude. Restart selected hosts, trust hooks, and keep manual approvals enabled.\n';
+    return 'Install or update the global CLI and register same-version native plugins.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nRC: npx @validflow/ccneed-cli@next install --agent codex,workbuddy\nHosts: codex, claude; WorkBuddy requires native desktop import. Check each host result, restart, trust hooks, and keep manual approvals enabled.\n';
   }
   if (args.length !== 2 || args[0] !== '--agent') throw new Error('Use install --agent codex,workbuddy,claude; see install --help');
   return JSON.stringify(await installIntegration({ agents: args[1] })) + '\n';

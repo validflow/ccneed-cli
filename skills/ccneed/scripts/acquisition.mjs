@@ -321,9 +321,16 @@ export function handleHook(host, input, { stateDir = defaultStateDir } = {}) {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/** runHookFromStdin 执行宿主的有界 JSON 协议，保持三种原生入口共用同一实现。
+ * Args:
+ *   host: 当前原生插件指定的宿主名称。
+ * Returns:
+ *   协议处理完成后的 Promise；结果 JSON 写入 stdout。
+ * Errors:
+ *   无效输入写入固定错误信息并设置退出码 2，不回显输入正文。
+ */
+export async function runHookFromStdin(host) {
   try {
-    const hostIndex = process.argv.indexOf('--host');
     const chunks = [];
     let size = 0;
     for await (const chunk of process.stdin) {
@@ -331,9 +338,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       if (size > 4 * 1024 * 1024) throw new Error('Hook input too large');
       chunks.push(chunk);
     }
-    process.stdout.write(JSON.stringify(handleHook(process.argv[hostIndex + 1], JSON.parse(Buffer.concat(chunks).toString('utf8')))) + '\n');
+    process.stdout.write(JSON.stringify(handleHook(host, JSON.parse(Buffer.concat(chunks).toString('utf8')))) + '\n');
   } catch {
     process.stderr.write('CCNeed hook input could not be verified; collection must not proceed.\n');
     process.exitCode = 2;
   }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const hostIndex = process.argv.indexOf('--host');
+  await runHookFromStdin(hostIndex < 0 ? '' : process.argv[hostIndex + 1]);
 }

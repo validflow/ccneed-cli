@@ -28,7 +28,7 @@
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-把 `codex` 换成自己的 Agent；同时接入两个 Agent 可写 `--agent codex,workbuddy`。安装器添加 `ccneed`、链接同版本 Skill；上述新版本发布后，还会合并采集 hooks 与 ask 规则到所选宿主的用户配置。安装后重新打开 Agent、审阅并信任这些 hooks，保持人工审批模式；详见[安装指南](INSTALL.zh.md)。
+把 `codex` 换成自己的 Agent；同时接入两个 Agent 可写 `--agent codex,workbuddy`。上述新版本发布后，安装器更新全局 CLI，并通过 Claude Code、Codex 的原生插件管理器注册同版本插件。WorkBuddy 桌面版需完成返回结果里的原生安装步骤。插件携带统一 Skill 与采集 hooks，不重复安装全局 Skill。安装后重新打开 Agent、审阅并信任 hooks，保持人工审批模式；逐宿主结果与要求见[安装指南](INSTALL.zh.md)。
 
 ```bash
 ccneed --help
@@ -45,7 +45,7 @@ go install ./cmd/ccneed
 ccneed --help
 ```
 
-这条路径只构建开发版 CLI。源码 Skill 位于 `skills/ccneed`，不会随 `go install` 自动安装或更新。要让 CLI 与 Skill 同步升级，使用上面的 npm 安装方式。PATH 与源码构建说明见[安装指南](INSTALL.zh.md)。
+这条路径只构建开发版 CLI。源码 Skill 位于 `skills/ccneed`；`go install` 不注册插件。CLI 与原生插件的配套升级使用上面的 npm 安装方式。PATH 与源码构建说明见[安装指南](INSTALL.zh.md)。
 
 ### 让 Agent 帮你安装
 
@@ -119,7 +119,7 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 
 ## 更新与反馈
 
-重新运行 `npx @validflow/ccneed-cli@latest install --agent ...`，可更新到已发布的稳定包，让 CLI、已接入的 Skill 与包内 hooks 保持同一版本。使用新采集命令前，先确认所需版本已发布、Club 接口已部署。更新后重新打开 Agent；更新提醒不会自动替你安装。
+重新运行 `npx @validflow/ccneed-cli@latest install --agent ...`，列出所有需要更新的宿主，协调更新 CLI 与原生插件。逐宿主检查 `plugins[]` 结果，完成待办的原生安装或信任步骤。使用采集命令前确认所需版本与 Club 接口已上线。更新后重载 Agent；更新提醒不会自动安装。
 
 遇到问题请 [提交 Issue](https://github.com/validflow/ccneed-cli/issues)，附上操作系统、CLI 版本和脱敏后的错误。不要上传凭证或私人文件。
 

@@ -33,7 +33,7 @@ The Squash commit normally uses the reviewed PR title. Version numbers are chose
 
 `cmd/ccneed` contains only process entry. Command parsing belongs in `internal/cli`; API, credentials, output, and downloads are separate modules added as needed. Development tools in `tools/` are not CLI runtime dependencies.
 
-The host Skill is `skills/ccneed/SKILL.md` with Chinese guidance and references; it has no separate English translation. The npm installer links the same global package Skill into each selected host, rather than copying independent versions. It must not overwrite a custom Skill; a modified managed Skill blocks upgrade until resolved. Check actual host loading, not just link existence.
+The host Skill is `skills/ccneed/SKILL.md` with Chinese guidance and references; it has no separate English translation. Native manifests in `.claude-plugin`, `.codex-plugin` and `.codebuddy-plugin` reference that shared Skill and host hook configuration in `hooks/`. Native managers own plugin caches and enable/disable/uninstall; the global npm package supplies the CLI and same-version local marketplace source. Keep all plugin manifests and marketplace versions aligned with `package.json` when preparing a release. The installer must preserve custom Skills/settings and report pending or failed host registration. Check actual host loading, not just files on disk.
 
 ## Local tests before staging integration
 

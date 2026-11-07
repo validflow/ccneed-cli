@@ -2,11 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, symlinkSync, existsSync, lstatSync, readlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, symlinkSync, existsSync, lstatSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { installIntegration } from './setup.mjs';
-import { preparePluginIntegration } from './plugin.mjs';
 import { prepareSkillLinks, attachSkillLinks, parseAgents, fingerprintSkill } from './skills.mjs';
 
 /** fixture 隔离 npm registry/process 边界，保留真实全局包与宿主文件系统链。
@@ -25,8 +24,23 @@ function fixture(version = '0.1.0') {
   mkdirSync(globalRoot);
   writePackage(root, version);
   const calls = [];
+  const nativeCalls = [];
+  let installed = null;
   const options = {
-    root, home, agents: 'codex,workbuddy,claude',
+    root, home, agents: 'codex,workbuddy,claude', env: {},
+    native: async (host, args) => {
+      nativeCalls.push([host, ...args]);
+      if (args[1] === 'marketplace') {
+        if (args[2] === 'list') return JSON.stringify(host === 'claude' ? [{ name: 'ccneed', installLocation: globalPackage, source: 'directory' }] : { marketplaces: [{ name: 'ccneed', root: globalPackage }] });
+        return '{}';
+      }
+      if (['install', 'update', 'add'].includes(args[1])) {
+        installed = { id: 'ccneed@ccneed', pluginId: 'ccneed@ccneed', name: 'ccneed', marketplaceName: 'ccneed', version: JSON.parse(readFileSync(join(globalPackage, 'package.json'))).version, installed: true, enabled: true, scope: 'user', installPath: globalPackage, source: { source: 'local', path: globalPackage } };
+        return '{}';
+      }
+      if (args[1] === 'list') return JSON.stringify(host === 'claude' ? (installed ? [installed] : []) : { installed: installed ? [installed] : [], available: [] });
+      throw new Error('unexpected native command: ' + args.join(' '));
+    },
     npm: async args => {
       calls.push(args);
       if (args[0] === 'root') return globalRoot + '\n';
@@ -40,7 +54,7 @@ function fixture(version = '0.1.0') {
       assert.equal(readFileSync(join(path, 'skills', 'ccneed', 'SKILL.md'), 'utf8'), 'skill ' + expected);
     },
   };
-  return { root, home, globalRoot, globalPackage, calls, options };
+  return { root, home, globalRoot, globalPackage, calls, nativeCalls, options };
 }
 
 /** writePackage 准备真实的同版本技能载荷，不创建凭证或运行云端任务。
@@ -55,35 +69,40 @@ function writePackage(root, version) {
   writeFileSync(join(root, 'hooks', 'acquisition.mjs'), '// Test package hook payload\n');
   mkdirSync(join(root, 'skills', 'ccneed', 'references'), { recursive: true });
   writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@validflow/ccneed-cli', version, private: false, license: 'MIT' }));
+  for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
+    mkdirSync(join(root, directory), { recursive: true });
+    writeFileSync(join(root, directory, 'plugin.json'), JSON.stringify({ name: 'ccneed', version, skills: './skills', hooks: './hooks/' + host + '.json' }));
+    writeFileSync(join(root, 'hooks', host + '.json'), JSON.stringify({ hooks: { SessionStart: [], PreToolUse: [], PostToolUse: [] } }));
+  }
+  for (const directory of ['.claude-plugin', '.codebuddy-plugin', '.agents/plugins']) {
+    mkdirSync(join(root, directory), { recursive: true });
+    writeFileSync(join(root, directory, 'marketplace.json'), JSON.stringify({ name: 'ccneed', plugins: [{ name: 'ccneed', source: directory === '.agents/plugins' ? { source: 'local', path: './' } : './', version }] }));
+  }
   writeFileSync(join(root, 'skills', 'ccneed', 'SKILL.md'), 'skill ' + version);
   for (const name of ['auth', 'account', 'tasks', 'resources']) writeFileSync(join(root, 'skills', 'ccneed', 'references', name + '.md'), name + ' ' + version);
   writeFileSync(join(root, 'checksums.json'), JSON.stringify({ version, skill_sha256: fingerprintSkill(join(root, 'skills', 'ccneed')) }));
 }
 
-test('one exact global package supplies all selected user-level hosts; no copy becomes stale on update', async () => {
+test('exact global CLI version is coordinated with the selected native plugin manager', async () => {
   const data = fixture();
-  const first = await installIntegration(data.options);
+  const first = await installIntegration({ ...data.options, agents: 'claude' });
   assert.equal(first.version, '0.1.0');
   assert.equal(first.auth, 'not_started');
   assert.equal(first.restart_required, true);
-  assert.equal(first.skill_targets.length, 3);
-  const targets = [...first.skill_targets];
-  for (const target of targets) {
-    assert.ok(lstatSync(target).isSymbolicLink());
-    assert.equal(readFileSync(join(target, 'references', 'tasks.md'), 'utf8'), 'tasks 0.1.0');
-  }
+  assert.equal(first.status, 'installed');
+  assert.equal(first.plugins[0].host, 'claude');
+  assert.equal(first.plugins[0].version, '0.1.0');
+  assert.equal(existsSync(join(data.home, '.claude/skills/ccneed')), false);
   writePackage(data.root, '0.1.1');
-  const second = await installIntegration({ ...data.options, agents: 'codex' });
+  const second = await installIntegration({ ...data.options, agents: 'claude' });
   assert.equal(second.version, '0.1.1');
-  for (const target of targets) {
-    assert.equal(readFileSync(join(target, 'SKILL.md'), 'utf8'), 'skill 0.1.1');
-    assert.equal(readFileSync(join(target, 'references', 'tasks.md'), 'utf8'), 'tasks 0.1.1');
-  }
+  assert.equal(second.plugins[0].version, '0.1.1');
+  assert.ok(data.nativeCalls.some(args => args[0] === 'claude' && args[2] === 'update'));
   assert.equal(data.calls.filter(args => args[0] === 'install').length, 2);
   assert.equal(existsSync(join(data.home, '.ccneed')), false);
 });
 
-test('selected Claude host installs crawl hooks and native ask rules preserving user settings', async () => {
+test('Claude loads Skill and hooks from its native plugin without duplicated user-level entries', async () => {
   const data = fixture();
   mkdirSync(join(data.home, '.claude'), { recursive: true });
   writeFileSync(join(data.home, '.claude', 'settings.json'), JSON.stringify({ permissions: { allow: ['Bash(git status)'] }, env: { KEEP: 'yes' } }));
@@ -91,10 +110,96 @@ test('selected Claude host installs crawl hooks and native ask rules preserving 
   const settings = JSON.parse(readFileSync(join(data.home, '.claude', 'settings.json'), 'utf8'));
   assert.deepEqual(settings.env, { KEEP: 'yes' });
   assert.deepEqual(settings.permissions.allow, ['Bash(git status)']);
-  assert.ok(settings.permissions.ask?.some(rule => rule.includes('ccneed kb start')), 'paid crawl must use native permission');
-  assert.ok(settings.hooks?.PreToolUse?.length, 'execution guard must load');
-  assert.ok(settings.hooks?.PostToolUse?.length, 'final plan presentation must load');
-  assert.ok(result.plugin_targets?.length, 'installer must report actual plugin assets');
+  assert.equal(settings.hooks, undefined);
+  assert.equal(settings.permissions.ask, undefined);
+  assert.equal(result.plugins[0].status, 'installed');
+  assert.equal(result.hook_trust_required, true);
+});
+
+test('WorkBuddy native desktop action is pending rather than falsely reporting plugin installation', async () => {
+  const data = fixture();
+  const result = await installIntegration({ ...data.options, agents: 'workbuddy' });
+  assert.equal(result.status, 'action_required');
+  assert.notEqual(result.plugins[0].status, 'installed');
+  assert.equal(result.plugins[0].host, 'workbuddy');
+  assert.equal(data.nativeCalls.length, 0, 'unsupported WorkBuddy CLI must never be invented');
+  assert.equal(existsSync(join(data.home, '.workbuddy/skills/ccneed')), false);
+});
+
+test('native plugin failures are reported per host after the CLI succeeds', async () => {
+  const data = fixture();
+  const result = await installIntegration({ ...data.options, agents: 'claude,workbuddy', native: async () => { throw new Error('native manager unavailable'); } });
+  assert.equal(result.status, 'action_required');
+  assert.equal(result.plugins.length, 2);
+  assert.ok(result.plugins.every(plugin => plugin.status !== 'installed'));
+  assert.equal(JSON.parse(readFileSync(join(data.globalPackage, 'package.json'))).version, result.version);
+});
+
+test('Codex verifies actual installed plugin state and keeps native prompt rules', async () => {
+  const data = fixture();
+  const result = await installIntegration({ ...data.options, agents: 'codex' });
+  assert.equal(result.status, 'installed');
+  assert.equal(result.plugins[0].host, 'codex');
+  const rules = readFileSync(join(data.home, '.codex/rules/ccneed.rules'), 'utf8');
+  assert.match(rules, /decision\s*=\s*"prompt"/);
+  assert.match(rules, /"kb"\s*,\s*"start"/);
+  assert.equal(existsSync(join(data.home, '.codex/hooks.json')), false);
+  assert.equal(existsSync(join(data.home, '.agents/skills/ccneed')), false);
+});
+
+test('an unavailable, disabled or wrong-version native plugin never counts as complete', async () => {
+  for (const variant of ['missing', 'disabled', 'version']) {
+    const data = fixture();
+    const native = async (host, args) => {
+      const output = await data.options.native(host, args);
+      if (args[1] !== 'list') return output;
+      const plugins = JSON.parse(output);
+      if (variant === 'missing') return '[]';
+      for (const plugin of plugins) {
+        if (variant === 'disabled') plugin.enabled = false;
+        if (variant === 'version') plugin.version = '0.0.1';
+      }
+      return JSON.stringify(plugins);
+    };
+    const result = await installIntegration({ ...data.options, agents: 'claude', native });
+    assert.equal(result.status, 'action_required', variant);
+    assert.notEqual(result.plugins[0].status, 'installed', variant);
+  }
+});
+
+test('a same-name foreign marketplace is preserved and reported as a host failure', async () => {
+  const data = fixture();
+  const native = async (host, args) => {
+    if (args[1] === 'marketplace' && args[2] === 'list') return JSON.stringify([{ name: 'ccneed', source: 'directory', installLocation: join(data.home, 'foreign') }]);
+    return data.options.native(host, args);
+  };
+  const result = await installIntegration({ ...data.options, agents: 'claude', native });
+  assert.equal(result.status, 'action_required');
+  assert.equal(result.plugins[0].status, 'failed');
+  assert.ok(!data.nativeCalls.some(args => args[1] === 'plugin' && ['install', 'update'].includes(args[2])));
+});
+
+test('custom native profiles cannot receive a false success with rules written to the default profile', async () => {
+  for (const [host, variable, directory] of [['codex', 'CODEX_HOME', '.codex'], ['claude', 'CLAUDE_CONFIG_DIR', '.claude']]) {
+    const data = fixture();
+    const profile = join(data.home, 'custom-profile');
+    const result = await installIntegration({ ...data.options, agents: host, env: { [variable]: profile } });
+    assert.equal(result.status, 'action_required');
+    assert.equal(result.plugins[0].status, 'action_required');
+    assert.equal(data.nativeCalls.length, 0, 'must not register with a mismatched profile');
+    assert.equal(existsSync(join(data.home, directory)), false, 'must not write rules to an unused profile');
+    assert.equal(existsSync(profile), false);
+  }
+});
+
+test('a custom profile blocks only that host and an explicit default profile remains supported', async () => {
+  const data = fixture();
+  const partial = await installIntegration({ ...data.options, agents: 'codex,claude', env: { CODEX_HOME: join(data.home, 'custom') } });
+  assert.equal(partial.status, 'action_required');
+  assert.equal(partial.plugins.find(plugin => plugin.host === 'claude').status, 'installed');
+  assert.ok(data.nativeCalls.every(args => args[0] === 'claude'));
+  const complete = await installIntegration({ ...data.options, agents: 'codex', env: { CODEX_HOME: join(data.home, '.codex') } });
+  assert.equal(complete.status, 'installed');
 });
 
 test('WorkBuddy sandbox uses its native command-safety ask rules without changing isolation', async () => {
@@ -107,34 +212,88 @@ test('WorkBuddy sandbox uses its native command-safety ask rules without changin
   assert.deepEqual(settings.sandbox.commandSafety.allow, [{ prefix: ['git', 'status'] }]);
   assert.ok(settings.sandbox.commandSafety.ask?.some(rule => JSON.stringify(rule.prefix) === JSON.stringify(['ccneed', 'kb', 'start'])));
   assert.ok(settings.sandbox.commandSafety.ask?.some(rule => JSON.stringify(rule.prefix) === JSON.stringify(['ccneed', 'tasks', 'reply'])));
+  assert.ok(settings.permissions?.ask?.includes('Bash(ccneed kb start *)'));
+  assert.ok(settings.permissions?.ask?.includes('Bash(ccneed tasks reply *)'));
+});
+
+test('native migration removes only owned legacy links and handlers after successful registration', async () => {
+  const data = fixture();
+  cpSync(data.root, data.globalPackage, { recursive: true });
+  const [link] = prepareSkillLinks(data.home, ['claude'], data.globalPackage);
+  attachSkillLinks([link]);
+  const args = [process.execPath, join(data.globalPackage, 'skills/ccneed/scripts/acquisition.mjs'), '--host', 'claude'];
+  const posix = args.map(value => "'" + value.replaceAll("'", "'\\''") + "'").join(' ');
+  const powershell = '& ' + args.map(value => "'" + value.replaceAll("'", "''") + "'").join(' ');
+  const owned = { type: 'command', command: process.platform === 'win32' ? powershell : posix, ...(process.platform === 'win32' ? { shell: 'powershell' } : {}), timeout: 10 };
+  const custom = { type: 'command', command: 'echo keep-my-hook' };
+  const settings = { env: { KEEP: 'yes' }, hooks: { PreToolUse: [{ matcher: 'Bash|PowerShell|exec_command', hooks: [owned, custom] }] }, permissions: { ask: ['Bash(ccneed kb start *)', 'Bash(git push *)'] } };
+  const filename = join(data.home, '.claude/settings.json');
+  writeFileSync(filename, JSON.stringify(settings));
+  const result = await installIntegration({ ...data.options, agents: 'claude' });
+  assert.equal(result.status, 'installed');
+  assert.equal(existsSync(link.target), false);
+  const actual = JSON.parse(readFileSync(filename, 'utf8'));
+  assert.deepEqual(actual.env, settings.env);
+  assert.deepEqual(actual.hooks.PreToolUse[0].hooks, [custom]);
+  assert.deepEqual(actual.permissions.ask, ['Bash(git push *)']);
+});
+
+test('native registration failure preserves the previous working Skill and Hook configuration', async () => {
+  const data = fixture();
+  cpSync(data.root, data.globalPackage, { recursive: true });
+  const [link] = prepareSkillLinks(data.home, ['claude'], data.globalPackage);
+  attachSkillLinks([link]);
+  const filename = join(data.home, '.claude/settings.json');
+  const previous = JSON.stringify({ hooks: { PreToolUse: [{ hooks: [{ type: 'command', command: 'echo previous-hook' }] }] } });
+  writeFileSync(filename, previous);
+  const result = await installIntegration({ ...data.options, agents: 'claude', native: async () => { throw new Error('native unavailable'); } });
+  assert.equal(result.status, 'action_required');
+  assert.ok(lstatSync(link.target).isSymbolicLink());
+  assert.equal(readFileSync(filename, 'utf8'), previous);
+});
+
+test('native manager settings changes survive subsequent permission and migration updates', async () => {
+  const data = fixture();
+  mkdirSync(join(data.home, '.claude'), { recursive: true });
+  const filename = join(data.home, '.claude/settings.json');
+  writeFileSync(filename, JSON.stringify({ env: { KEEP: 'yes' } }));
+  const native = async (host, args) => {
+    const output = await data.options.native(host, args);
+    if (args[1] === 'install') writeFileSync(filename, JSON.stringify({ env: { KEEP: 'yes' }, enabledPlugins: { 'ccneed@ccneed': true } }));
+    return output;
+  };
+  const result = await installIntegration({ ...data.options, agents: 'claude', native });
+  assert.equal(result.status, 'installed');
+  assert.deepEqual(JSON.parse(readFileSync(filename, 'utf8')).enabledPlugins, { 'ccneed@ccneed': true });
 });
 
 test('generated Codex hook executes through the platform shell with JSON stdin', () => {
   const directory = mkdtempSync(join(tmpdir(), 'ccneed-native-hook-'));
   const root = fileURLToPath(new URL('../../', import.meta.url));
-  const plan = preparePluginIntegration(directory, ['codex'], root).find(value => value.target.endsWith('hooks.json'));
-  const handler = JSON.parse(plan.after).hooks.SessionStart[0].hooks[0];
+  const handler = JSON.parse(readFileSync(join(root, 'hooks/codex.json'), 'utf8')).hooks.SessionStart[0].hooks[0];
   const program = process.platform === 'win32' ? 'powershell.exe' : 'sh';
   const args = process.platform === 'win32' ? ['-NoProfile', '-NonInteractive', '-Command', handler.commandWindows] : ['-c', handler.command];
-  const result = spawnSync(program, args, { input: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 'native-protocol-test' }), encoding: 'utf8', timeout: 10000, windowsHide: true });
+  const result = spawnSync(program, args, { cwd: directory, env: { ...process.env, PLUGIN_ROOT: root }, input: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 'native-protocol-test' }), encoding: 'utf8', timeout: 10000, windowsHide: true });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(JSON.parse(result.stdout).hookSpecificOutput.hookEventName, 'SessionStart');
 });
 
-test('ordinary npm package replacement also updates previously linked hosts without a separate Skill command', async () => {
+test('only the explicitly selected host receives a native registration command', async () => {
   const data = fixture();
-  const result = await installIntegration(data.options);
-  writePackage(data.globalPackage, '0.1.2');
-  for (const target of result.skill_targets) assert.equal(readFileSync(join(target, 'SKILL.md'), 'utf8'), 'skill 0.1.2');
+  const result = await installIntegration({ ...data.options, agents: 'claude' });
+  assert.equal(result.plugins.length, 1);
+  assert.ok(data.nativeCalls.every(args => args[0] === 'claude'));
+  assert.equal(existsSync(join(data.home, '.agents')), false);
+  assert.equal(existsSync(join(data.home, '.workbuddy')), false);
 });
 
 test('repeating the same version is idempotent; adding a host does not reinstall the global program', async () => {
   const data = fixture();
-  const first = await installIntegration({ ...data.options, agents: 'codex' });
-  const originalLink = readlinkSync(first.skill_targets[0]);
-  await installIntegration(data.options);
+  const first = await installIntegration({ ...data.options, agents: 'claude' });
+  const second = await installIntegration({ ...data.options, agents: 'claude' });
   assert.equal(data.calls.filter(args => args[0] === 'install').length, 1);
-  assert.equal(readlinkSync(first.skill_targets[0]), originalLink);
+  assert.equal(second.plugins[0].version, first.plugins[0].version);
+  assert.equal(existsSync(join(data.home, '.claude/skills/ccneed')), false);
 });
 
 test('unknown hosts, empty selection and malformed arguments never start npm', async () => {
@@ -208,9 +367,9 @@ test('an older installer cannot downgrade an already installed newer release', a
 
 test('next-channel RC installs the exact CLI and Skill version', async () => {
   const data = fixture('0.1.1-rc.1');
-  const result = await installIntegration(data.options);
+  const result = await installIntegration({ ...data.options, agents: 'claude' });
   assert.equal(result.version, '0.1.1-rc.1');
-  assert.equal(readFileSync(join(result.skill_targets[0], 'SKILL.md'), 'utf8'), 'skill 0.1.1-rc.1');
+  assert.equal(result.plugins[0].version, '0.1.1-rc.1');
   assert.deepEqual(data.calls.find(args => args[0] === 'install')?.slice(0, 3), ['install', '--global', '@validflow/ccneed-cli@0.1.1-rc.1']);
 });
 
@@ -256,20 +415,21 @@ test('partial host-link failure withdraws only new links; retry completes withou
 
 test('upgrading preserves edits to the managed previous Skill and stops before npm replaces the package', async () => {
   const data = fixture();
-  const first = await installIntegration(data.options);
-  writeFileSync(join(first.skill_targets[0], 'references', 'tasks.md'), 'user customization');
+  await installIntegration({ ...data.options, agents: 'claude' });
+  const target = join(data.globalPackage, 'skills/ccneed/references/tasks.md');
+  writeFileSync(target, 'user customization');
   writePackage(data.root, '0.1.1');
   const before = data.calls.filter(args => args[0] === 'install').length;
   await assert.rejects(installIntegration(data.options), /Skill.*checksum|modified Skill/i);
   assert.equal(data.calls.filter(args => args[0] === 'install').length, before);
-  assert.equal(readFileSync(join(first.skill_targets[0], 'references', 'tasks.md'), 'utf8'), 'user customization');
+  assert.equal(readFileSync(target, 'utf8'), 'user customization');
 });
 
 test('unified installer help works offline without downloading a binary or creating credentials', () => {
   const result = spawnSync(process.execPath, [fileURLToPath(new URL('./run.mjs', import.meta.url)), 'install', '--help'], { encoding: 'utf8', windowsHide: true });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /--agent/);
-  assert.match(result.stdout, /CLI.*Skill/);
+  assert.match(result.stdout, /CLI.*native plugins/);
 });
 
 test('private development package refuses global installation before any npm operation', async () => {

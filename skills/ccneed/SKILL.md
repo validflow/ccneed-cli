@@ -26,6 +26,7 @@ CLI 与本 Skill 已正式发行；**部分云端命令仍取决于 CCNeed 正�
 - 不熟悉安装版本时先运行 `ccneed --help`、`ccneed version --no-update-check`，再看目标命令的 `--help`。缺少命令说明本版本不支持，不猜 flag 或绕过为未经确认的 HTTP 请求。
 - 产品命令默认 JSON；结果和错误均在 stdout，诊断及更新提醒在 stderr。先检查退出码，再解释业务状态：`pending`、`accepted`、`queued` 都不代表工作已完成。无需 Lark 的 `ok` 信封或 `--json` 参数。
 - 官网授权链接必须先展示并交还用户；用户确认后才运行完成登录步骤。任务 `waiting_user` 时原样说明问题和候选项，停下来等用户选择；不要为了验证流程而替用户选择、批准或补全答案。
+- 本 Skill 随原生插件加载，统一安装器逐宿主报告结果。安装 CLI 不等于插件已启用；`action_required`、`failed` 或待信任 hooks 时先完成宿主操作，不另外复制一份全局 Skill。
 - 采集方案的展示和执行授权由已加载的 plugin hooks 与宿主原生权限共同承担。不能用一句“用户已同意”、`--yes` 或 AskUserQuestion 代替工具执行前的原生权限确认；缺少 hooks、权限策略或可交互确认能力时停止正式采集，按[采集说明](references/acquisition.md)处理。
 - CLI 默认连接正式线上服务 `https://ccneed.ai`；普通用户不需要 `--api-url`。只有获授权的开发者才能用它连接 staging，并使用测试账号；它不是接口路径或环境访问凭证。同一流程保持同一 origin，认证错误不能通过切回生产绕过。
 - `--no-update-check` 关闭本次更新检查。更新提醒不取代当前任务；安装与升级以仓库 README 为准，不把源码构建或手工复制的 Skill 当成可自动联动更新的 npm 安装。

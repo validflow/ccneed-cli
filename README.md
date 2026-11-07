@@ -28,7 +28,7 @@ Node.js 22.14+ and npm are required. Choose your agent: `codex`, `workbuddy` (lo
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. The installer adds `ccneed` and links the same-version Skill. Once the new release above is published, it also merges collection hooks and ask rules into the selected agent's user settings. Restart your agent, review/trust those hooks, and keep manual approval enabled. See [installation](INSTALL.md) for host requirements.
+Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. In the new release above, the installer updates the global CLI and registers its same-version native plugin with Claude Code or Codex. WorkBuddy desktop requires the native plugin installation step shown in the result. The plugin bundles the shared Skill and collection hooks; it does not add a second global Skill. Restart your agent, review/trust the hooks, and keep manual approval enabled. See [installation](INSTALL.md) for requirements and per-host results.
 
 ```bash
 ccneed --help
@@ -45,7 +45,7 @@ go install ./cmd/ccneed
 ccneed --help
 ```
 
-This builds the development CLI only. The source Skill lives in `skills/ccneed` and is **not** installed or updated automatically by `go install`. For a linked CLI + Skill that update together, use the npm method above. See the [installation guide](INSTALL.md) for PATH and source-build details.
+This builds the development CLI only. The source Skill lives in `skills/ccneed`; `go install` does not register a plugin. Use the npm installer for coordinated CLI and native plugin updates. See the [installation guide](INSTALL.md) for PATH and source-build details.
 
 ### Ask your agent to install it
 
@@ -119,7 +119,7 @@ Knowledge-base and file bindings can be added, but not removed. Use `ccneed <com
 
 ## Update and contribute
 
-Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update to the published stable package, keeping the CLI, linked Skill and bundled hooks together. Confirm that the required release and Club APIs are available before using the new collection commands. Reload your agent afterward; update notifications never install software without your action.
+Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update the CLI and every host you name. Check each host's plugin result and complete any pending native installation or trust steps. Confirm that the required release and Club APIs are available before using collection commands. Reload your agent afterward; update notifications never install software without your action.
 
 Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues) with your OS, CLI version, and a redacted error message. Never post credentials or private files.
 

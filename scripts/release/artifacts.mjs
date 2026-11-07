@@ -41,6 +41,30 @@ function rejectLinks(path) {
   if (stat.isDirectory()) for (const name of readdirSync(path)) rejectLinks(join(path, name));
 }
 
+/** validatePluginPayload 检查发行插件与 CLI 同版本且具有可搬迁的技能与 Hook 入口。
+ * Args:
+ *   root: 本轮源码或装配后的 npm 包目录。
+ *   version: 本轮发行版本。
+ * Errors:
+ *   插件错版、目录缺失、越界链接或 Hook 缺失时禁止发行。
+ */
+function validatePluginPayload(root, version) {
+  for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
+    rejectLinks(join(root, directory));
+    const plugin = JSON.parse(readFileSync(join(root, directory, 'plugin.json'), 'utf8'));
+    if (plugin.name !== 'ccneed' || plugin.version !== version) throw new Error('Native plugin version mismatch');
+    if (plugin.skills.replace(/\/$/, '') !== './skills' || plugin.hooks !== './hooks/' + host + '.json') throw new Error('Invalid native plugin entry points');
+    JSON.parse(readFileSync(join(root, 'hooks', host + '.json'), 'utf8'));
+  }
+  rejectLinks(join(root, '.agents', 'plugins'));
+  for (const directory of ['.claude-plugin', '.codebuddy-plugin', '.agents/plugins']) {
+    const catalog = JSON.parse(readFileSync(join(root, directory, 'marketplace.json'), 'utf8'));
+    if (catalog.name !== 'ccneed' || !catalog.plugins?.some(plugin => plugin.name === 'ccneed' && (plugin.version === undefined || plugin.version === version))) throw new Error('Native marketplace version mismatch');
+  }
+  rejectLinks(join(root, 'hooks'));
+  if (!readFileSync(join(root, 'hooks', 'acquisition.mjs'), 'utf8').trim()) throw new Error('Missing native plugin hook entry');
+}
+
 /** stagePackage 将同一源码版本的 npm 包装、校验和与 Skill 装配到 dist/npm。
  * Args:
  *   root: 已审查的源码目录。
@@ -59,6 +83,7 @@ export function stagePackage(root, out, manifest) {
   rejectLinks(skill);
   if (!readFileSync(join(skill, 'SKILL.md'), 'utf8').trim()) throw new Error('Release requires a usable Skill');
   validateSkill(skill);
+  validatePluginPayload(root, manifest.version);
   const assets = Object.fromEntries(targets(manifest.version).map(({ asset }) => [asset, sha256(join(out, asset))]));
   const checksums = JSON.stringify({ version: manifest.version, assets, skill_sha256: fingerprintSkill(skill) }, null, 2) + '\n';
   writeFileSync(join(out, 'checksums.json'), checksums);
@@ -66,13 +91,14 @@ export function stagePackage(root, out, manifest) {
   mkdirSync(join(destination, 'scripts', 'npm'), { recursive: true });
   writeFileSync(join(destination, 'package.json'), JSON.stringify(manifest, null, 2) + '\n');
   writeFileSync(join(destination, 'checksums.json'), checksums);
-  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
+  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
   for (const file of ['README.md', 'INSTALL.md', 'LICENSE']) copyFileSync(join(root, file), join(destination, file));
   const logo = join(root, 'assets', 'ccneed-logo.png');
   rejectLinks(logo);
   mkdirSync(join(destination, 'assets'));
   copyFileSync(logo, join(destination, 'assets', 'ccneed-logo.png'));
   cpSync(skill, join(destination, 'skills', 'ccneed'), { recursive: true });
+  for (const directory of ['hooks', '.claude-plugin', '.codex-plugin', '.codebuddy-plugin', '.agents/plugins']) cpSync(join(root, directory), join(destination, directory), { recursive: true });
   return destination;
 }
 
@@ -89,6 +115,7 @@ export function verifyArtifacts(out) {
   validateManifest(manifest);
   const checksums = JSON.parse(readFileSync(join(out, 'checksums.json'), 'utf8'));
   validateBundledSkill(join(out, 'npm'));
+  validatePluginPayload(join(out, 'npm'), manifest.version);
   if (checksums.version !== manifest.version || readFileSync(join(out, 'npm', 'checksums.json'), 'utf8') !== readFileSync(join(out, 'checksums.json'), 'utf8')) throw new Error('Artifact checksum version mismatch');
   const names = targets(manifest.version).map(({ asset }) => asset);
   if (Object.keys(checksums.assets).length !== names.length) throw new Error('Incomplete artifact checksums');
