@@ -27,6 +27,15 @@ test('a failed unchanged version can only be reissued explicitly from main', () 
   assert.match(workflow, /RETRY_VERSION: \$\{\{ inputs\.retry_version \}\}/);
 });
 
+test('release artifacts retain hidden native plugin metadata between jobs', () => {
+  const build = workflow.split('\n  build:')[1]?.split('\n  publish:')[0];
+  const upload = build?.split('- name: Preserve exact assets for failure recovery')[1];
+  assert.ok(upload, 'release artifacts must be transferred to the publishing job');
+  assert.match(upload, /actions\/upload-artifact@/);
+  assert.match(upload, /path:\s*dist\//);
+  assert.match(upload, /include-hidden-files:\s*true/);
+});
+
 test('installer dependencies are installed without lifecycle scripts before tests, builds and publication', () => {
   const quality = readFileSync(new URL('../../.github/workflows/quality.yml', import.meta.url), 'utf8');
   const jobs = [
