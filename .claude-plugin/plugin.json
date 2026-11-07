@@ -1,0 +1,11 @@
+{
+  "name": "ccneed",
+  "version": "0.1.7",
+  "description": "Collect CCNeed data with reviewed plans, or run cloud research and retrieve reports.",
+  "author": { "name": "CCNeed" },
+  "homepage": "https://ccneed.ai",
+  "repository": "https://github.com/validflow/ccneed-cli",
+  "license": "MIT",
+  "skills": "./skills",
+  "hooks": "./hooks/claude.json"
+}

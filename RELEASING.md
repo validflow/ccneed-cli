@@ -47,7 +47,7 @@ The workflow produces Linux, macOS, and Windows assets for amd64/arm64. The npm 
 - If scripts were fixed but `package.json.version` is unchanged, manually dispatch the Release workflow on current `main` with `retry_version` equal to its exact version. It rebuilds and safely resumes that release; ordinary merges never retry it. Conflicting unpublished tags/drafts must first be audited and cleaned up; never move an already successful release.
 - The workflow uploads by the draft's returned Release ID, not by assuming tag lookup is immediately consistent. On retries it checks tag, target commit, and asset digests. A public GitHub Release without npm completion is **not** success; fix access/network and resume before announcing.
 
-Success requires verified GitHub assets, npm tarball content, and the intended npm channel. Update checks read stable npm `latest` with a 24-hour cache and two-second request limit; failed checks do not block commands. Updates are advisory, never automatic. Re-run the unified installation command to update CLI and linked Skills together; reload the host. See [Installation](INSTALL.md).
+Success requires verified GitHub assets, npm tarball content, and the intended npm channel. Keep native plugin manifests and marketplace versions aligned with npm; staging rejects missing hooks or mismatched plugin versions. Update checks read stable npm `latest` with a 24-hour cache and two-second request limit; failed checks do not block commands. Updates are advisory, never automatic. Re-run the unified installer for every desired host, check each native result, and reload/trust the host. See [Installation](INSTALL.md).
 
 ## Stable-release group notification
 

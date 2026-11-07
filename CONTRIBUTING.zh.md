@@ -37,7 +37,7 @@ CLI 与宿主 Skill 使用同一套命名约定：新增 Skill 能力用 `feat(s
 
 `cmd/ccneed` 只放进程入口；命令解析放 `internal/cli`。API 客户端、凭证存储、输出与下载按真实需求逐步增加独立模块，不提前创建空目录或通用框架。
 
-开发工具位于 `tools/`；不能成为 CLI 的运行时依赖。宿主 Skill 放在 `skills/ccneed/SKILL.md`，只维护一份说明。统一 npm 安装入口将所选宿主的用户级目录链接到同一全局包，更新不产生技能复制件；发行校验和包含完整 Skill 摘要。安装器只预检/操作明确选择的宿主，不覆盖已有自定义技能，旧托管技能被修改时先停止升级。真实宿主加载仍需验收，不能把文件链接存在当成加载成功。
+开发工具位于 `tools/`；不能成为 CLI 的运行时依赖。宿主 Skill 放在 `skills/ccneed/SKILL.md`，只维护一份中文说明。`.claude-plugin`、`.codex-plugin`、`.codebuddy-plugin` 引用统一 Skill 与 `hooks/` 中的宿主配置；原生管理器管理缓存、启停及卸载，全局 npm 包提供 CLI 和同版本本地 marketplace。准备发版时同步 `package.json`、三个插件 manifest 与 marketplace 版本。安装器保留自定义 Skill/设置，并逐宿主报告未完成或失败状态；真实加载仍需验收。
 
 ## 先本地测试，再 staging 联调
 

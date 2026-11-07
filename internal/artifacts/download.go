@@ -7,9 +7,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/validflow/ccneed-cli/internal/api"
+	"github.com/validflow/ccneed-cli/internal/localfile"
 )
 
 // Downloaded 表示完整校验并写入用户显式目标的本地文件。
@@ -36,25 +36,7 @@ type Downloaded struct {
 //
 //	已存在目标返回 output_exists；非法文件名或父目录返回 invalid_output。
 func ValidateOutput(output string) (string, error) {
-	if output == "" || strings.ContainsAny(filepath.Base(output), "\\/:") || strings.IndexFunc(output, func(r rune) bool { return r < 32 || r == 127 }) != -1 {
-		return "", &api.Error{Code: "invalid_output"}
-	}
-	target, err := filepath.Abs(output)
-	if err != nil {
-		return "", &api.Error{Code: "invalid_output"}
-	}
-	_, err = os.Lstat(target)
-	if err == nil {
-		return "", &api.Error{Code: "output_exists"}
-	}
-	if !os.IsNotExist(err) {
-		return "", &api.Error{Code: "invalid_output"}
-	}
-	parent, err := os.Stat(filepath.Dir(target))
-	if err != nil || !parent.IsDir() {
-		return "", &api.Error{Code: "invalid_output"}
-	}
-	return target, nil
+	return localfile.ValidateOutput(output)
 }
 
 // Download 流式写入同目录临时文件，完整成功后以不覆盖的硬链接发布目标。
@@ -113,14 +95,5 @@ func (c *Client) Download(ctx context.Context, threadID, artifactID, output stri
 //
 //	不支持安全硬链接时返回 output_write，不退回会覆盖目标的 rename。
 func finishDownload(file *os.File, target string) error {
-	if file.Sync() != nil || file.Close() != nil {
-		return &api.Error{Code: "output_write"}
-	}
-	if err := os.Link(file.Name(), target); err != nil {
-		if os.IsExist(err) {
-			return &api.Error{Code: "output_exists"}
-		}
-		return &api.Error{Code: "output_write"}
-	}
-	return nil
+	return localfile.Publish(file, target)
 }
