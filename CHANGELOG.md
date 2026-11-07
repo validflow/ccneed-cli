@@ -2,6 +2,17 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.7
+
+CCNeed now includes native Agent plugins and a data collection/export workflow alongside cloud analysis. Export data for your own Agent, or continue research with CCNeed's cloud Agent.
+
+- Added reviewed collection with `kb plan` and `kb start`: validate Agent-generated plans, fit platform quotas to the available balance, display the final plan, and request native execution approval. Unspecified collection counts default to 300 items in total.
+- Added knowledge-base CSV/JSON export for analysis by the user's own Agent, with KB identity in default filenames and protection against overwriting existing files.
+- Packaged the shared Skill and collection hooks as native Claude Code, Codex and WorkBuddy plugins. The unified installer coordinates CLI and selected native plugin versions, preserves custom configuration and reports incomplete registration.
+- Bound collection HITL approvals to the displayed plan, with feedback, rejection and revalidated plan changes supported before cloud execution resumes.
+
+Collection commands require the matching Club APIs to be deployed. WorkBuddy desktop plugin installation requires a native UI step; hooks must be trusted and manual approval must remain enabled.
+
 ## 0.1.6
 
 - Fixed GitHub binary downloads during npm installation and recovery on Node.js 22 to honor existing `HTTPS_PROXY`, `HTTP_PROXY`, and `NO_PROXY` settings, including lowercase forms.

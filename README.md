@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="CCNeed mascot holding a magnifying glass" width="280">
-  <h1>CCNeed CLI</h1>
-  <p>Run research with CCNeed from your own AI agent or terminal.</p>
+  <h1>CCNeed CLI + Agent Plugins</h1>
+  <p>Collect data or run cloud research from Claude Code, Codex, or WorkBuddy.</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
     <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed-333840?style=flat&amp;logo=x&amp;logoColor=white&amp;labelColor=15171A" alt="X: CCNeed"></a>
@@ -16,9 +16,18 @@
   </p>
 </div>
 
-Let CCNeed's cloud agent analyze your data and return a report. This branch adds collection planning and knowledge-base CSV/JSON exports for your own agent, with the CLI, Skill, collection hooks and native permission rules delivered in one coordinated release.
+CCNeed combines a global CLI with native Agent plugins for Claude Code, Codex and WorkBuddy. Collect and export data for your own Agent to analyze, or let CCNeed's cloud Agent analyze your knowledge base and return a report. The plugins bundle the shared Skill and collection hooks; each host manages their loading and lifecycle.
 
-> Release status: this branch keeps version 0.1.6 and does not publish a release. The new `kb plan`, `kb start`, `kb export` and collection plugin require a new CLI release containing these changes and deployment of the matching Club APIs. Updating the currently published `@latest` alone does not provide them. Keep the CLI, Skill and hooks on the same package version; merging code does not publish npm automatically.
+> Release preparation: this branch targets 0.1.7. Merging this version change into `main` starts the existing gated release workflow. The new `kb plan`, `kb start`, `kb export` and native plugin require that release and deployment of the matching Club APIs. Until publication is verified, the current `@latest` does not include these changes. Keep the CLI, Skill and hooks on the same package version.
+
+## What's new in 0.1.7
+
+- **Native Agent plugins:** one shared Skill and Hook core, packaged for CC/CX/WB. The unified installer coordinates CLI and selected plugin versions; CC/CX use native registration, while WorkBuddy desktop requires the native installation step described in [Installation](INSTALL.md).
+- **Reviewed collection:** the Agent prepares a plan with `kb plan`; CCNeed validates it, fits quotas to the available balance, and displays the research requirement, platform keywords, quotas and credits. `kb start` requires native execution approval. Unspecified counts default to 300 items across all platforms.
+- **Data for your own Agent:** `kb export --format csv|json` exports knowledge-base data without starting a cloud analysis conversation. Default filenames include the KB ID, name and export time to distinguish exports.
+- **Cloud conversation continuity:** collection HITL requests support plan display, approval, feedback and rejection. Plan changes must be revalidated before approval; the cloud Agent can then continue its analysis and produce a report.
+
+See the [0.1.7 changelog](CHANGELOG.md#017) for release details and service prerequisites.
 
 ## Install
 

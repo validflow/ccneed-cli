@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="拿着放大镜的 CCNeed 小河马" width="280">
-  <h1>CCNeed CLI</h1>
-  <p>在你熟悉的 Agent 或终端里使用 CCNeed。</p>
+  <h1>CCNeed CLI + Agent 插件</h1>
+  <p>在 Claude Code、Codex、WorkBuddy 中采集数据或调用云端分析。</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
     <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed-333840?style=flat&amp;logo=x&amp;logoColor=white&amp;labelColor=15171A" alt="X：CCNeed"></a>
@@ -16,9 +16,18 @@
   </p>
 </div>
 
-让 CCNeed 云端 Agent 分析数据并取回报告。本分支新增采集方案确认与知识库 CSV/JSON 导出，让自己的 Agent 也能分析数据；CLI、Skill、采集 hooks 与原生权限规则将随配套版本一起发行。
+CCNeed 提供全局 CLI，以及适配 Claude Code、Codex、WorkBuddy 的原生 Agent 插件。你可以采集并导出数据，交给自己的 Agent 分析；也可以把知识库交给 CCNeed 云端 Agent 分析并获取报告。插件携带统一 Skill 与采集 hooks，由各宿主管理加载和生命周期。
 
-> 发行状态：本分支保留 0.1.6 版本号，不执行发版。新增的 `kb plan`、`kb start`、`kb export` 和采集 plugin，需要发布包含本次改动的新 CLI 版本，并部署配套 Club 接口；仅更新当前已发布的 `@latest` 不代表这些能力可用。CLI、Skill、hooks 必须来自同一版本，合并代码不会自动发布 npm。
+> 发行准备：本分支版本更新为 0.1.7。该版本变更合入 `main` 后，会启动现有发行门禁与发布流程。新增的 `kb plan`、`kb start`、`kb export` 和原生插件需要完成该发行，并部署配套 Club 接口；确认发布成功前，当前 `@latest` 不包含这些改动。CLI、Skill、hooks 必须来自同一版本。
+
+## 0.1.7 主要更新
+
+- **原生 Agent 插件：**统一 Skill 与 Hook 核心，分别打包适配 CC/CX/WB。统一安装器协调 CLI 与所选插件版本；CC/CX 通过原生管理器注册，WorkBuddy 桌面版需完成[安装指南](INSTALL.zh.md)中的原生安装步骤。
+- **采集前方案确认：**Agent 通过 `kb plan` 准备方案，平台校验、按余额适配配额，展示研究需求、各平台关键词、配额与积分；`kb start` 前请求原生执行授权。未指定数量时，所有平台合计默认 300 条。
+- **数据交给自己的 Agent：**通过 `kb export --format csv|json` 导出知识库数据，不必开启云端分析会话。默认文件名包含 KB ID、名称和导出时间，便于区分不同知识库及批次。
+- **云端对话继续闭环：**采集类 HITL 支持方案展示、批准、反馈与拒绝；修改方案需重新校验再批准，之后云端 Agent 可继续分析并生成报告。
+
+完整变更与服务前提见 [0.1.7 更新记录](CHANGELOG.zh.md#017)。
 
 ## 安装
 
