@@ -2,7 +2,7 @@
 
 以下命令已随 CLI 发行并有本地契约测试；具体云端能力仍取决于正式服务接口是否上线。示例 `THREAD_UUID`、`FILE_UUID`、`ARTIFACT_UUID`、`VERSION` 必须换成服务实际返回值；知识库用正整数 ID，文件/会话/产出用真实 UUID。
 
-## 知识库：查询与网页创建
+## 知识库：查询、采集与原生数据导出
 
 ```bash
 ccneed kb list
@@ -15,7 +15,16 @@ ccneed kb create
 
 `stats` 只返回已发布、可分析内容的总数、平台与情绪分布、最多八个主话题，以及同环境的 `web_url`。它不返回帖子正文、单条来源或批量数据。用于选库和判断覆盖范围；如果用户要研究结论，仍需 `ccneed run ... --kb-id 7` 交给 CCNeed 云端分析。需要在网页浏览具体内容时，把 `web_url` 交给用户，不通过其他网页接口绕过 CLI 的聚合边界。采集中的数据尚未发布时，统计可能暂时为零，不把零解释为采集失败。
 
-`kb create` 只返回 `status: website_required` 和当前 origin 的官网入口 `url`，**没有创建知识库或启动采集**。向用户展示链接，把意图优化、平台/配额选择和确认交给网页；完成后重新 `kb list/get` 获取真实 ID 和状态，不伪造知识库。
+`kb create` 保留原来的网页入口。用户希望在宿主内直接创建或补采集时，走[采集方案与确认](acquisition.md)中的 `kb plan` → 展示 → `kb start`，不要求再打开网页确认。
+
+需要让用户自己的 Agent 分析时，直接导出已有知识库：
+
+```bash
+ccneed kb export --kb-id 7 --format csv
+ccneed kb export --kb-id 7 --format json --output ./brand-feedback.json
+```
+
+两种格式来自同一份知识库数据，不自动采集、补充作者信息或启动报告任务。未指定路径时使用 `ccneed-kb-{KB_ID}-{安全知识库名}-{UTC时间戳}.{csv|json}`，例如 `ccneed-kb-7-某品牌用户反馈-20261106T073025Z.csv`。保留返回的 KB ID、名称、格式、导出时间与本地路径，以免混淆多个知识库。目标存在会报错，不覆盖旧数据；自行指定路径也必须不存在。
 
 ## 文件：先上传，再绑定
 

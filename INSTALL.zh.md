@@ -4,7 +4,7 @@
 
 默认全局安装 CLI，Skill 接入所选 Agent 的**当前用户目录**。不同项目复用同一套版本，不改用户项目。安装与升级共用一个入口；登录仍由用户在官网明确授权。
 
-> 官方 npm 包已经发布；普通用户使用 `@latest`，无需记住具体版本号。部分云端命令仍取决于对应服务接口在正式环境中的上线进度。
+> 发行状态：本分支保留 0.1.6 版本号，不重新发布该版本。新增的 `kb plan`、`kb start`、`kb export` 和采集 plugin，需要发布包含本次改动的新 CLI 版本，并部署配套 Club 接口。`@latest` 安装的是已发布稳定包，不包含尚未发行的分支改动；CLI、Skill、hooks 必须来自同一版本，合并代码不会自动发布 npm。
 
 ## 正式版：一次安装，也用于升级
 
@@ -18,7 +18,7 @@ npx @validflow/ccneed-cli@latest install --agent codex
 npx @validflow/ccneed-cli@latest install --agent workbuddy
 ```
 
-需要 Node 22.14.0+ 和 npm。CLI 安装在 npm 全局命令目录；该目录必须在宿主实际执行环境的 PATH 中。本机安装不会自动提供给远程沙箱，不默认申请管理员权限。安装器不读取账号、创建任务或修改宿主安全配置。
+需要 Node 22.14.0+ 和 npm。CLI 安装在 npm 全局命令目录；该目录必须在宿主实际执行环境的 PATH 中。本机安装不会自动提供给远程沙箱。上述新版本发布后，安装器还会仅向明确选择的宿主合并采集 hooks 与 ask 规则，保留其他设置；不切换权限模式、不读取账号、不创建任务。
 
 如果访问 GitHub 需要代理，请在安装所在终端设置 `HTTPS_PROXY`（或 `HTTP_PROXY`）。二进制下载会遵循这些变量及 `NO_PROXY`，也支持小写形式；包内不预设个人代理地址或端口。
 
@@ -29,14 +29,32 @@ npx @validflow/ccneed-cli@latest install --agent workbuddy
 | 宿主 | 用户级 Skill 入口 |
 | --- | --- |
 | Codex | `~/.agents/skills/ccneed` |
-| WorkBuddy 本地代码环境 | `~/.codebuddy/skills/ccneed` |
+| WorkBuddy 桌面端 | `~/.workbuddy/skills/ccneed` |
 | Claude Code | `~/.claude/skills/ccneed` |
 
 这些入口是**目录链接，不是复制件**：Windows 用 junction，其他平台用 symlink，全部指向全局 npm 包的 `skills/ccneed`。升级包后，已经接入的宿主一起读到新 Skill；即使升级时只指定一个宿主，其他已有链接也会跟随同一包更新。
 
 不能创建链接就明确失败，不复制一份旧 Skill 冒充同步成功。不在 npm 的普通 postinstall 中隐式写入所有宿主；首次宿主接入由统一入口和用户明确选择完成。
 
-完整 Skill 包含 `SKILL.md` 与 `references/auth.md`、`account.md`、`tasks.md`、`resources.md`。发行、安装前后及 npm 启动入口验证完整摘要；CLI 二进制另验证摘要与实际版本。仅有 tag、程序或入口文件不算发行完整。
+完整包包含 Skill、按需读取的参考说明与采集 hooks。发行和安装验证 Skill 与 CLI 二进制；目录存在不代表宿主已加载。旧版 `.codebuddy/skills/ccneed` 链接保留，WorkBuddy 桌面端改用实际的 `.workbuddy` 目录。
+
+## 采集确认接入
+
+本节适用于上述配套新版本。先核对安装版本与命令帮助；已发布的 0.1.6 包不包含这些采集 hooks。
+
+| 宿主 | 新增配置 | 使用前提 |
+| --- | --- | --- |
+| Claude Code | `~/.claude/settings.json` 的展示/执行 hooks 与 ask 规则 | 交互式 default/acceptEdits，关闭自动批准 |
+| Codex | `~/.codex/hooks.json` 与 `~/.codex/rules/ccneed.rules` | `on-request`、`approvals_reviewer = "user"`，启用 hooks/rules |
+| WorkBuddy 桌面端 | `~/.workbuddy/settings.json` 的 hooks、ask 规则与 `sandbox.commandSafety.ask` | 默认权限，付费采集用原生 Bash，每次仅允许本次 |
+
+重新打开所选宿主，审阅并信任新 hooks。验收时，准备方案必须展示研究需求、各平台关键词/配额与积分余额；执行同一方案必须出现原生权限窗口。可在验收时拒绝，确认没有创建或启动采集。文件和单测通过不能代替这一步。
+
+WorkBuddy 采集要求其原生 Bash 工具（Windows 使用 Git Bash），保留用户原有沙箱与安全规则。当前 PowerShell 沙箱包装无法可靠匹配采集前缀，付费执行会明确拒绝并提示改用同一宿主的 Bash。每次选择**仅允许本次**；选择本会话放行代表主动扩大该前缀的授权，需要新建宿主会话恢复逐次确认。
+
+独立调用 `ccneed kb start ...`，不包进其他脚本，不用 shell 重定向隐藏计划。Codex 当前 hook 不提供命令覆盖的工作目录，因此方案/答案文件使用绝对路径；它的 PreToolUse 不支持 `ask`，原生 `.rules` 负责请求确认。已知的 bypass、never、auto-review 模式会拒绝执行。主动关闭 hook/rules 或覆盖审批设置后，不属于已支持的确认配置。
+
+宿主协议依据 [Claude hooks](https://code.claude.com/docs/en/hooks)、[Codex hooks](https://learn.chatgpt.com/docs/hooks) 与 [rules](https://learn.chatgpt.com/docs/agent-configuration/rules)，并检查了本机 WorkBuddy 5.3.8 桌面运行时代码。[WorkBuddy 权限说明](https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Permission-Modes)区分默认权限与完全访问；逐宿主的真实权限窗口仍需按部署版本记录验收结果。
 
 ## 更新规则与冲突
 
@@ -85,4 +103,4 @@ go install ./cmd/ccneed
 
 [Codex 技能与链接](https://developers.openai.com/codex/skills) · [WorkBuddy 用户级配置](https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Setting) · [CodeBuddy 目录说明](https://www.codebuddy.cn/docs/cli/codebuddy-dir) · [Claude Code 技能](https://code.claude.com/docs/en/skills)
 
-WorkBuddy 的非本地代码场景可走客户端技能导入，但它是独立安装方式，不声称能跟随本机 npm 更新。当前实际 WorkBuddy 客户端加载仍待验收。
+客户端独立导入的 Skill 不属于本机 npm 联动更新；仍需验证所用客户端的加载与原生权限确认。

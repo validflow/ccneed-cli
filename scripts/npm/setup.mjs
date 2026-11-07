@@ -5,6 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { installBinary, packageRoot } from './install.mjs';
 import { prepareSkillLinks, attachSkillLinks, parseAgents, validateBundledSkill } from './skills.mjs';
+import { preparePluginIntegration, attachPluginIntegration } from './plugin.mjs';
 
 const exec = promisify(execFile);
 const officialPackage = '@validflow/ccneed-cli';
@@ -113,6 +114,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
   if (!isAbsolute(globalRoot) || globalRoot === parse(globalRoot).root || /[\r\n]/.test(globalRoot)) throw new Error('Invalid global npm directory');
   const globalPackage = join(globalRoot, '@validflow', 'ccneed-cli');
   const plans = prepareSkillLinks(home, selected, globalPackage);
+  const pluginPlans = preparePluginIntegration(home, selected, globalPackage);
   const current = existingManifest(globalPackage);
   if (current) validateBundledSkill(globalPackage);
   if (current && newerVersion(current.version, desired.version)) throw new Error('Refusing to downgrade; use the current official installer');
@@ -123,8 +125,9 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
   if (releaseManifest(globalPackage).version !== desired.version) throw new Error('Global package version mismatch');
   validateBundledSkill(globalPackage);
   await verify(globalPackage, desired.version);
+  const pluginPaths = attachPluginIntegration(pluginPlans);
   const paths = attachSkillLinks(plans);
-  return { status: 'installed', version: desired.version, agents: selected, skill_targets: paths, restart_required: true, auth: 'not_started' };
+  return { status: 'installed', version: desired.version, agents: selected, skill_targets: paths, plugin_targets: pluginPaths, restart_required: true, hook_trust_required: true, manual_approval_required: true, auth: 'not_started' };
 }
 
 /** installerMain 提供安装与更新共用的明确入口，帮助和参数错误不触发网络。
@@ -137,7 +140,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
  */
 export async function installerMain(args) {
   if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
-    return 'Install or update CLI + same-version Skill globally.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nRC: npx @validflow/ccneed-cli@next install --agent codex,workbuddy\nHosts: codex, workbuddy, claude. Restart selected hosts after updating.\n';
+    return 'Install or update CLI + same-version Skill, crawl hooks and native ask rules globally.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nRC: npx @validflow/ccneed-cli@next install --agent codex,workbuddy\nHosts: codex, workbuddy, claude. Restart selected hosts, trust hooks, and keep manual approvals enabled.\n';
   }
   if (args.length !== 2 || args[0] !== '--agent') throw new Error('Use install --agent codex,workbuddy,claude; see install --help');
   return JSON.stringify(await installIntegration({ agents: args[1] })) + '\n';

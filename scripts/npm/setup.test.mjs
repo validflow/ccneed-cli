@@ -6,6 +6,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, symlinkSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { installIntegration } from './setup.mjs';
+import { preparePluginIntegration } from './plugin.mjs';
 import { prepareSkillLinks, attachSkillLinks, parseAgents, fingerprintSkill } from './skills.mjs';
 
 /** fixture 隔离 npm registry/process 边界，保留真实全局包与宿主文件系统链。
@@ -48,6 +49,10 @@ function fixture(version = '0.1.0') {
  *   version: 当前测试版本。
  */
 function writePackage(root, version) {
+  mkdirSync(join(root, 'skills', 'ccneed', 'scripts'), { recursive: true });
+  writeFileSync(join(root, 'skills', 'ccneed', 'scripts', 'acquisition.mjs'), '// Test package hook payload\n');
+  mkdirSync(join(root, 'hooks'), { recursive: true });
+  writeFileSync(join(root, 'hooks', 'acquisition.mjs'), '// Test package hook payload\n');
   mkdirSync(join(root, 'skills', 'ccneed', 'references'), { recursive: true });
   writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@validflow/ccneed-cli', version, private: false, license: 'MIT' }));
   writeFileSync(join(root, 'skills', 'ccneed', 'SKILL.md'), 'skill ' + version);
@@ -76,6 +81,44 @@ test('one exact global package supplies all selected user-level hosts; no copy b
   }
   assert.equal(data.calls.filter(args => args[0] === 'install').length, 2);
   assert.equal(existsSync(join(data.home, '.ccneed')), false);
+});
+
+test('selected Claude host installs crawl hooks and native ask rules preserving user settings', async () => {
+  const data = fixture();
+  mkdirSync(join(data.home, '.claude'), { recursive: true });
+  writeFileSync(join(data.home, '.claude', 'settings.json'), JSON.stringify({ permissions: { allow: ['Bash(git status)'] }, env: { KEEP: 'yes' } }));
+  const result = await installIntegration({ ...data.options, agents: 'claude' });
+  const settings = JSON.parse(readFileSync(join(data.home, '.claude', 'settings.json'), 'utf8'));
+  assert.deepEqual(settings.env, { KEEP: 'yes' });
+  assert.deepEqual(settings.permissions.allow, ['Bash(git status)']);
+  assert.ok(settings.permissions.ask?.some(rule => rule.includes('ccneed kb start')), 'paid crawl must use native permission');
+  assert.ok(settings.hooks?.PreToolUse?.length, 'execution guard must load');
+  assert.ok(settings.hooks?.PostToolUse?.length, 'final plan presentation must load');
+  assert.ok(result.plugin_targets?.length, 'installer must report actual plugin assets');
+});
+
+test('WorkBuddy sandbox uses its native command-safety ask rules without changing isolation', async () => {
+  const data = fixture();
+  mkdirSync(join(data.home, '.workbuddy'), { recursive: true });
+  writeFileSync(join(data.home, '.workbuddy', 'settings.json'), JSON.stringify({ sandbox: { enabled: true, commandSafety: { allow: [{ prefix: ['git', 'status'] }] } } }));
+  await installIntegration({ ...data.options, agents: 'workbuddy' });
+  const settings = JSON.parse(readFileSync(join(data.home, '.workbuddy', 'settings.json'), 'utf8'));
+  assert.equal(settings.sandbox.enabled, true);
+  assert.deepEqual(settings.sandbox.commandSafety.allow, [{ prefix: ['git', 'status'] }]);
+  assert.ok(settings.sandbox.commandSafety.ask?.some(rule => JSON.stringify(rule.prefix) === JSON.stringify(['ccneed', 'kb', 'start'])));
+  assert.ok(settings.sandbox.commandSafety.ask?.some(rule => JSON.stringify(rule.prefix) === JSON.stringify(['ccneed', 'tasks', 'reply'])));
+});
+
+test('generated Codex hook executes through the platform shell with JSON stdin', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'ccneed-native-hook-'));
+  const root = fileURLToPath(new URL('../../', import.meta.url));
+  const plan = preparePluginIntegration(directory, ['codex'], root).find(value => value.target.endsWith('hooks.json'));
+  const handler = JSON.parse(plan.after).hooks.SessionStart[0].hooks[0];
+  const program = process.platform === 'win32' ? 'powershell.exe' : 'sh';
+  const args = process.platform === 'win32' ? ['-NoProfile', '-NonInteractive', '-Command', handler.commandWindows] : ['-c', handler.command];
+  const result = spawnSync(program, args, { input: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 'native-protocol-test' }), encoding: 'utf8', timeout: 10000, windowsHide: true });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).hookSpecificOutput.hookEventName, 'SessionStart');
 });
 
 test('ordinary npm package replacement also updates previously linked hosts without a separate Skill command', async () => {

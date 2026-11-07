@@ -7,7 +7,7 @@ import (
 	"github.com/validflow/ccneed-cli/internal/resources"
 )
 
-// kbCommand 分离只读知识库状态与需要用户在官网完成的创建流程。
+// kbCommand 提供知识库状态、方案准备、确认执行和数据导出。
 //
 // Args:
 //
@@ -17,10 +17,11 @@ import (
 //
 //	知识库命令组。
 func kbCommand(connection *connectionConfig) *cobra.Command {
-	command := commandGroup("kb", "Read knowledge bases; create through the website")
+	command := commandGroup("kb", "Plan collection, start an approved plan, and export knowledge-base data")
 	command.AddCommand(kbListCommand(connection), kbCreateCommand(connection))
 	command.AddCommand(kbGetCommand(connection))
 	command.AddCommand(kbStatsCommand(connection))
+	command.AddCommand(kbPlanCommand(connection), kbStartCommand(connection), kbExportCommand(connection))
 	return command
 }
 

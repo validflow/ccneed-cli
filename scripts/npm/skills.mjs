@@ -2,7 +2,7 @@ import { lstatSync, mkdirSync, readFileSync, readlinkSync, readdirSync, symlinkS
 import { isAbsolute, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
-const hosts = { codex: '.agents', workbuddy: '.codebuddy', claude: '.claude' };
+const hosts = { codex: '.agents', workbuddy: '.workbuddy', claude: '.claude' };
 
 /** fingerprintSkill 为完整技能的文件名和字节生成稳定摘要，不跟随内部链接。
  * Args:

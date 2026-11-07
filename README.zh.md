@@ -16,9 +16,9 @@
   </p>
 </div>
 
-把长程研究任务交给 CCNeed 云端执行，继续在自己的 Agent 里查看进度、回答确认问题并取回报告。CLI 与配套 Skill 通过同一个入口安装。
+让 CCNeed 云端 Agent 分析数据并取回报告。本分支新增采集方案确认与知识库 CSV/JSON 导出，让自己的 Agent 也能分析数据；CLI、Skill、采集 hooks 与原生权限规则将随配套版本一起发行。
 
-> 部分云端命令仍取决于 CCNeed 正式环境中对应接口的上线进度。
+> 发行状态：本分支保留 0.1.6 版本号，不执行发版。新增的 `kb plan`、`kb start`、`kb export` 和采集 plugin，需要发布包含本次改动的新 CLI 版本，并部署配套 Club 接口；仅更新当前已发布的 `@latest` 不代表这些能力可用。CLI、Skill、hooks 必须来自同一版本，合并代码不会自动发布 npm。
 
 ## 安装
 
@@ -28,7 +28,7 @@
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-把 `codex` 换成自己的 Agent；同时接入两个 Agent 可写 `--agent codex,workbuddy`。安装器会添加全局 `ccneed` 命令，并把同版本 Skill 链接到所选 Agent 的用户目录，不修改当前项目。安装后重新打开 Agent。
+把 `codex` 换成自己的 Agent；同时接入两个 Agent 可写 `--agent codex,workbuddy`。安装器添加 `ccneed`、链接同版本 Skill；上述新版本发布后，还会合并采集 hooks 与 ask 规则到所选宿主的用户配置。安装后重新打开 Agent、审阅并信任这些 hooks，保持人工审批模式；详见[安装指南](INSTALL.zh.md)。
 
 ```bash
 ccneed --help
@@ -78,13 +78,16 @@ ccneed account credits
 需要我确认的地方，请先问我。
 ```
 
-开启研究会话前，先选择知识库。如果还没有，运行下面的命令，打开返回的官网链接创建：
+已有数据可直接导出，不必开启研究会话：
 
 ```bash
-ccneed kb create
+ccneed kb export --kb-id KB_ID --format csv
+ccneed kb export --kb-id KB_ID --format json
 ```
 
-选好知识库后，带上第一句话开启会话。如果还要绑定文件，先上传，再使用返回的文件 ID：
+需要新数据时，Agent 通过 `kb plan` 准备方案，展示研究需求、关键词、各平台配额及积分，然后在 `kb start` 前请求原生权限确认。详见[采集说明](skills/ccneed/references/acquisition.md)；原来的 `kb create` 网页入口继续保留。
+
+需要云端分析时，带上第一句话和知识库 ID 开启会话。如果还要绑定文件，先上传，再使用返回的文件 ID：
 
 ```bash
 ccneed files upload ./research-brief.pdf
@@ -102,6 +105,8 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 | 🚀 开启研究 | `ccneed run "你的研究问题" --kb-id KB_ID` |
 | 📚 查看知识库 | `ccneed kb list` |
 | 📊 查看知识库数据分布 | `ccneed kb stats --kb-id KB_ID` |
+| 导出数据交给自己的 Agent | `ccneed kb export --kb-id KB_ID --format csv` |
+| 准备采集方案 | `ccneed kb plan --plan-file ./plan.json --output ./prepared.json` |
 | ➕ 在网页创建知识库 | `ccneed kb create` |
 | 📎 查看、上传自己的文件 | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
 | 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
@@ -114,7 +119,7 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 
 ## 更新与反馈
 
-重新运行 `npx @validflow/ccneed-cli@latest install --agent ...`，就能一起更新 CLI 和已接入的 Skill。更新后重新打开 Agent；更新提醒不会自动替你安装。
+重新运行 `npx @validflow/ccneed-cli@latest install --agent ...`，可更新到已发布的稳定包，让 CLI、已接入的 Skill 与包内 hooks 保持同一版本。使用新采集命令前，先确认所需版本已发布、Club 接口已部署。更新后重新打开 Agent；更新提醒不会自动替你安装。
 
 遇到问题请 [提交 Issue](https://github.com/validflow/ccneed-cli/issues)，附上操作系统、CLI 版本和脱敏后的错误。不要上传凭证或私人文件。
 

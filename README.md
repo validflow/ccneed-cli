@@ -16,9 +16,9 @@
   </p>
 </div>
 
-CCNeed runs long research tasks in the cloud. Its CLI lets you prepare research sources, submit work, follow progress, answer questions, and bring reports back into the agent you already use. The CLI and its companion Skill are installed together.
+Let CCNeed's cloud agent analyze your data and return a report. This branch adds collection planning and knowledge-base CSV/JSON exports for your own agent, with the CLI, Skill, collection hooks and native permission rules delivered in one coordinated release.
 
-> Some cloud commands depend on the corresponding CCNeed service APIs being available in production.
+> Release status: this branch keeps version 0.1.6 and does not publish a release. The new `kb plan`, `kb start`, `kb export` and collection plugin require a new CLI release containing these changes and deployment of the matching Club APIs. Updating the currently published `@latest` alone does not provide them. Keep the CLI, Skill and hooks on the same package version; merging code does not publish npm automatically.
 
 ## Install
 
@@ -28,7 +28,7 @@ Node.js 22.14+ and npm are required. Choose your agent: `codex`, `workbuddy` (lo
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. The installer adds a global `ccneed` command and links the same-version Skill into the selected agent's user directory; it does not modify the current project. Restart your agent after installation.
+Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. The installer adds `ccneed` and links the same-version Skill. Once the new release above is published, it also merges collection hooks and ask rules into the selected agent's user settings. Restart your agent, review/trust those hooks, and keep manual approval enabled. See [installation](INSTALL.md) for host requirements.
 
 ```bash
 ccneed --help
@@ -78,13 +78,16 @@ Use my CCNeed knowledge base to research iPhone 18 discussions and bring me a PD
 Ask me before making any choice that needs my confirmation.
 ```
 
-Before creating a research conversation, choose a knowledge base. If you need a new one, this command returns a website link to create it:
+For existing data, export it without starting a research conversation:
 
 ```bash
-ccneed kb create
+ccneed kb export --kb-id KB_ID --format csv
+ccneed kb export --kb-id KB_ID --format json
 ```
 
-Start the conversation with your first question and the knowledge-base ID. To bind a file too, upload it first and use the returned file ID:
+For new data, your agent prepares a plan with `kb plan`, displays the research requirement, keywords, platform quotas and credit estimate, then requests native permission before `kb start`. See [collection instructions](skills/ccneed/references/acquisition.md). The legacy `kb create` website entry remains available.
+
+For cloud analysis, start a conversation with your first question and the knowledge-base ID. To bind a file too, upload it first and use the returned file ID:
 
 ```bash
 ccneed files upload ./research-brief.pdf
@@ -102,6 +105,8 @@ The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, includi
 | 🚀 Start research | `ccneed run "Your question" --kb-id KB_ID` |
 | 📚 Explore knowledge bases | `ccneed kb list` |
 | 📊 Check a knowledge base's data mix | `ccneed kb stats --kb-id KB_ID` |
+| Export data for your own agent | `ccneed kb export --kb-id KB_ID --format csv` |
+| Prepare a collection plan | `ccneed kb plan --plan-file ./plan.json --output ./prepared.json` |
 | ➕ Create a knowledge base in the browser | `ccneed kb create` |
 | 📎 List or upload your own files | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
 | 🗂️ View or add conversation resources | `ccneed threads resources` / `ccneed threads append` |
@@ -114,7 +119,7 @@ Knowledge-base and file bindings can be added, but not removed. Use `ccneed <com
 
 ## Update and contribute
 
-Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update both the CLI and linked Skill. Reload your agent afterward; update notifications never install software without your action.
+Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update to the published stable package, keeping the CLI, linked Skill and bundled hooks together. Confirm that the required release and Club APIs are available before using the new collection commands. Reload your agent afterward; update notifications never install software without your action.
 
 Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues) with your OS, CLI version, and a redacted error message. Never post credentials or private files.
 
