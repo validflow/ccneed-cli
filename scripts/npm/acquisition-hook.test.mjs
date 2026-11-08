@@ -68,13 +68,62 @@ for (const host of ['claude', 'codex', 'workbuddy']) {
     const start = { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed kb start --plan-file ' + quoted(data.filename) + ' --request-id 00000000-0000-0000-0000-000000000222' } };
     assert.equal(handleHook(host, start, data.options).hookSpecificOutput.permissionDecision, 'deny');
     const shown = handleHook(host, { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed kb plan --plan-file raw.json' }, tool_response: { stdout: JSON.stringify(data.plan) } }, data.options);
-    assert.ok(shown.systemMessage.includes('比较品牌反馈'));
+    assert.equal(shown.systemMessage, undefined);
+    assert.equal(shown.hookSpecificOutput.hookEventName, 'PostToolUse');
+    const context = shown.hookSpecificOutput.additionalContext;
+    for (const value of ['比较品牌反馈', 'Brand', 'feedback', '300', '1000']) assert.ok(context.includes(value));
+    for (const value of ['server-token', 'tier', '240']) assert.ok(!context.includes(value));
     const allowed = handleHook(host, start, data.options);
     assert.notEqual(allowed.hookSpecificOutput?.permissionDecision, 'deny');
     if (host !== 'codex') assert.equal(allowed.hookSpecificOutput.permissionDecision, 'ask');
+    assert.ok(allowed.systemMessage.includes('300'));
+    for (const value of ['比较品牌反馈', 'Brand', 'feedback', '|', '###']) assert.ok(!allowed.systemMessage.includes(value));
     data.plan.platforms[0].quota = 301;
     writeFileSync(data.filename, JSON.stringify(data.plan));
     assert.equal(handleHook(host, start, data.options).hookSpecificOutput.permissionDecision, 'deny');
+  });
+}
+
+for (const host of ['claude', 'codex', 'workbuddy']) {
+  test(host + ' sends invalid-plan feedback to the Agent and invalidates the earlier plan', () => {
+    const data = fixture();
+    const event = { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed kb plan --plan-file raw.json' } };
+    handleHook(host, { ...event, tool_response: data.plan }, data.options);
+    const result = handleHook(host, { ...event, tool_response: { status: 'invalid_plan', errors: [{ field: 'platforms.0.quota', message: 'Quota must be positive' }] } }, data.options);
+    assert.equal(result.systemMessage, undefined);
+    assert.equal(result.hookSpecificOutput.hookEventName, 'PostToolUse');
+    assert.ok(result.hookSpecificOutput.additionalContext.includes('platforms\\.0\\.quota'));
+    assert.ok(result.hookSpecificOutput.additionalContext.includes('Quota must be positive'));
+    const denied = handleHook(host, { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed kb start --plan-file ' + quoted(data.filename) } }, data.options);
+    assert.equal(denied.hookSpecificOutput.permissionDecision, 'deny');
+  });
+
+  test(host + ' sends cloud collection plans to Agent context before requesting native approval', () => {
+    const data = fixture();
+    const suggested = { mode: 'add', kb_id: 7, kb_description: data.plan.research_requirement, quotas: { twitter: 300 }, search_plan: data.plan.search_plan, estimated_credits: 300, balance: 1000 };
+    const action = { thread_id: 'thread', turn_id: 'turn', pending_action: { action_id: 'action', suggested } };
+    const result = handleHook(host, { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed tasks get --thread-id thread --turn-id turn' }, tool_response: action }, data.options);
+    assert.equal(result.systemMessage, undefined);
+    assert.equal(result.hookSpecificOutput.hookEventName, 'PostToolUse');
+    assert.ok(result.hookSpecificOutput.additionalContext.includes('比较品牌反馈'));
+    assert.ok(result.hookSpecificOutput.additionalContext.includes('Brand'));
+    const filename = join(data.directory, 'answer.json');
+    writeFileSync(filename, '{"decision":"approved"}');
+    const approval = handleHook(host, { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed tasks reply --thread-id thread --turn-id turn --action-id action --answer-file ' + quoted(filename) } }, data.options);
+    assert.notEqual(approval.hookSpecificOutput?.permissionDecision, 'deny');
+    if (host !== 'codex') assert.equal(approval.hookSpecificOutput.permissionDecision, 'ask');
+    for (const value of ['比较品牌反馈', 'Brand', '|', '###']) assert.ok(!approval.systemMessage.includes(value));
+  });
+
+  test(host + ' still rejects expired and unaffordable plans without a native start', () => {
+    for (const update of [{ expires_at: '2000-01-01T00:00:00Z' }, { balance: 299 }, { estimated_credits: null }]) {
+      const data = fixture();
+      Object.assign(data.plan, update);
+      writeFileSync(data.filename, JSON.stringify(data.plan));
+      handleHook(host, { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed kb plan --plan-file raw.json' }, tool_response: data.plan }, data.options);
+      const result = handleHook(host, { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed kb start --plan-file ' + quoted(data.filename) } }, data.options);
+      assert.equal(result.hookSpecificOutput.permissionDecision, 'deny');
+    }
   });
 }
 
