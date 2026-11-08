@@ -4,7 +4,7 @@ English · [中文](INSTALL.zh.md)
 
 The global CLI runs commands. A native plugin supplies the shared Skill and collection hooks to Claude Code, Codex or WorkBuddy desktop; each host manages its plugin cache and lifecycle.
 
-> Release preparation: this branch targets 0.1.9. Its Agent plan handoff and export guidance require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs.
+> Release preparation: this branch targets 0.1.10. Its confirmation improvements require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs.
 
 ## Install or update
 
@@ -34,8 +34,8 @@ If downloads require a proxy, set `HTTPS_PROXY` or `HTTP_PROXY`; the downloader 
 ## Collection confirmation
 
 1. The Agent prepares a plan; CCNeed validates it and compares estimated credits with balance.
-2. PostToolUse passes plan context to the Agent, which presents the research requirement, each platform's entity/other keywords, total platform quota, credits and balance, then waits for conversational confirmation. Internal T1/T2/T3 allocation stays out of the user summary.
-3. PreToolUse checks that exact plan and shows a short start reminder, without repeating the full plan. Starting still requires native tool permission. Changed or expired plans must be prepared and displayed again. Conversation HITL approvals use the same protections.
+2. PostToolUse passes plan context to the Agent. Every request for plan confirmation presents the research requirement, each platform's entity/other keywords and quota, total count, estimated credits, balance and adjustments; prose, tables and lists are supported. Both keyword groups are editable, with at least one nonblank entity per platform. Changes require revalidation and a complete presentation before confirmation. Internal T1/T2/T3 allocation stays out of the user summary.
+3. PreToolUse checks that exact plan and shows a short start reminder, without repeating the full plan. Starting requires the host's native permission UI; a conversational answer cannot replace execution approval. Changed or expired plans must be prepared and displayed again. Conversation HITL approvals use the same protections.
 4. After collection finishes, the Agent normally exports CSV and delivers the local file. User-requested formats, destinations and analysis-only workflows take priority.
 
 | Host | Supported collection mode |

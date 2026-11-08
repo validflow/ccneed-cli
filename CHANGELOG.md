@@ -2,6 +2,12 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.10
+
+- Clarified the shared Skill and hook context: each plan confirmation includes the complete requirement, platform entity/other keywords and quotas, total count, estimated credits, balance and adjustments, with flexible prose, tables or lists.
+- Entity and other keywords can be added, removed or replaced after revalidation. Each platform must retain a nonblank entity; blank-only entity groups now invalidate the prepared approval candidate.
+- Kept the short execution reminder, native permission UI and automatic CSV delivery after collection completes. Added regression coverage for repeated reviews and keyword edits across Claude Code, Codex and WorkBuddy.
+
 ## 0.1.9
 
 - Collection hooks now pass validated plans and field errors into Agent context. The Agent presents the plan conversationally and waits for user confirmation; execution shows a short reminder and retains native permission approval without repeating the plan.

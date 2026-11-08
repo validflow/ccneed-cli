@@ -18,14 +18,15 @@
 
 CCNeed combines a global CLI with native Agent plugins for Claude Code, Codex and WorkBuddy. Collect and export data for your own Agent to analyze, or let CCNeed's cloud Agent analyze your knowledge base and return a report. The plugins bundle the shared Skill and collection hooks; each host manages their loading and lifecycle.
 
-> Release preparation: this branch targets 0.1.9. The Agent handoff and export guidance below require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs. Keep the CLI, Skill and hooks on the same package version.
+> Release preparation: this branch targets 0.1.10. The confirmation improvements below require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs. Keep the CLI, Skill and hooks on the same package version.
 
-## What's new in 0.1.9
+## What's new in 0.1.10
 
-- Collection hooks pass plan data to the Agent, which presents the final plan conversationally and waits for confirmation. Starting collection shows a short reminder and requests native permission without repeating the plan.
-- The shared Skill normally exports CSV and delivers the local file after collection completes, honoring requested formats and destinations.
+- Each plan confirmation includes the research requirement, all platform keywords and quotas, total count, estimated credits, balance and any adjustments. The Agent can use natural prose, tables or lists.
+- Entity and other keywords can be added, removed or replaced. Each platform must retain at least one nonblank entity; changes are revalidated and presented before confirmation.
+- Starting collection still shows a short reminder and requires the host's native permission UI. CSV is normally exported and delivered after collection completes.
 
-See the [0.1.9 changelog](CHANGELOG.md#019) for details.
+See the [0.1.10 changelog](CHANGELOG.md#0110) for details.
 
 ## What's new in 0.1.7
 
