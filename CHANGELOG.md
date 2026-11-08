@@ -2,6 +2,11 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.9
+
+- Collection hooks now pass validated plans and field errors into Agent context. The Agent presents the plan conversationally and waits for user confirmation; execution shows a short reminder and retains native permission approval without repeating the plan.
+- Updated the shared Skill to normally export and deliver CSV after collection completes, honoring requested formats and destinations and preserving accurate in-progress or failure states.
+
 ## 0.1.8
 
 - Fixed collection hooks rejecting literal Codex plugin-status queries that use `ccneed` as the marketplace name.

@@ -7,7 +7,7 @@
       "name": "ccneed",
       "description": "Collect data for your agent or request CCNeed cloud research.",
       "source": "./",
-      "version": "0.1.8"
+      "version": "0.1.9"
     }
   ]
 }

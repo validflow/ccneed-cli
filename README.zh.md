@@ -18,19 +18,19 @@
 
 CCNeed 提供全局 CLI，以及适配 Claude Code、Codex、WorkBuddy 的原生 Agent 插件。你可以采集并导出数据，交给自己的 Agent 分析；也可以把知识库交给 CCNeed 云端 Agent 分析并获取报告。插件携带统一 Skill 与采集 hooks，由各宿主管理加载和生命周期。
 
-> 发行准备：本分支版本为 0.1.8，以下 hook 和安装器修复需确认该版本发布成功后使用。0.1.7 引入的采集与导出命令仍需配套 Club 接口。CLI、Skill、hooks 保持同一包版本。
+> 发行准备：本分支版本为 0.1.9，以下 Agent 方案展示与导出指引需确认该版本发布成功后使用。0.1.7 引入的采集与导出命令仍需配套 Club 接口。CLI、Skill、hooks 保持同一包版本。
 
-## 0.1.8 更新
+## 0.1.9 更新
 
-- 原生 Codex 插件状态查询可将 `ccneed` 用作插件源名称，不再误触发采集校验。
-- Codex 安装核验直接查询 CCNeed 插件源，避免无关插件源造成等待。
+- 采集 hook 把方案数据交给 Agent，由 Agent 用自然语言展示并等待对话确认；开始采集前只显示短提示并请求原生权限，不重复整份方案。
+- 共享 Skill 通常在采集完成后自动导出 CSV 并交付本地文件，尊重用户指定的格式与目录。
 
-完整变更见 [0.1.8 更新记录](CHANGELOG.zh.md#018)。
+完整变更见 [0.1.9 更新记录](CHANGELOG.zh.md#019)。
 
 ## 0.1.7 主要更新
 
 - **原生 Agent 插件：**统一 Skill 与 Hook 核心，分别打包适配 CC/CX/WB。统一安装器协调 CLI 与所选插件版本；CC/CX 通过原生管理器注册，WorkBuddy 桌面版需完成[安装指南](INSTALL.zh.md)中的原生安装步骤。
-- **采集前方案确认：**Agent 通过 `kb plan` 准备方案，平台校验、按余额适配配额，展示研究需求、各平台关键词、配额与积分；`kb start` 前请求原生执行授权。未指定数量时，所有平台合计默认 300 条。
+- **采集前方案确认：**Agent 通过 `kb plan` 准备方案，平台校验并按余额适配配额。Agent 用自然语言展示最终研究需求、各平台关键词、配额与积分，等待对话确认后，在 `kb start` 前请求原生执行授权。未指定数量时，所有平台合计默认 300 条。
 - **数据交给自己的 Agent：**通过 `kb export --format csv|json` 导出知识库数据，不必开启云端分析会话。默认文件名包含 KB ID、名称和导出时间，便于区分不同知识库及批次。
 - **云端对话继续闭环：**采集类 HITL 支持方案展示、批准、反馈与拒绝；修改方案需重新校验再批准，之后云端 Agent 可继续分析并生成报告。
 
@@ -101,7 +101,7 @@ ccneed kb export --kb-id KB_ID --format csv
 ccneed kb export --kb-id KB_ID --format json
 ```
 
-需要新数据时，Agent 通过 `kb plan` 准备方案，展示研究需求、关键词、各平台配额及积分，然后在 `kb start` 前请求原生权限确认。详见[采集说明](skills/ccneed/references/acquisition.md)；原来的 `kb create` 网页入口继续保留。
+需要新数据时，Agent 通过 `kb plan` 准备方案，用自然语言展示并等待对话确认，再在 `kb start` 前请求原生权限。采集完成后，Agent 通常自动导出 CSV 并交付本地文件；指定格式与目录优先。详见[采集说明](skills/ccneed/references/acquisition.md)；原来的 `kb create` 网页入口继续保留。
 
 需要云端分析时，带上第一句话和知识库 ID 开启会话。如果还要绑定文件，先上传，再使用返回的文件 ID：
 

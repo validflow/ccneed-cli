@@ -18,19 +18,19 @@
 
 CCNeed combines a global CLI with native Agent plugins for Claude Code, Codex and WorkBuddy. Collect and export data for your own Agent to analyze, or let CCNeed's cloud Agent analyze your knowledge base and return a report. The plugins bundle the shared Skill and collection hooks; each host manages their loading and lifecycle.
 
-> Release preparation: this branch targets 0.1.8. The hook and installer fixes below require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs. Keep the CLI, Skill and hooks on the same package version.
+> Release preparation: this branch targets 0.1.9. The Agent handoff and export guidance below require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs. Keep the CLI, Skill and hooks on the same package version.
 
-## What's new in 0.1.8
+## What's new in 0.1.9
 
-- Native Codex plugin-status queries can use the `ccneed` marketplace name without triggering collection validation.
-- Codex installation verifies the CCNeed plugin source directly, avoiding delays from unrelated marketplaces.
+- Collection hooks pass plan data to the Agent, which presents the final plan conversationally and waits for confirmation. Starting collection shows a short reminder and requests native permission without repeating the plan.
+- The shared Skill normally exports CSV and delivers the local file after collection completes, honoring requested formats and destinations.
 
-See the [0.1.8 changelog](CHANGELOG.md#018) for details.
+See the [0.1.9 changelog](CHANGELOG.md#019) for details.
 
 ## What's new in 0.1.7
 
 - **Native Agent plugins:** one shared Skill and Hook core, packaged for CC/CX/WB. The unified installer coordinates CLI and selected plugin versions; CC/CX use native registration, while WorkBuddy desktop requires the native installation step described in [Installation](INSTALL.md).
-- **Reviewed collection:** the Agent prepares a plan with `kb plan`; CCNeed validates it, fits quotas to the available balance, and displays the research requirement, platform keywords, quotas and credits. `kb start` requires native execution approval. Unspecified counts default to 300 items across all platforms.
+- **Reviewed collection:** the Agent prepares a plan with `kb plan`; CCNeed validates it and fits quotas to the available balance. The Agent presents the final requirement, platform keywords, quotas and credits, then waits for conversational confirmation. `kb start` still requires native execution approval. Unspecified counts default to 300 items across all platforms.
 - **Data for your own Agent:** `kb export --format csv|json` exports knowledge-base data without starting a cloud analysis conversation. Default filenames include the KB ID, name and export time to distinguish exports.
 - **Cloud conversation continuity:** collection HITL requests support plan display, approval, feedback and rejection. Plan changes must be revalidated before approval; the cloud Agent can then continue its analysis and produce a report.
 
@@ -101,7 +101,7 @@ ccneed kb export --kb-id KB_ID --format csv
 ccneed kb export --kb-id KB_ID --format json
 ```
 
-For new data, your agent prepares a plan with `kb plan`, displays the research requirement, keywords, platform quotas and credit estimate, then requests native permission before `kb start`. See [collection instructions](skills/ccneed/references/acquisition.md). The legacy `kb create` website entry remains available.
+For new data, your agent prepares a plan with `kb plan`, presents it conversationally and waits for your confirmation, then requests native permission before `kb start`. Once collection completes, the Agent normally exports and delivers CSV automatically; requested formats and destinations take priority. See [collection instructions](skills/ccneed/references/acquisition.md). The legacy `kb create` website entry remains available.
 
 For cloud analysis, start a conversation with your first question and the knowledge-base ID. To bind a file too, upload it first and use the returned file ID:
 
