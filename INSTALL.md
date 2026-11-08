@@ -4,7 +4,7 @@ English · [中文](INSTALL.zh.md)
 
 The global CLI runs commands. A native plugin supplies the shared Skill and collection hooks to Claude Code, Codex or WorkBuddy desktop; each host manages its plugin cache and lifecycle.
 
-> Release preparation: this branch targets 0.1.7. Merging this version change into `main` starts the existing gated release workflow. Native plugins, `kb plan`, `kb start` and `kb export` require that release and deployment of matching Club APIs. Until publication is verified, the current `@latest` does not include these changes.
+> Release preparation: this branch targets 0.1.8. Its plugin-query and installation-check fixes require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs.
 
 ## Install or update
 

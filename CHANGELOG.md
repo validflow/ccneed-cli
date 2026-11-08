@@ -2,6 +2,11 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.8
+
+- Fixed collection hooks rejecting literal Codex plugin-status queries that use `ccneed` as the marketplace name.
+- Scoped Codex installation checks to the CCNeed marketplace so unrelated plugin sources cannot delay version verification.
+
 ## 0.1.7
 
 CCNeed now includes native Agent plugins and a data collection/export workflow alongside cloud analysis. Export data for your own Agent, or continue research with CCNeed's cloud Agent.

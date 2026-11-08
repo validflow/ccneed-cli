@@ -18,7 +18,14 @@
 
 CCNeed combines a global CLI with native Agent plugins for Claude Code, Codex and WorkBuddy. Collect and export data for your own Agent to analyze, or let CCNeed's cloud Agent analyze your knowledge base and return a report. The plugins bundle the shared Skill and collection hooks; each host manages their loading and lifecycle.
 
-> Release preparation: this branch targets 0.1.7. Merging this version change into `main` starts the existing gated release workflow. The new `kb plan`, `kb start`, `kb export` and native plugin require that release and deployment of the matching Club APIs. Until publication is verified, the current `@latest` does not include these changes. Keep the CLI, Skill and hooks on the same package version.
+> Release preparation: this branch targets 0.1.8. The hook and installer fixes below require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs. Keep the CLI, Skill and hooks on the same package version.
+
+## What's new in 0.1.8
+
+- Native Codex plugin-status queries can use the `ccneed` marketplace name without triggering collection validation.
+- Codex installation verifies the CCNeed plugin source directly, avoiding delays from unrelated marketplaces.
+
+See the [0.1.8 changelog](CHANGELOG.md#018) for details.
 
 ## What's new in 0.1.7
 

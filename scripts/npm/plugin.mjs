@@ -394,7 +394,7 @@ async function ensureMarketplace(native, host, root) {
   return marketplace;
 }
 
-/** installedPlugin 读取原生用户级安装状态，不用缓存目录存在代替实际状态。
+/** installedPlugin 读取本插件源的原生安装状态，不查询无关远程源。
  * Args:
  *   native: 原生进程边界。
  *   host: claude 或 codex。
@@ -404,7 +404,7 @@ async function ensureMarketplace(native, host, root) {
  *   无效或重复的原生安装记录返回异常。
  */
 async function installedPlugin(native, host) {
-  const value = await nativeJSON(native, host, ['plugin', 'list', '--json']);
+  const value = await nativeJSON(native, host, ['plugin', 'list', '--json', ...(host === 'codex' ? ['--marketplace', 'ccneed'] : [])]);
   const rows = host === 'claude' ? value : value.installed;
   if (!Array.isArray(rows)) throw new Error('Invalid native plugin response');
   const matches = rows.filter(row => host === 'claude' ? row.id === 'ccneed@ccneed' && row.scope === 'user' : row.pluginId === 'ccneed@ccneed');
