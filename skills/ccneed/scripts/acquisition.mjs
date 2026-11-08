@@ -92,7 +92,24 @@ function readObject(path) {
   return value;
 }
 
-/** parseCommand 只接受明确的单条 ccneed 调用，拒绝包装、插值和隐藏输出。
+/** isCodexPluginQuery 识别将本插件源名称当作数据的原生只读查询。
+ * Args:
+ *   args: 已通过单条命令和字面量检查的 argv。
+ * Returns:
+ *   是否仅列出 CCNeed 插件源的状态。
+ */
+function isCodexPluginQuery(args) {
+  if (!/^codex(?:\.cmd|\.exe)?$/i.test(args[0] ?? '') || args[1] !== 'plugin' || args[2] !== 'list') return false;
+  for (let index = 3; index < args.length; index++) {
+    const value = args[index];
+    if (['--json', '--available'].includes(value) || /^(?:--marketplace|-m)=ccneed$/.test(value)) continue;
+    if (['--marketplace', '-m'].includes(value) && args[++index] === 'ccneed') continue;
+    return false;
+  }
+  return true;
+}
+
+/** parseCommand 接受明确的单条调用，排除原生只读插件查询中的源名称。
  * Args:
  *   command: 宿主提供的实际命令文本。
  * Returns:
@@ -112,6 +129,7 @@ function parseCommand(command) {
     if (offset < command.length && !/\s/.test(command[offset])) throw new Error('Use separated literal command arguments');
   }
   if (command.slice(offset).trim()) throw new Error('Unclosed command quote');
+  if (isCodexPluginQuery(args)) return null;
   if (!/^ccneed(?:\.cmd|\.exe)?$/.test(args[0] ?? '')) throw new Error('Use the lowercase ccneed command directly so native permission rules match');
   if (args[1]?.startsWith('-') && !(args.length === 2 && ['--help', '-h'].includes(args[1]))) throw new Error('Place connection flags after the subcommand so native permission rules match');
   return args;

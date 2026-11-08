@@ -18,7 +18,14 @@
 
 CCNeed 提供全局 CLI，以及适配 Claude Code、Codex、WorkBuddy 的原生 Agent 插件。你可以采集并导出数据，交给自己的 Agent 分析；也可以把知识库交给 CCNeed 云端 Agent 分析并获取报告。插件携带统一 Skill 与采集 hooks，由各宿主管理加载和生命周期。
 
-> 发行准备：本分支版本更新为 0.1.7。该版本变更合入 `main` 后，会启动现有发行门禁与发布流程。新增的 `kb plan`、`kb start`、`kb export` 和原生插件需要完成该发行，并部署配套 Club 接口；确认发布成功前，当前 `@latest` 不包含这些改动。CLI、Skill、hooks 必须来自同一版本。
+> 发行准备：本分支版本为 0.1.8，以下 hook 和安装器修复需确认该版本发布成功后使用。0.1.7 引入的采集与导出命令仍需配套 Club 接口。CLI、Skill、hooks 保持同一包版本。
+
+## 0.1.8 更新
+
+- 原生 Codex 插件状态查询可将 `ccneed` 用作插件源名称，不再误触发采集校验。
+- Codex 安装核验直接查询 CCNeed 插件源，避免无关插件源造成等待。
+
+完整变更见 [0.1.8 更新记录](CHANGELOG.zh.md#018)。
 
 ## 0.1.7 主要更新
 

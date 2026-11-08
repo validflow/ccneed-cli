@@ -16,6 +16,45 @@ function fixture() {
 
 const quoted = value => '"' + value.replaceAll('\\', '/') + '"';
 
+for (const host of ['claude', 'codex', 'workbuddy']) {
+  test(host + ' leaves literal native plugin queries and their output untouched', () => {
+    const data = fixture();
+    for (const command of [
+      'codex plugin list --marketplace ccneed --json',
+      'codex.cmd plugin list --json -m ccneed --available',
+      'codex.exe plugin list --marketplace=ccneed --json',
+      'Codex.CMD plugin list --marketplace "ccneed"',
+    ]) {
+      for (const hook_event_name of ['PreToolUse', 'PostToolUse']) {
+        const event = { ...data.input, hook_event_name,
+          tool_name: host === 'codex' ? 'exec_command' : 'Bash',
+          tool_input: host === 'codex' ? { cmd: command } : { command },
+          tool_response: { stdout: '{"installed":[]}' } };
+        assert.deepEqual(handleHook(host, event, data.options), {}, command);
+      }
+    }
+  });
+}
+
+test('wrapped or compound collection calls still fail after a plan has been displayed', () => {
+  const data = fixture();
+  for (const host of ['claude', 'codex', 'workbuddy']) {
+    handleHook(host, { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed kb plan --plan-file raw.json' }, tool_response: data.plan }, data.options);
+    const start = 'ccneed kb start --plan-file ' + quoted(data.filename);
+    for (const command of [
+      'env ' + start,
+      'bash -lc ' + quoted(start),
+      '/usr/local/bin/' + start,
+      'codex plugin list --marketplace ccneed --json; ' + start,
+      'codex plugin list --marketplace ccneed --config profile=other',
+      start + ' | cat',
+    ]) {
+      const result = handleHook(host, { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command } }, data.options);
+      assert.equal(result.hookSpecificOutput?.permissionDecision, 'deny', command);
+    }
+  }
+});
+
 test('plan presentation groups whole platform quota and hides internal allocation', () => {
   const { plan } = fixture();
   const text = renderPlan(plan);

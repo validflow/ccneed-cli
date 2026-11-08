@@ -102,6 +102,21 @@ test('exact global CLI version is coordinated with the selected native plugin ma
   assert.equal(existsSync(join(data.home, '.ccneed')), false);
 });
 
+test('Codex installation checks its marketplace without querying unrelated plugin sources', async () => {
+  const data = fixture();
+  const native = async (host, args) => {
+    if (host === 'codex' && args[0] === 'plugin' && args[1] === 'list'
+      && !args.includes('--marketplace')) throw new Error('Unrelated marketplace lookup timed out');
+    return data.options.native(host, args);
+  };
+  const result = await installIntegration({ ...data.options, agents: 'codex', native });
+  assert.equal(result.status, 'installed');
+  assert.equal(result.plugins[0].version, '0.1.0');
+  const lookups = data.nativeCalls.filter(args => args[0] === 'codex' && args[1] === 'plugin' && args[2] === 'list');
+  assert.equal(lookups.length, 2, 'installation verifies the plugin both before and after registration');
+  for (const args of lookups) assert.equal(args[args.indexOf('--marketplace') + 1], 'ccneed');
+});
+
 test('Claude loads Skill and hooks from its native plugin without duplicated user-level entries', async () => {
   const data = fixture();
   mkdirSync(join(data.home, '.claude'), { recursive: true });
