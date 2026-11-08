@@ -1,6 +1,6 @@
 {
   "name": "ccneed",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Collect CCNeed data with reviewed plans, or run cloud research and retrieve reports.",
   "author": { "name": "CCNeed" },
   "homepage": "https://ccneed.ai",

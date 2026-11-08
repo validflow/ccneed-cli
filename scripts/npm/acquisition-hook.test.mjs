@@ -63,6 +63,47 @@ test('plan presentation groups whole platform quota and hides internal allocatio
 });
 
 for (const host of ['claude', 'codex', 'workbuddy']) {
+  test(host + ' rejects a plan without a nonblank entity and clears the old approval candidate', () => {
+    for (const entities of [[], [''], [' \t ']]) {
+      const data = fixture();
+      const post = { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed kb plan --plan-file raw.json' } };
+      handleHook(host, { ...post, tool_response: data.plan }, data.options);
+      data.plan.platforms[0].entity_keywords = entities;
+      writeFileSync(data.filename, JSON.stringify(data.plan));
+      handleHook(host, { ...post, tool_response: data.plan }, data.options);
+      const start = handleHook(host, { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed kb start --plan-file ' + quoted(data.filename) } }, data.options);
+      assert.equal(start.hookSpecificOutput.permissionDecision, 'deny');
+    }
+  });
+
+  test(host + ' accepts replaced entities and editable other keywords only after re-preparation', () => {
+    for (const other of [['support experience'], []]) {
+      const data = fixture();
+      const post = { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed kb plan --plan-file raw.json' } };
+      const start = { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed kb start --plan-file ' + quoted(data.filename) } };
+      handleHook(host, { ...post, tool_response: data.plan }, data.options);
+      data.plan.plan_version = 'v2';
+      data.plan.platforms[0].entity_keywords = ['NextProduct', 'NextAlias'];
+      data.plan.platforms[0].other_keywords = other;
+      data.plan.search_plan = [
+        { platform: 'twitter', keyword: 'NextProduct', tier: 1, quota: 150, strategy_rationale: 'entity anchor' },
+        { platform: 'twitter', keyword: 'NextAlias', tier: 1, quota: other.length ? 90 : 150, strategy_rationale: 'entity anchor' },
+        ...(other.length ? [{ platform: 'twitter', keyword: other[0], tier: 2, quota: 60, strategy_rationale: 'expanded' }] : []),
+      ];
+      writeFileSync(data.filename, JSON.stringify(data.plan));
+      assert.equal(handleHook(host, start, data.options).hookSpecificOutput.permissionDecision, 'deny');
+      for (let review = 0; review < 2; review++) {
+        const context = handleHook(host, { ...post, tool_response: data.plan }, data.options).hookSpecificOutput.additionalContext;
+        for (const value of ['NextProduct', 'NextAlias', ...other, '300', '1000']) assert.ok(context.includes(value));
+      }
+      const permission = handleHook(host, start, data.options).hookSpecificOutput;
+      if (host === 'codex') assert.equal(permission.permissionDecision, undefined);
+      else assert.equal(permission.permissionDecision, 'ask');
+    }
+  });
+}
+
+for (const host of ['claude', 'codex', 'workbuddy']) {
   test(host + ' requires same-session final presentation before native confirmation', () => {
     const data = fixture();
     const start = { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed kb start --plan-file ' + quoted(data.filename) + ' --request-id 00000000-0000-0000-0000-000000000222' } };
