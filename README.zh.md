@@ -18,24 +18,14 @@
 
 CCNeed 提供全局 CLI，以及适配 Claude Code、Codex、WorkBuddy 的原生 Agent 插件。你可以采集并导出数据，交给自己的 Agent 分析；也可以把知识库交给 CCNeed 云端 Agent 分析并获取报告。插件携带统一 Skill 与采集 hooks，由各宿主管理加载和生命周期。
 
-> 发行准备：本分支版本为 0.1.10，以下确认流程优化需确认该版本发布成功后使用。0.1.7 引入的采集与导出命令仍需配套 Club 接口。CLI、Skill、hooks 保持同一包版本。
+## 可以做什么
 
-## 0.1.10 更新
+- **采集数据交给自己的 Agent：**准备采集方案，将数据采集到知识库，再导出 CSV 或 JSON 供本地分析。文件名包含知识库 ID、名称和导出时间。
+- **调用云端分析：**把研究问题、知识库和文件交给 CCNeed 云端 Agent，跟进进度、回复确认请求，并下载完成的报告。
+- **采集前审阅方案：**查看研究需求、各平台的实体词和其他关键词、配额、预计积分及余额。方案可调整，确认后还需通过宿主原生权限界面批准执行。未指定数量时，所有平台合计默认 300 条。
+- **接入常用 Agent：**Claude Code、Codex、WorkBuddy 的原生插件共用 Skill 和采集 hooks；安装器管理全局 CLI 与各宿主的插件安装。
 
-- 每次确认方案时，完整展示研究需求、各平台关键词与配额、合计条数、预计积分、余额及调整说明；可自然表达，也可使用表格或列表。
-- 实体词和其他关键词都可增删、替换，每个平台至少保留一个非空白实体词；修改后重新校验、展示，再确认。
-- 正式采集前仍为短提示加宿主原生权限界面，采集完成后通常自动导出 CSV 并交付。
-
-完整变更见 [0.1.10 更新记录](CHANGELOG.zh.md#0110)。
-
-## 0.1.7 主要更新
-
-- **原生 Agent 插件：**统一 Skill 与 Hook 核心，分别打包适配 CC/CX/WB。统一安装器协调 CLI 与所选插件版本；CC/CX 通过原生管理器注册，WorkBuddy 桌面版需完成[安装指南](INSTALL.zh.md)中的原生安装步骤。
-- **采集前方案确认：**Agent 通过 `kb plan` 准备方案，平台校验并按余额适配配额。Agent 用自然语言展示最终研究需求、各平台关键词、配额与积分，等待对话确认后，在 `kb start` 前请求原生执行授权。未指定数量时，所有平台合计默认 300 条。
-- **数据交给自己的 Agent：**通过 `kb export --format csv|json` 导出知识库数据，不必开启云端分析会话。默认文件名包含 KB ID、名称和导出时间，便于区分不同知识库及批次。
-- **云端对话继续闭环：**采集类 HITL 支持方案展示、批准、反馈与拒绝；修改方案需重新校验再批准，之后云端 Agent 可继续分析并生成报告。
-
-完整变更与服务前提见 [0.1.7 更新记录](CHANGELOG.zh.md#017)。
+采集和导出需要配套的 CCNeed 服务接口。宿主支持情况和服务前提见[安装指南](INSTALL.zh.md)。
 
 ## 安装
 
@@ -45,7 +35,7 @@ CCNeed 提供全局 CLI，以及适配 Claude Code、Codex、WorkBuddy 的原生
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-把 `codex` 换成自己的 Agent；同时接入两个 Agent 可写 `--agent codex,workbuddy`。上述新版本发布后，安装器更新全局 CLI，并通过 Claude Code、Codex 的原生插件管理器注册同版本插件。WorkBuddy 桌面版需完成返回结果里的原生安装步骤。插件携带统一 Skill 与采集 hooks，不重复安装全局 Skill。安装后重新打开 Agent、审阅并信任 hooks，保持人工审批模式；逐宿主结果与要求见[安装指南](INSTALL.zh.md)。
+把 `codex` 换成自己的 Agent；同时接入两个 Agent 可写 `--agent codex,workbuddy`。安装器更新全局 CLI，并通过 Claude Code、Codex 的原生插件管理器注册同版本插件。WorkBuddy 桌面版需完成返回结果里的原生安装步骤。插件携带统一 Skill 与采集 hooks。安装后重新打开 Agent、审阅并信任 hooks，保持人工审批模式；逐宿主结果与要求见[安装指南](INSTALL.zh.md)。
 
 ```bash
 ccneed --help
@@ -68,7 +58,7 @@ ccneed --help
 
 ```text
 请阅读 https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md。
-为我当前使用的 Agent 安装官方 CCNeed CLI 和配套 Skill。
+为我当前使用的 Agent 安装官方 CCNeed CLI 和原生插件。
 登录时把官网授权链接发给我，由我自己确认授权。
 ```
 
@@ -136,7 +126,7 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 
 ## 更新与反馈
 
-重新运行 `npx @validflow/ccneed-cli@latest install --agent ...`，列出所有需要更新的宿主，协调更新 CLI 与原生插件。逐宿主检查 `plugins[]` 结果，完成待办的原生安装或信任步骤。使用采集命令前确认所需版本与 Club 接口已上线。更新后重载 Agent；更新提醒不会自动安装。
+重新运行 `npx @validflow/ccneed-cli@latest install --agent ...`，列出所有需要更新的宿主，一起更新 CLI 与原生插件。检查各宿主的结果，完成待办的原生安装或信任步骤。更新后重载 Agent；更新提醒不会自动安装。
 
 遇到问题请 [提交 Issue](https://github.com/validflow/ccneed-cli/issues)，附上操作系统、CLI 版本和脱敏后的错误。不要上传凭证或私人文件。
 

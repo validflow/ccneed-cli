@@ -18,24 +18,14 @@
 
 CCNeed combines a global CLI with native Agent plugins for Claude Code, Codex and WorkBuddy. Collect and export data for your own Agent to analyze, or let CCNeed's cloud Agent analyze your knowledge base and return a report. The plugins bundle the shared Skill and collection hooks; each host manages their loading and lifecycle.
 
-> Release preparation: this branch targets 0.1.10. The confirmation improvements below require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs. Keep the CLI, Skill and hooks on the same package version.
+## What you can do
 
-## What's new in 0.1.10
+- **Collect data for your own Agent:** prepare a collection plan, collect into a knowledge base, and export CSV or JSON for local analysis. Export filenames include the KB ID, name and timestamp.
+- **Run cloud research:** give CCNeed's cloud Agent your question, knowledge bases and files, follow its progress, respond to confirmation requests, and download the finished report.
+- **Review before collecting:** see the research requirement, every platform's entity and other keywords, quotas, estimated credits and balance. You can adjust the plan before confirming; starting collection also requires your host's native execution approval. Unspecified counts default to 300 items across all platforms.
+- **Use your preferred Agent:** native plugins for Claude Code, Codex and WorkBuddy share one Skill and collection hooks. The installer manages the global CLI and host-specific plugin setup.
 
-- Each plan confirmation includes the research requirement, all platform keywords and quotas, total count, estimated credits, balance and any adjustments. The Agent can use natural prose, tables or lists.
-- Entity and other keywords can be added, removed or replaced. Each platform must retain at least one nonblank entity; changes are revalidated and presented before confirmation.
-- Starting collection still shows a short reminder and requires the host's native permission UI. CSV is normally exported and delivered after collection completes.
-
-See the [0.1.10 changelog](CHANGELOG.md#0110) for details.
-
-## What's new in 0.1.7
-
-- **Native Agent plugins:** one shared Skill and Hook core, packaged for CC/CX/WB. The unified installer coordinates CLI and selected plugin versions; CC/CX use native registration, while WorkBuddy desktop requires the native installation step described in [Installation](INSTALL.md).
-- **Reviewed collection:** the Agent prepares a plan with `kb plan`; CCNeed validates it and fits quotas to the available balance. The Agent presents the final requirement, platform keywords, quotas and credits, then waits for conversational confirmation. `kb start` still requires native execution approval. Unspecified counts default to 300 items across all platforms.
-- **Data for your own Agent:** `kb export --format csv|json` exports knowledge-base data without starting a cloud analysis conversation. Default filenames include the KB ID, name and export time to distinguish exports.
-- **Cloud conversation continuity:** collection HITL requests support plan display, approval, feedback and rejection. Plan changes must be revalidated before approval; the cloud Agent can then continue its analysis and produce a report.
-
-See the [0.1.7 changelog](CHANGELOG.md#017) for release details and service prerequisites.
+Collection and export require matching CCNeed service APIs. See [installation](INSTALL.md) for host support and service prerequisites.
 
 ## Install
 
@@ -45,7 +35,7 @@ Node.js 22.14+ and npm are required. Choose your agent: `codex`, `workbuddy` (lo
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. In the new release above, the installer updates the global CLI and registers its same-version native plugin with Claude Code or Codex. WorkBuddy desktop requires the native plugin installation step shown in the result. The plugin bundles the shared Skill and collection hooks; it does not add a second global Skill. Restart your agent, review/trust the hooks, and keep manual approval enabled. See [installation](INSTALL.md) for requirements and per-host results.
+Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. The installer updates the global CLI and registers its same-version native plugin with Claude Code or Codex. WorkBuddy desktop requires the native plugin installation step shown in the result. The plugin bundles the shared Skill and collection hooks. Restart your agent, review/trust the hooks, and keep manual approval enabled. See [installation](INSTALL.md) for requirements and per-host results.
 
 ```bash
 ccneed --help
@@ -68,7 +58,7 @@ This builds the development CLI only. The source Skill lives in `skills/ccneed`;
 
 ```text
 Read https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md.
-Install the official CCNeed CLI and Skill for the agent I am using.
+Install the official CCNeed CLI and native plugin for the agent I am using.
 Give me the website authorization link; I will approve the login myself.
 ```
 
@@ -136,7 +126,7 @@ Knowledge-base and file bindings can be added, but not removed. Use `ccneed <com
 
 ## Update and contribute
 
-Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update the CLI and every host you name. Check each host's plugin result and complete any pending native installation or trust steps. Confirm that the required release and Club APIs are available before using collection commands. Reload your agent afterward; update notifications never install software without your action.
+Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update the CLI and native plugins together for every host you name. Check each host's result and complete any pending native installation or trust steps. Reload your agent afterward; update notifications never install software without your action.
 
 Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues) with your OS, CLI version, and a redacted error message. Never post credentials or private files.
 
