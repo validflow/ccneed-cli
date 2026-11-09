@@ -16,16 +16,13 @@
   </p>
 </div>
 
-CCNeed combines a global CLI with native Agent plugins for Claude Code, Codex and WorkBuddy. Collect and export data for your own Agent to analyze, or let CCNeed's cloud Agent analyze your knowledge base and return a report. The plugins bundle the shared Skill and collection hooks; each host manages their loading and lifecycle.
+CCNeed connects Claude Code, Codex and WorkBuddy to social data collection and cloud research through a CLI and native plugins.
 
 ## What you can do
 
-- **Collect data for your own Agent:** prepare a collection plan, collect into a knowledge base, and export CSV or JSON for local analysis. Export filenames include the KB ID, name and timestamp.
-- **Run cloud research:** give CCNeed's cloud Agent your question, knowledge bases and files, follow its progress, respond to confirmation requests, and download the finished report.
-- **Review before collecting:** see the research requirement, every platform's entity and other keywords, quotas, estimated credits and balance. You can adjust the plan before confirming; starting collection also requires your host's native execution approval. Unspecified counts default to 300 items across all platforms.
-- **Use your preferred Agent:** native plugins for Claude Code, Codex and WorkBuddy share one Skill and collection hooks. The installer manages the global CLI and host-specific plugin setup.
-
-Collection and export require matching CCNeed service APIs. See [installation](INSTALL.md) for host support and service prerequisites.
+- **Get data:** collect into a knowledge base and export CSV or JSON for your own Agent.
+- **Run cloud research:** analyze knowledge bases and files with CCNeed's cloud Agent, then download the report.
+- **Review before collecting:** adjust keywords, collection targets and budget, confirm the plan, then approve execution in your Agent.
 
 ## Install
 
@@ -92,7 +89,7 @@ ccneed kb export --kb-id KB_ID --format csv
 ccneed kb export --kb-id KB_ID --format json
 ```
 
-For new data, your agent prepares a plan with `kb plan`, presents it conversationally and waits for your confirmation, then requests native permission before `kb start`. Once collection completes, the Agent normally exports and delivers CSV automatically; requested formats and destinations take priority. See [collection instructions](skills/ccneed/references/acquisition.md). The legacy `kb create` website entry remains available.
+For new data, your agent prepares a plan with `kb plan`, presents it conversationally and waits for your confirmation, then requests native permission before `kb start`. Once collection and tagging finish, the Agent normally exports and delivers CSV automatically; requested formats and destinations take priority. See [collection instructions](skills/ccneed/references/acquisition.md). The legacy `kb create` website entry remains available.
 
 For cloud analysis, start a conversation with your first question and the knowledge-base ID. To bind a file too, upload it first and use the returned file ID:
 

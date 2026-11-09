@@ -2,6 +2,14 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.11
+
+- Describe platform quotas as collection targets and explain that complete result pages can exceed them, for direct collection and cloud confirmations across Claude Code, Codex and WorkBuddy.
+- Clarify that CLI submissions use the platform's normal collection and tagging workflow; the Agent waits for completion before automatically exporting CSV.
+- Simplify the English and Chinese README introductions and capability summaries.
+
+Restoring tagging for CLI collections requires the corresponding Club deployment. This release does not reprocess existing data or change credit accounting.
+
 ## 0.1.10
 
 - Clarified the shared Skill and hook context: each plan confirmation includes the complete requirement, platform entity/other keywords and quotas, total count, estimated credits, balance and adjustments, with flexible prose, tables or lists.

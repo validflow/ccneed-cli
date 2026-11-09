@@ -16,16 +16,13 @@
   </p>
 </div>
 
-CCNeed 提供全局 CLI，以及适配 Claude Code、Codex、WorkBuddy 的原生 Agent 插件。你可以采集并导出数据，交给自己的 Agent 分析；也可以把知识库交给 CCNeed 云端 Agent 分析并获取报告。插件携带统一 Skill 与采集 hooks，由各宿主管理加载和生命周期。
+通过 CLI 和原生插件，在 Claude Code、Codex、WorkBuddy 中使用 CCNeed 的社媒数据采集与云端研究能力。
 
 ## 可以做什么
 
-- **采集数据交给自己的 Agent：**准备采集方案，将数据采集到知识库，再导出 CSV 或 JSON 供本地分析。文件名包含知识库 ID、名称和导出时间。
-- **调用云端分析：**把研究问题、知识库和文件交给 CCNeed 云端 Agent，跟进进度、回复确认请求，并下载完成的报告。
-- **采集前审阅方案：**查看研究需求、各平台的实体词和其他关键词、配额、预计积分及余额。方案可调整，确认后还需通过宿主原生权限界面批准执行。未指定数量时，所有平台合计默认 300 条。
-- **接入常用 Agent：**Claude Code、Codex、WorkBuddy 的原生插件共用 Skill 和采集 hooks；安装器管理全局 CLI 与各宿主的插件安装。
-
-采集和导出需要配套的 CCNeed 服务接口。宿主支持情况和服务前提见[安装指南](INSTALL.zh.md)。
+- **获取数据：**采集到知识库，导出 CSV 或 JSON，交给自己的 Agent 分析。
+- **云端研究：**让 CCNeed 云端 Agent 分析知识库和文件，下载研究报告。
+- **采集前确认：**调整关键词、采集目标和预算，确认方案后通过 Agent 原生权限界面批准执行。
 
 ## 安装
 
@@ -92,7 +89,7 @@ ccneed kb export --kb-id KB_ID --format csv
 ccneed kb export --kb-id KB_ID --format json
 ```
 
-需要新数据时，Agent 通过 `kb plan` 准备方案，用自然语言展示并等待对话确认，再在 `kb start` 前请求原生权限。采集完成后，Agent 通常自动导出 CSV 并交付本地文件；指定格式与目录优先。详见[采集说明](skills/ccneed/references/acquisition.md)；原来的 `kb create` 网页入口继续保留。
+需要新数据时，Agent 通过 `kb plan` 准备方案，用自然语言展示并等待对话确认，再在 `kb start` 前请求原生权限。采集、打标完成后，Agent 通常自动导出 CSV 并交付本地文件；指定格式与目录优先。详见[采集说明](skills/ccneed/references/acquisition.md)；原来的 `kb create` 网页入口继续保留。
 
 需要云端分析时，带上第一句话和知识库 ID 开启会话。如果还要绑定文件，先上传，再使用返回的文件 ID：
 
