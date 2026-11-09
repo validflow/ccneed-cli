@@ -63,6 +63,27 @@ test('plan presentation groups whole platform quota and hides internal allocatio
 });
 
 for (const host of ['claude', 'codex', 'workbuddy']) {
+  test(host + ' explains page-sized collection targets for direct and cloud plans', () => {
+    const data = fixture();
+    const suggested = { mode: 'add', kb_id: 7, kb_description: data.plan.research_requirement, quotas: { twitter: 300 }, search_plan: data.plan.search_plan, estimated_credits: 300, balance: 1000 };
+    const events = [
+      { command: 'ccneed kb plan --plan-file raw.json', response: data.plan },
+      { command: 'ccneed tasks get --thread-id thread --turn-id turn', response: { thread_id: 'thread', turn_id: 'turn', pending_action: { action_id: 'action', suggested } } },
+    ];
+    for (const { command, response } of events) {
+      const result = handleHook(host, { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command }, tool_response: response }, data.options);
+      const context = result.hookSpecificOutput.additionalContext;
+      assert.ok(context.includes('采集目标（条）'));
+      assert.ok(context.includes('整页'));
+      assert.ok(context.includes('可能超过目标'));
+      assert.ok(!context.includes('采集上限'));
+      for (const value of ['比较品牌反馈', 'Brand', 'feedback', '300', '1000']) assert.ok(context.includes(value));
+      assert.equal(result.systemMessage, undefined);
+    }
+  });
+}
+
+for (const host of ['claude', 'codex', 'workbuddy']) {
   test(host + ' rejects a plan without a nonblank entity and clears the old approval candidate', () => {
     for (const entities of [[], [''], [' \t ']]) {
       const data = fixture();

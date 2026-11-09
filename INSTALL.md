@@ -4,7 +4,7 @@ English · [中文](INSTALL.zh.md)
 
 The global CLI runs commands. A native plugin supplies the shared Skill and collection hooks to Claude Code, Codex or WorkBuddy desktop; each host manages its plugin cache and lifecycle.
 
-> Release preparation: this branch targets 0.1.10. Its confirmation improvements require verified publication of that version. Collection and export commands introduced in 0.1.7 still require matching Club APIs.
+> Release preparation: this branch targets 0.1.11. Verify publication before updating; restoring tagging for CLI collections also requires the matching Club deployment.
 
 ## Install or update
 
