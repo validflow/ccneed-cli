@@ -26,18 +26,36 @@
 
 ## 安装与更新
 
-需要 Node.js 22.14+、npm，以及你使用的 Agent。在终端运行对应命令：
+<p>
+  <img src="assets/agents/claude-code.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Claude&nbsp;Code
+  &nbsp;·&nbsp;
+  <img src="assets/agents/codex.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Codex
+  &nbsp;·&nbsp;
+  <img src="assets/agents/workbuddy.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;WorkBuddy
+  &nbsp;·&nbsp;
+  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" align="absmiddle" alt=""></picture>&nbsp;Kimi&nbsp;Code
+</p>
 
-| Agent | 安装 / 更新命令 | 插件接入 |
-| --- | --- | --- |
-| <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `npx @validflow/ccneed-cli@latest install --agent claude` | 自动注册 |
-| <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `npx @validflow/ccneed-cli@latest install --agent codex` | 自动注册 |
-| <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `npx @validflow/ccneed-cli@latest install --agent workbuddy` | 在桌面插件管理器导入 |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code | `npx @validflow/ccneed-cli@latest install --agent kimi` | 通过 `/plugins` 导入 |
+需要 Node.js 22.14+ 和 npm。
 
-按安装结果完成剩余接入步骤，然后重启 Agent。后续使用同一条命令更新 CLI 和配套插件。
+### 让 Agent 帮你安装
 
-多个 Agent 可一起安装：`--agent claude,codex,workbuddy,kimi`。宿主要求、源码构建与排障见[安装指南](INSTALL.zh.md)。
+```text
+请阅读 https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md，
+为我当前使用的 Agent 安装或更新 CCNeed CLI 和原生插件。
+```
+
+### 手动安装
+
+用同一条命令安装或更新 CLI 和所选 Agent 的插件：
+
+```bash
+npx @validflow/ccneed-cli@latest install --agent codex
+```
+
+按需替换 `codex`：`claude`（Claude Code）、`codex`、`workbuddy` 或 `kimi`。多个 Agent 用逗号组合，例如 `--agent claude,codex`。
+
+按安装结果完成插件接入，然后重启 Agent。宿主要求、原生导入步骤与排障见[安装指南](INSTALL.zh.md)。
 
 ## 登录
 

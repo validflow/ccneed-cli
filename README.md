@@ -26,18 +26,36 @@ CCNeed connects your Agent to social data collection and cloud research through 
 
 ## Install or update
 
-Requires Node.js 22.14+, npm and your preferred Agent. Run its command in a terminal:
+<p>
+  <img src="assets/agents/claude-code.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Claude&nbsp;Code
+  &nbsp;·&nbsp;
+  <img src="assets/agents/codex.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Codex
+  &nbsp;·&nbsp;
+  <img src="assets/agents/workbuddy.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;WorkBuddy
+  &nbsp;·&nbsp;
+  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" align="absmiddle" alt=""></picture>&nbsp;Kimi&nbsp;Code
+</p>
 
-| Agent | Install / update command | Plugin setup |
-| --- | --- | --- |
-| <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `npx @validflow/ccneed-cli@latest install --agent claude` | Automatic registration |
-| <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `npx @validflow/ccneed-cli@latest install --agent codex` | Automatic registration |
-| <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `npx @validflow/ccneed-cli@latest install --agent workbuddy` | Import in desktop plugin manager |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code | `npx @validflow/ccneed-cli@latest install --agent kimi` | Import via `/plugins` |
+Requires Node.js 22.14+ and npm.
 
-Follow any remaining setup steps in the installer result, then restart your Agent. Use the same command to update both the CLI and its plugin.
+### Ask your Agent
 
-For multiple Agents, list them together: `--agent claude,codex,workbuddy,kimi`. See the [installation guide](INSTALL.md) for host requirements, source builds and troubleshooting.
+```text
+Read https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md
+and install or update CCNeed CLI and its native plugin for my current Agent.
+```
+
+### Install manually
+
+Use one command to install or update the CLI and your chosen Agent's plugin:
+
+```bash
+npx @validflow/ccneed-cli@latest install --agent codex
+```
+
+Replace `codex` as needed: `claude` (Claude Code), `codex`, `workbuddy` or `kimi`. Select multiple with commas, e.g. `--agent claude,codex`.
+
+Follow the installer result to finish plugin setup, then restart your Agent. See the [installation guide](INSTALL.md) for host requirements, native import steps and troubleshooting.
 
 ## Sign in
 
