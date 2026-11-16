@@ -1,6 +1,6 @@
 # CCNeed CLI 开发指令
 
-本文件是项目指令的单一来源。开始工作前完整阅读 [CODE_STYLE.md](CODE_STYLE.md) 和 [CONTRIBUTING.md](CONTRIBUTING.md)。
+本文件是项目指令的单一来源。开始工作前完整阅读 [CODE_STYLE.md](docs/en/CODE_STYLE.md) 和 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 - Go 完整命令行接入工具，覆盖登录、资源、长程任务、确认及结果生命周期；云端执行任务，不复制 CCNeed runtime。
 - 产品命令、API、登录凭证、资源处理和输出分层；只为当前需求增加模块。

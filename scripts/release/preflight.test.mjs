@@ -29,7 +29,8 @@ test('ready release requires matching lockfile and each nonempty release materia
   writeFileSync(join(root, 'package.json'), JSON.stringify(manifest));
   writeFileSync(join(root, 'package-lock.json'), JSON.stringify({ ...manifest, packages: { '': manifest } }));
   mkdirSync(join(root, 'skills', 'ccneed'), { recursive: true });
-  const files = ['LICENSE', 'CHANGELOG.md', 'skills/ccneed/SKILL.md'];
+  mkdirSync(join(root, 'docs', 'en'), { recursive: true });
+  const files = ['LICENSE', 'docs/en/CHANGELOG.md', 'skills/ccneed/SKILL.md'];
   for (const file of files) writeFileSync(join(root, file), 'fixture material');
   preflight(root, 'v0.1.0');
   for (const file of files) {

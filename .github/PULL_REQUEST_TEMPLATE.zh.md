@@ -8,7 +8,7 @@
 
 - [ ] `make check` 或 `bash scripts/check.sh` 通过。
 - [ ] 新增行为有实际失败再通过的测试证据。
-- [ ] 注释、模块边界、错误与输出契约符合 [代码规范](../CODE_STYLE.zh.md)。
+- [ ] 注释、模块边界、错误与输出契约符合 [代码规范](../docs/zh/CODE_STYLE.md)。
 - [ ] 完成正确性、架构、安全和需求一致性 review。
 - [ ] 必需的 `quality` 检查通过；若本地另做了 CX Review，附上报告并处理确认的问题（自动 CX Review 当前暂停）。
 

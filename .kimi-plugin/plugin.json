@@ -1,6 +1,6 @@
 {
   "name": "ccneed",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "CCNeed collection plans, knowledge-base data export and cloud research with Kimi native permissions.",
   "skills": "./skills",
   "sessionStart": { "skill": "ccneed" },

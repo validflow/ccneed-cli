@@ -1,6 +1,12 @@
 # Changelog
 
-English · [中文](CHANGELOG.zh.md)
+English · [中文](../zh/CHANGELOG.md)
+
+## 0.1.13
+
+- Move the Kimi manifest to `.kimi-plugin/plugin.json`, matching the other native plugin directories; update installation validation and release packaging.
+- Organize detailed English and Chinese guides under `docs/en/` and `docs/zh/`, keeping the READMEs and GitHub contribution/security entries at the root. Update links, installation prompts and release-note paths; include both languages in the npm package.
+- Keep maintainer review configuration local and ignored while preserving the Codex product marketplace. Automatic CI review remains paused.
 
 ## 0.1.12
 

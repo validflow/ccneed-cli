@@ -1,6 +1,12 @@
 # 更新记录
 
-[English](CHANGELOG.md) · 中文
+[English](../en/CHANGELOG.md) · 中文
+
+## 0.1.13
+
+- Kimi 清单迁入 `.kimi-plugin/plugin.json`，与其他宿主的插件目录保持一致；同步安装校验和发行打包。
+- 详细中英文说明归入 `docs/en/`、`docs/zh/`，根目录保留 README 和 GitHub 贡献／安全入口；同步文档链接、一句话安装入口及发布说明读取路径，npm 包包含两种语言的说明。
+- 维护者审查配置仅留本地并忽略，保留 Codex 产品 marketplace；CI 自动审查继续暂停。
 
 ## 0.1.12
 

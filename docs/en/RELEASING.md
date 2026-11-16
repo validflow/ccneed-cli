@@ -1,6 +1,6 @@
 # Releasing CCNeed CLI
 
-English · [中文](RELEASING.zh.md)
+English · [中文](../zh/RELEASING.md)
 
 The CLI, npm package, and companion Skill share one version. Maintainers decide when and what to release. Ordinary feature PRs can accumulate on `main`; **do not bump `package.json.version` until a release is intended**. Version numbers are not derived from PR titles, branch names, commit counts, or dates.
 
@@ -8,12 +8,12 @@ Only a version-change PR Squash-merged into `main` initiates the automated relea
 
 ## Current state and prerequisites
 
-The initial stable `0.1.0` and subsequent releases have shipped. Do not repeat the first-package manual bootstrap. Use the existing [Release workflow](.github/workflows/release.yml) and keep repository variable `CCNEED_RELEASE_ENABLED=true`. npm Trusted Publisher must match `validflow/ccneed-cli`, workflow filename `release.yml`, and environment `npm-release`, with `npm publish` and `npm dist-tag` allowed. Verify OIDC on each automated release; no long-lived npm token belongs in the repository or workflow logs.
+The initial stable `0.1.0` and subsequent releases have shipped. Do not repeat the first-package manual bootstrap. Use the existing [Release workflow](../../.github/workflows/release.yml) and keep repository variable `CCNEED_RELEASE_ENABLED=true`. npm Trusted Publisher must match `validflow/ccneed-cli`, workflow filename `release.yml`, and environment `npm-release`, with `npm publish` and `npm dist-tag` allowed. Verify OIDC on each automated release; no long-lived npm token belongs in the repository or workflow logs.
 
 Before release, confirm:
 
 1. Required `quality` is green; automated CX Review is currently paused. Maintainers review the version change, changelog, and risk.
-2. `package.json`, root `package-lock.json` package/version, and `CHANGELOG.md` agree. Skill and platform assets ship at that same version.
+2. `package.json`, root `package-lock.json` package/version, and `docs/en/CHANGELOG.md` agree. Skill and platform assets ship at that same version.
 3. Authorized developers have run real staging integration using a staging account. If Club production lacks a related API, say so in the release notes; publishing the CLI does not deploy Club. Users still connect to `https://ccneed.ai` by default.
 4. The `npm-release` environment allows only `main` and does not require a manual reviewer for every release. Keep the repository public so users can download binary assets.
 
@@ -23,7 +23,7 @@ Create a release branch from current `main`; replace the example with the mainta
 
 ```bash
 npm version 0.1.4 --no-git-tag-version --ignore-scripts
-# Update CHANGELOG.md and CHANGELOG.zh.md, then check:
+# Update docs/en/CHANGELOG.md and docs/zh/CHANGELOG.md, then check:
 npm test
 bash scripts/check.sh
 ```

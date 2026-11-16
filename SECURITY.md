@@ -1,6 +1,6 @@
 # Security
 
-English · [中文](SECURITY.zh.md)
+English · [中文](docs/zh/SECURITY.md)
 
 CCNeed CLI is published on npm. Check [npm `latest`](https://www.npmjs.com/package/@validflow/ccneed-cli) and [GitHub Releases](https://github.com/validflow/ccneed-cli/releases) for current versions; affected and fixed versions will be identified in individual advisories. We do not currently promise a fixed vulnerability response time.
 

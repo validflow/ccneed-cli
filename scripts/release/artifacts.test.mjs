@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, unlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, unlinkSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stagePackage, verifyArtifacts, targets } from './artifacts.mjs';
@@ -14,8 +14,11 @@ function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'ccneed-artifacts-'));
   const manifest = { name: '@validflow/ccneed-cli', version: '0.1.0', private: false, license: 'MIT' };
   writeFileSync(join(root, 'package.json'), JSON.stringify(manifest));
-  writeFileSync(join(root, 'README.md'), 'fixture');
-  writeFileSync(join(root, 'INSTALL.md'), 'fixture agent installation');
+  for (const name of ['README.md', 'README.zh.md', 'CONTRIBUTING.md', 'SECURITY.md']) writeFileSync(join(root, name), 'fixture');
+  for (const language of ['en', 'zh']) {
+    mkdirSync(join(root, 'docs', language), { recursive: true });
+    writeFileSync(join(root, 'docs', language, 'INSTALL.md'), 'fixture agent installation ' + language);
+  }
   mkdirSync(join(root, 'assets'));
   writeFileSync(join(root, 'assets', 'ccneed-logo.png'), Buffer.from('fixture logo'));
   mkdirSync(join(root, 'assets', 'agents'));
@@ -29,7 +32,8 @@ function fixture() {
   for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
   mkdirSync(join(root, 'hooks'));
   writeFileSync(join(root, 'hooks', 'acquisition.mjs'), 'fixture shared hook');
-  writeFileSync(join(root, 'kimi.plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
+  mkdirSync(join(root, '.kimi-plugin'));
+  writeFileSync(join(root, '.kimi-plugin', 'plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
   for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
     mkdirSync(join(root, directory));
     writeFileSync(join(root, directory, 'plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', hooks: './hooks/' + host + '.json' }));
@@ -51,7 +55,9 @@ test('npm staging includes same-source Skill and complete checksum map for all s
   assert.equal(verifyArtifacts(out).length, 6);
   for (const file of ['setup.mjs', 'skills.mjs']) assert.equal(readFileSync(join(out, 'npm', 'scripts', 'npm', file), 'utf8'), 'fixture source');
   assert.equal(readFileSync(join(out, 'npm', 'skills', 'ccneed', 'SKILL.md'), 'utf8'), 'fixture skill');
-  assert.equal(readFileSync(join(out, 'npm', 'INSTALL.md'), 'utf8'), 'fixture agent installation');
+  for (const language of ['en', 'zh']) assert.equal(readFileSync(join(out, 'npm', 'docs', language, 'INSTALL.md'), 'utf8'), 'fixture agent installation ' + language);
+  assert.equal(readFileSync(join(out, 'npm', 'README.zh.md'), 'utf8'), 'fixture');
+  assert.equal(existsSync(join(out, 'npm', 'INSTALL.md')), false);
   assert.deepEqual(readFileSync(join(out, 'npm', 'assets', 'ccneed-logo.png')), Buffer.from('fixture logo'));
   assert.equal(JSON.parse(readFileSync(join(out, 'npm', 'package.json'))).version, '0.1.0');
   writeFileSync(join(out, targets('0.1.0')[0].asset), 'corrupt');
@@ -76,14 +82,15 @@ test('release staging includes installer imports and all native plugin payloads'
     assert.equal(JSON.parse(readFileSync(join(staged, directory, 'plugin.json'), 'utf8')).version, manifest.version);
   }
   assert.equal(JSON.parse(readFileSync(join(staged, '.agents/plugins/marketplace.json'), 'utf8')).name, 'ccneed');
-  assert.equal(JSON.parse(readFileSync(join(staged, 'kimi.plugin.json'), 'utf8')).version, manifest.version);
+  assert.equal(JSON.parse(readFileSync(join(staged, '.kimi-plugin/plugin.json'), 'utf8')).version, manifest.version);
+  assert.equal(existsSync(join(staged, 'kimi.plugin.json')), false);
   assert.equal(readFileSync(join(staged, 'assets/agents/kimi.svg'), 'utf8'), '<svg/>');
 });
 
 test('Kimi version or missing collection guard blocks publication', () => {
   for (const change of [{ version: '0.0.1' }, { hooks: [] }]) {
     const { root, out, manifest } = fixture();
-    const path = join(root, 'kimi.plugin.json');
+    const path = join(root, '.kimi-plugin/plugin.json');
     writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path)), ...change }));
     assert.throws(() => stagePackage(root, out, manifest), /Kimi/);
   }

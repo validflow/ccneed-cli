@@ -1,6 +1,6 @@
 # 贡献指南
 
-[English](CONTRIBUTING.md) · 中文
+[English](../../CONTRIBUTING.md) · 中文
 
 ## 开发流程
 
@@ -13,7 +13,7 @@ git switch -c feat/short-description
 make check
 ```
 
-每次 Squash 合并后，从最新 main 开新分支；不要继续复用已经合并的功能分支。改代码前先读 [代码规范](CODE_STYLE.zh.md)；新增行为先写能复现问题的测试。
+每次 Squash 合并后，从最新 main 开新分支；不要继续复用已经合并的功能分支。改代码前先读 [代码规范](CODE_STYLE.md)；新增行为先写能复现问题的测试。
 
 ## 分支、PR 与提交命名
 
@@ -37,7 +37,9 @@ CLI 与宿主 Skill 使用同一套命名约定：新增 Skill 能力用 `feat(s
 
 `cmd/ccneed` 只放进程入口；命令解析放 `internal/cli`。API 客户端、凭证存储、输出与下载按真实需求逐步增加独立模块，不提前创建空目录或通用框架。
 
-开发工具位于 `tools/`；不能成为 CLI 的运行时依赖。宿主 Skill 放在 `skills/ccneed/SKILL.md`，只维护一份中文说明。`.claude-plugin`、`.codex-plugin`、`.codebuddy-plugin` 引用统一 Skill 与 `hooks/` 中的宿主配置；原生管理器管理缓存、启停及卸载，全局 npm 包提供 CLI 和同版本本地 marketplace。准备发版时同步 `package.json`、三个插件 manifest 与 marketplace 版本。安装器保留自定义 Skill/设置，并逐宿主报告未完成或失败状态；真实加载仍需验收。
+开发工具位于 `tools/`；不能成为 CLI 的运行时依赖。宿主 Skill 放在 `../../skills/ccneed/SKILL.md`，只维护一份中文说明。`.claude-plugin`、`.codex-plugin`、`.codebuddy-plugin`、`.kimi-plugin` 引用统一 Skill 与 `hooks/` 中的宿主配置；原生管理器管理缓存、启停及卸载，全局 npm 包提供 CLI 和同版本插件源。准备发版时同步 `package.json`、四个插件 manifest 与 marketplace 版本。安装器保留自定义 Skill/设置，并逐宿主报告未完成或失败状态；真实加载仍需验收。
+
+根目录保留中英文 README，以及 GitHub 可识别的贡献与安全入口；详细说明按 `docs/en/`、`docs/zh/` 归档。`.codex/` 与 `.agents/skills/` 中的维护者审查配置只保存在本地并忽略；`.agents/plugins/marketplace.json` 是 Codex 产品入口，继续跟踪。
 
 ## 先本地测试，再 staging 联调
 
@@ -83,9 +85,9 @@ main 已启用分支保护：禁止删除和强推，只允许通过 PR Squash �
 2. README、安装说明或 Skill 已随用户可见行为同步更新。
 3. PR 描述给出验证方式、兼容性影响和需要维护者处理的前置条件。
 
-普通测试只在无生产凭证的 GitHub-hosted runner 执行。CX Review 的工作流和审查规范保留在仓库中，但其执行 job 当前被关闭；不要把它当作已经完成的自动审查，也不要让外部 PR 在持有凭证的自托管 runner 上执行。后续如决定重新启用，应先评估公开仓库的触发与权限边界，再按 [CX Review 运维说明](.agents/skills/review-pipeline/references/operations.md) 验证。
+普通测试只在无生产凭证的 GitHub-hosted runner 执行。CX Review 的执行 job 当前被关闭；不要把它当作已经完成的自动审查，也不要让外部 PR 在持有凭证的自托管 runner 上执行。后续如决定重新启用，应先恢复本地审查配置，再评估公开仓库的触发与权限边界。
 
-公开发行完整可用版本前确认 sg-prod 服务兼容，再验证生产登录与受控任务闭环。若 CLI 先独立发行，须在发行说明中明确尚未完成的服务验收。发行工作流由 `CCNEED_RELEASE_ENABLED` 控制；MIT 许可证与首次 CLI 发行已获所有者授权。生产凭证不进入仓库、CI 日志或外部贡献者 PR。操作和失败恢复见 [发行说明](RELEASING.zh.md)。
+公开发行完整可用版本前确认 sg-prod 服务兼容，再验证生产登录与受控任务闭环。若 CLI 先独立发行，须在发行说明中明确尚未完成的服务验收。发行工作流由 `CCNEED_RELEASE_ENABLED` 控制；MIT 许可证与首次 CLI 发行已获所有者授权。生产凭证不进入仓库、CI 日志或外部贡献者 PR。操作和失败恢复见 [发行说明](RELEASING.md)。
 
 CLI 发行使用独立的 `vX.Y.Z` tag；npm、二进制的 `ccneed version` 和随包 Skill 属于同一版发行，不沿用 Club 的服务版本。预发行使用 `vX.Y.Z-rc.N`，不能进入 npm `latest` 或普通用户更新提醒。推送开发提交不等于发行，也不自动打 tag。
 

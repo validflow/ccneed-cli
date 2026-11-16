@@ -19,3 +19,7 @@ Thumbs.db
 credentials.json
 *.pem
 *.key
+/.claude/
+/.codex/
+/.agents/skills/
+.gitnexus

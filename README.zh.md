@@ -10,7 +10,7 @@
   </p>
   <p>
     <a href="https://ccneed.ai">官网</a> ·
-    <a href="INSTALL.zh.md">安装指南</a> ·
+    <a href="docs/zh/INSTALL.md">安装指南</a> ·
     <a href="skills/ccneed/SKILL.md">Agent Skill</a> ·
     <a href="https://github.com/validflow/ccneed-cli/issues">反馈</a>
   </p>
@@ -41,7 +41,7 @@
 ### 让 Agent 帮你安装
 
 ```text
-请阅读 https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md，
+请阅读 https://github.com/validflow/ccneed-cli/blob/main/docs/en/INSTALL.md，
 为我当前使用的 Agent 安装或更新 CCNeed CLI 和原生插件。
 ```
 
@@ -55,7 +55,7 @@ npx @validflow/ccneed-cli@latest install --agent codex
 
 按需替换 `codex`：`claude`（Claude Code）、`codex`、`workbuddy` 或 `kimi`。多个 Agent 用逗号组合，例如 `--agent claude,codex`。
 
-按安装结果完成插件接入，然后重启 Agent。宿主要求、原生导入步骤与排障见[安装指南](INSTALL.zh.md)。
+按安装结果完成插件接入，然后重启 Agent。宿主要求、原生导入步骤与排障见[安装指南](docs/zh/INSTALL.md)。
 
 ## 登录
 
@@ -125,4 +125,4 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 
 产品动态和使用文章可关注 [X 上的 CCNeed](https://x.com/CCNeed_ai)、[Medium 上的 Ccneedai](https://medium.com/@ccneedai) 或 [DEV 上的 CC Need](https://dev.to/cc_need_be7954bac5ca859e1)。
 
-[安装与排障](INSTALL.zh.md) · [参与贡献](CONTRIBUTING.zh.md) · [代码规范](CODE_STYLE.zh.md) · [安全说明](SECURITY.zh.md) · [版本发布](RELEASING.zh.md) · [更新记录](CHANGELOG.zh.md)
+[安装与排障](docs/zh/INSTALL.md) · [参与贡献](docs/zh/CONTRIBUTING.md) · [代码规范](docs/zh/CODE_STYLE.md) · [安全说明](docs/zh/SECURITY.md) · [版本发布](docs/zh/RELEASING.md) · [更新记录](docs/zh/CHANGELOG.md)

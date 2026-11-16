@@ -1,6 +1,6 @@
 ﻿# Install CCNeed
 
-English · [中文](INSTALL.zh.md)
+English · [中文](../zh/INSTALL.md)
 
 The global CLI runs commands. Native plugins supply a shared Skill and collection hooks for Claude Code, Codex, WorkBuddy and Kimi Code.
 
@@ -79,7 +79,7 @@ ccneed auth login --complete --timeout 60s
 ccneed auth status --verify
 ```
 
-`auth: not_started` means login has not happened. Never approve website access for the user, read browser cookies or print secrets. Commands default to production `https://ccneed.ai`; only authorized developers use `--api-url` with isolated staging accounts. See [Contributing](CONTRIBUTING.md).
+`auth: not_started` means login has not happened. Never approve website access for the user, read browser cookies or print secrets. Commands default to production `https://ccneed.ai`; only authorized developers use `--api-url` with isolated staging accounts. See [Contributing](../../CONTRIBUTING.md).
 
 ## Build from source
 

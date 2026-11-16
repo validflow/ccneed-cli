@@ -1,6 +1,6 @@
 # 安全说明
 
-[English](SECURITY.md) · 中文
+[English](../../SECURITY.md) · 中文
 
 CCNeed CLI 已通过 npm 正式发行。当前可安装版本以 [npm `latest`](https://www.npmjs.com/package/@validflow/ccneed-cli) 和 [GitHub Releases](https://github.com/validflow/ccneed-cli/releases) 为准；具体受影响版本与修复版本会在对应的安全公告中说明。本项目目前不承诺固定漏洞响应时限。
 

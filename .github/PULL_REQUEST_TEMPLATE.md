@@ -6,7 +6,7 @@ Explain the problem and the change. Link the relevant issue; do not add unrelate
 
 - [ ] `make check` or `bash scripts/check.sh` passed.
 - [ ] New behavior has evidence of a failing test that passes after the change.
-- [ ] Comments, module boundaries, errors, and output contracts follow `CODE_STYLE.md`.
+- [ ] Comments, module boundaries, errors, and output contracts follow the [code style guide](../docs/en/CODE_STYLE.md).
 - [ ] Correctness, architecture, security, and requirement fit were reviewed.
 - [ ] Required `quality` passed. If a local CX Review was also run, attach its report and resolve confirmed findings; automated CX Review is currently paused.
 

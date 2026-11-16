@@ -132,7 +132,7 @@ export async function publishGitHub(identity, sha, out, names, { api = githubAPI
       tag_name: identity.tag,
       target_commitish: sha,
       name: identity.tag,
-      body: readFileSync('CHANGELOG.md', 'utf8'),
+      body: readFileSync('docs/en/CHANGELOG.md', 'utf8'),
       draft: true,
       prerelease: identity.channel !== 'latest',
     }, [201, 422]);
