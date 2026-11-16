@@ -110,19 +110,18 @@ test('ordinary CLI commands and executable paths require no acquisition state', 
   }
 });
 
-test('Kimi processes short tool_output payloads and blocks paid execution without a verified native prompt', () => {
+test('Kimi preserves plan guards and delegates execution permission to the native host', () => {
   const data = fixture();
   const { permission_mode, ...input } = data.input;
   const shown = handleHook('kimi', { ...input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed kb plan --plan-file raw.json' }, tool_output: JSON.stringify(data.plan) }, data.options);
   assert.match(shown.hookSpecificOutput.additionalContext, /Brand/);
-  for (const mode of [undefined, 'default', 'yolo']) {
+  for (const mode of [undefined, 'manual', 'yolo', 'auto']) {
     const result = handleHook('kimi', { ...input, permission_mode: mode, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed kb start --plan-file ' + quoted(data.filename) } }, data.options);
-    assert.equal(result.hookSpecificOutput.permissionDecision, 'deny');
-    assert.match(result.hookSpecificOutput.permissionDecisionReason, /Kimi/);
+    assert.deepEqual(result, {}, 'native permission mode: ' + mode);
   }
 });
 
-test('Kimi cloud HITL permits feedback and rejection while refusing paid approval', () => {
+test('Kimi cloud HITL keeps business validation while following native permission', () => {
   const data = fixture();
   const suggested = { mode: 'add', kb_id: 7, kb_description: data.plan.research_requirement, quotas: { twitter: 300 }, search_plan: data.plan.search_plan, estimated_credits: 300, balance: 1000 };
   const action = { thread_id: 'thread', turn_id: 'turn', pending_action: { action_id: 'action', suggested } };
@@ -132,9 +131,34 @@ test('Kimi cloud HITL permits feedback and rejection while refusing paid approva
   for (const answer of [{ decision: 'approved' }, { decision: 'rejected' }, { decision: 'approved', response_kind: 'user_feedback', user_reply: '少采一点' }]) {
     writeFileSync(filename, JSON.stringify(answer));
     const result = handleHook('kimi', event, data.options);
-    if (answer.decision === 'approved' && !answer.response_kind) assert.equal(result.hookSpecificOutput.permissionDecision, 'deny');
-    else assert.deepEqual(result, {});
+    assert.deepEqual(result, {});
   }
+});
+
+test('Kimi reads a complete explicit snapshot when the host truncates plan or HITL output', () => {
+  const data = fixture();
+  data.plan.research_requirement = '完整研究需求'.repeat(600);
+  writeFileSync(data.filename, JSON.stringify(data.plan));
+  const post = { ...data.input, hook_event_name: 'PostToolUse' };
+  handleHook('kimi', { ...post, tool_input: { command: 'ccneed kb plan --plan-file raw.json --output ' + quoted(data.filename) }, tool_output: JSON.stringify(data.plan).slice(0, 2000) }, data.options);
+  const start = { ...data.input, permission_mode: 'auto', hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed kb start --plan-file ' + quoted(data.filename) } };
+  assert.deepEqual(handleHook('kimi', start, data.options), {});
+  const suggested = { mode: 'add', kb_id: 7, kb_description: data.plan.research_requirement, quotas: { twitter: 300 }, search_plan: data.plan.search_plan, estimated_credits: 300, balance: 1000 };
+  const snapshot = { thread_id: 'thread', turn_id: 'turn', pending_action: { action_id: 'action', suggested } };
+  const filename = join(data.directory, 'snapshot.json');
+  const answer = join(data.directory, 'answer.json');
+  writeFileSync(filename, JSON.stringify(snapshot));
+  writeFileSync(answer, JSON.stringify({ decision: 'approved' }));
+  handleHook('kimi', { ...post, tool_input: { command: 'ccneed tasks get --thread-id thread --turn-id turn --output ' + quoted(filename) }, tool_output: JSON.stringify(snapshot).slice(0, 2000) }, data.options);
+  const reply = { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed tasks reply --thread-id thread --turn-id turn --action-id action --answer-file ' + quoted(answer) } };
+  assert.deepEqual(handleHook('kimi', reply, data.options), {});
+  snapshot.thread_id = 'another-thread';
+  writeFileSync(filename, JSON.stringify(snapshot));
+  handleHook('kimi', { ...post, tool_input: { command: 'ccneed tasks get --thread-id thread --turn-id turn --output ' + quoted(filename) }, tool_output: JSON.stringify(snapshot).slice(0, 2000) }, data.options);
+  assert.equal(handleHook('kimi', reply, data.options).hookSpecificOutput.permissionDecision, 'deny');
+  data.plan.platforms[0].quota++;
+  writeFileSync(data.filename, JSON.stringify(data.plan));
+  assert.equal(handleHook('kimi', start, data.options).hookSpecificOutput.permissionDecision, 'deny');
 });
 
 for (const host of ['claude', 'codex', 'workbuddy']) {

@@ -218,7 +218,7 @@ function deny(reason) {
  */
 function planFile(host, input, args, flag) {
   const path = flagValue(args, flag);
-  if (!path || (host === 'codex' && !isAbsolute(path))) throw new Error('Use an absolute JSON file path for Codex collection commands');
+  if (!path || (['codex', 'kimi'].includes(host) && !isAbsolute(path))) throw new Error('Use an absolute JSON file path for Codex and Kimi collection commands');
   return readObject(resolve(input.cwd ?? process.cwd(), path));
 }
 
@@ -232,7 +232,15 @@ function planFile(host, input, args, flag) {
  *   Agent 方案上下文或空输出，不直接通知用户。
  */
 function postTool(host, input, args, access) {
-  const response = responseObject(input.tool_response ?? input.tool_output);
+  const raw = input.tool_response ?? input.tool_output;
+  let response = responseObject(raw);
+  if (host === 'kimi') {
+    access.save({ ...access.state, [args[1] === 'kb' ? 'plan' : 'action']: null });
+    if (!response && typeof raw === 'string' && raw.length >= 2000 && flagValue(args, '--output')) {
+      response = planFile(host, input, args, '--output');
+      if (args[1] === 'tasks' && (response.thread_id !== flagValue(args, '--thread-id') || response.turn_id !== flagValue(args, '--turn-id'))) throw new Error('Snapshot does not belong to this turn');
+    }
+  }
   if (args[1] === 'kb' && args[2] === 'plan') {
     access.save({ ...access.state, plan: null });
     if (!response) return postContext('未收到完整采集校验结果，请向用户说明并重新准备方案；本次不能启动。');
@@ -302,7 +310,7 @@ function preTool(host, input, args, access) {
     if (answer.modified_input && Object.entries(answer.modified_input).some(([key, value]) => !(key === 'user_reply' && typeof value === 'string') && fingerprint(value) !== action.fields?.[key])) return deny('采集方案发生修改，请先反馈给云端 Agent，取得并展示重新校验的采集卡片后再批准。');
     message = '即将按上述已确认方案创建或补充知识库并开始采集，请在宿主权限窗口确认积分支出。';
   } else return {};
-  if (host === 'kimi') return deny('Kimi 当前 Hooks 无法强制逐次原生权限确认，也未提供可验证的免确认模式状态，因此暂不允许付费采集或采集 HITL 批准。请使用已支持逐次审批的宿主；查询、方案校验和导出仍可使用。');
+  if (host === 'kimi') return {};
   if (!['default', 'acceptEdits'].includes(input.permission_mode)) return deny('正式采集需要宿主的人工权限确认；请关闭完全访问、自动批准或免确认模式后重试。');
   if (host === 'workbuddy' && input.tool_name !== 'Bash') return deny('WorkBuddy 正式采集请使用同一宿主的原生 Bash 工具。当前 PowerShell 沙箱路径无法保证采集前确认；无需关闭沙箱或修改安全删除保护。');
   if (host === 'codex') {
@@ -322,7 +330,7 @@ function preTool(host, input, args, access) {
  */
 export function handleHook(host, input, { stateDir = defaultStateDir } = {}) {
   if (!hosts.includes(host)) return deny('未知的 CCNeed plugin 宿主。');
-  if (host === 'kimi' && input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed Kimi 预览 hooks 已加载。可查询、导出已有数据和准备方案。请完整展示研究需求、各平台实体词、其他关键词、配额及积分余额；每个平台实体词不能删空。Kimi 当前无法保证每次原生审批，付费采集与采集 HITL 批准暂时禁止。不能伪造 ask、补写权限字段或绕过为 HTTP 调用；需要采集时说明限制并使用已支持的宿主。' } };
+  if (host === 'kimi' && input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed Kimi hooks 已加载。完整展示研究需求、各平台关键词、配额和积分余额，再按已确认方案执行。执行审批遵循用户选择的 Kimi 原生权限模式，包括自动模式和会话授权；业务校验仍然生效。长方案和 HITL 结果用绝对 --output 文件保留，不能依据截断结果推测内容。' } };
   if (input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed 采集 hooks 已加载。方案确认时由 Agent 完整展示研究需求、各平台实体词和其他关键词、配额及积分余额；两类关键词都可调整，每个平台实体词不能删空。对话确认后，kb start 前只显示短提示，由宿主原生权限界面审批执行，不能用自然语言回答代替。采集完成后通常自动导出 CSV 并交付用户；免确认模式禁止采集。' + (host === 'workbuddy' ? ' WorkBuddy 的付费采集使用原生 Bash 工具，每次选择“仅允许本次”；不要选择本会话不再询问。' : '') } };
   let args;
   try {

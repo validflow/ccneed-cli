@@ -2,7 +2,7 @@
 
 English · [中文](INSTALL.zh.md)
 
-The global CLI runs commands. Native plugins supply a shared Skill and host-specific collection hooks. Claude Code, Codex and WorkBuddy support collection; Kimi Code has a limited preview described below.
+The global CLI runs commands. Native plugins supply a shared Skill and collection hooks for Claude Code, Codex, WorkBuddy and Kimi Code.
 
 ## Install or update
 
@@ -20,9 +20,9 @@ The installer installs the exact global CLI version and coordinates native regis
 | Claude Code | Claude marketplace/plugin commands; verified user-scope version and enabled state | Plugin PreToolUse requests native `ask` |
 | Codex | Codex marketplace/plugin commands; verified installed version and enabled state | `~/.codex/rules/ccneed.rules` prompts for paid prefixes |
 | WorkBuddy desktop | Complete the native marketplace/plugin steps returned by the installer | `~/.workbuddy/settings.json`: compatible ask rules and `sandbox.commandSafety.ask` |
-| Kimi Code · Preview | `--agent kimi` returns native `/plugins` import steps | Paid collection is blocked; no per-operation approval mechanism has been verified |
+| Kimi Code | `--agent kimi` returns native `/plugins` import steps | Follows the user's native permission mode and session authorization |
 
-The package provides a local marketplace named `ccneed`; the plugin is `ccneed@ccneed`. Native managers load the bundled Skill and hooks without a second global Skill or user-level hook registration. Native caches can contain copies: rerun this installer rather than assuming `npm install -g` refreshes every host.
+Claude Code, Codex and WorkBuddy use the local marketplace `ccneed` and plugin `ccneed@ccneed`; Kimi uses manifest ID `ccneed`. Native managers load the shared Skill and hooks without a second global Skill or user-level hook registration. Rerun the installer and complete each host's update steps; `npm install -g` alone does not refresh native caches.
 
 Check `plugins[]` in the JSON result. `installed` means the native manager reported the requested version enabled; hooks still require trust and a running session may need reloading. `action_required` or `failed` means integration is incomplete. WorkBuddy desktop currently has no verified public CLI registration command, so it remains pending until native desktop installation is completed. CodeBuddy CLI registration does not establish WorkBuddy desktop integration.
 
@@ -30,21 +30,21 @@ Restart the host, review/trust hooks and confirm the Skill loads. Installation t
 
 If downloads require a proxy, set `HTTPS_PROXY` or `HTTP_PROXY`; the downloader also honors `NO_PROXY` and lowercase forms. Use an exact version instead of `@latest` for reproducibility. RC releases use `@next`.
 
-## Kimi Code preview
+## Kimi Code
 
 Run `npx @validflow/ccneed-cli@latest install --agent kimi`, then follow the returned `/plugins install "PACKAGE_PATH"` instructions in **Kimi Code CLI 2.5.3** or a compatible newer native release. Enable `ccneed`, verify the requested version, and `/reload` or start a new session. Repeat the import after every update: the native manager copies the plugin. The installer leaves Kimi profiles, `KIMI_CODE_HOME` and user configuration untouched and reports `action_required` for this manual setup.
 
 The bundled manifest follows the [documented plugin format](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins). Native 2.5.3 was tested in an isolated profile: installation, enable/disable and update to 0.1.12 loaded one Skill and three hooks without diagnostics. The deprecated Python `kimi-cli` 1.x is a different product and cannot load this bundle; use the [official native installer](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started).
 
-Existing-data queries, CSV/JSON export and plan preparation are the preview scope. `kb start` and collection HITL approval are blocked: in native 2.5.3, automatic mode and session approval override configured `ask` rules, while the [Hook protocol](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/hooks.html) exposes neither state and cannot force `ask`. Natural-language confirmation cannot replace native approval. Use a supported host for collection.
+Collection and HITL execution follow Kimi's native permission policy. Manual/Ask When Needed modes prompt as configured; automatic mode and session authorization remain the user's choice. CCNeed does not force another prompt or reject those modes. Hooks still reject invalid, expired, changed or unaffordable plans.
 
-Kimi loads startup instructions through `sessionStart.skill`; its SessionStart/PostToolUse events do not inject returned hook text into the conversation. The Skill uses the CLI's full result and an absolute `--output` prepared file to present plans. External hooks receive only the first 2000 characters of tool output, so a long cloud HITL card may not be registered completely. The preview does not guarantee that cloud-confirmation replies are available.
+Kimi loads instructions through `sessionStart.skill`; SessionStart/PostToolUse do not inject returned hook text. The Agent presents the full CLI result and saved JSON. For `kb plan` and HITL `tasks get/watch`, use a new absolute `--output` file so hooks can read the complete plan when Kimi truncates tool output to 2000 characters. Existing files are never overwritten. Hooks use local files; remote Bash output paths are not supported.
 
 ## Collection confirmation
 
 1. The Agent prepares a plan; CCNeed validates it and compares estimated credits with balance.
-2. PostToolUse passes plan context to the Agent. Every request for plan confirmation presents the research requirement, each platform's entity/other keywords and quota, total count, estimated credits, balance and adjustments; prose, tables and lists are supported. Both keyword groups are editable, with at least one nonblank entity per platform. Changes require revalidation and a complete presentation before confirmation. Internal T1/T2/T3 allocation stays out of the user summary.
-3. PreToolUse checks that exact plan and shows a short start reminder, without repeating the full plan. Starting requires the host's native permission UI; a conversational answer cannot replace execution approval. Changed or expired plans must be prepared and displayed again. Conversation HITL approvals use the same protections.
+2. The Agent reads the complete plan through PostToolUse context in Claude Code/Codex/WorkBuddy, or CLI output and the saved snapshot in Kimi. Each confirmation presents the requirement, platform entity/other keywords, quota, total, credits, balance and adjustments. Both keyword groups are editable; retain a nonblank entity per platform, revalidate changes and show the full result. Internal T1/T2/T3 allocation stays out of the summary.
+3. PreToolUse checks that exact plan; the Agent gives a short start reminder without repeating it. Native permissions govern execution, including Kimi's existing automatic/session authorization. Changed or expired plans require preparation and display again. Conversation HITL uses the same business checks.
 4. After collection finishes, the Agent normally exports CSV and delivers the local file. User-requested formats, destinations and analysis-only workflows take priority.
 
 | Host | Supported collection mode |
@@ -52,10 +52,11 @@ Kimi loads startup instructions through `sessionStart.skill`; its SessionStart/P
 | Claude Code | Interactive default/acceptEdits, manual approvals |
 | Codex | `on-request`, `approvals_reviewer = "user"`, hooks/rules enabled |
 | WorkBuddy desktop | Default permission, native Bash, **allow once** |
+| Kimi Code | User-selected native permission mode, including automatic/session authorization |
 
 Codex PreToolUse cannot return `ask`; native command rules supply confirmation. WorkBuddy's current PowerShell sandbox wrapper does not reliably match paid prefixes, so paid PowerShell calls are blocked. Use Bash, including Git Bash on Windows. Session-wide approval suppresses later confirmations for that prefix; open a fresh session to restore them. Known bypass/never/automatic-review modes are rejected.
 
-Use a standalone `ccneed kb start ...`, without script wrappers, composite commands or redirects. Codex plan/answer paths must be absolute because hooks do not receive an overridden command working directory. Disabling hooks, rules or manual approvals invalidates this supported configuration.
+Use a standalone `ccneed kb start ...`, without script wrappers, composite commands or redirects. Codex and Kimi plan/answer paths must be absolute. Keep business hooks enabled; Claude Code, Codex and WorkBuddy also require their documented manual-approval configuration. Kimi follows its native permission policy.
 
 For acceptance, prepare a plan and verify its display; deny the native start prompt and confirm no collection starts, then approve a fresh attempt. Repeat for conversation HITL. Unit tests and files on disk do not establish desktop UI acceptance.
 

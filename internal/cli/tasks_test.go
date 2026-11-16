@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -16,6 +18,40 @@ import (
 
 const taskThread = "00000000-0000-0000-0000-000000000111"
 const taskTurn = "00000000-0000-0000-0000-000000000222"
+
+func TestTasksSaveExactPublicSnapshotWithoutOverwriting(t *testing.T) {
+	for _, command := range []string{"get", "watch"} {
+		t.Run(command, func(t *testing.T) {
+			filename := filepath.Join(t.TempDir(), "snapshot.json")
+			var calls atomic.Int32
+			handler := func(w http.ResponseWriter, _ *http.Request) {
+				calls.Add(1)
+				_, _ = fmt.Fprint(w, taskFixture("completed"))
+			}
+			args := append(taskArgs(command), "--output", filename)
+			code, output := runTaskCommand(t, handler, args...)
+			data, err := os.ReadFile(filename)
+			if code != 0 || err != nil || string(data) != output || strings.Contains(string(data), "private-") {
+				t.Fatalf("exit=%d err=%v file=%s stdout=%s", code, err, data, output)
+			}
+			code, output = runTaskCommand(t, handler, args...)
+			preserved, err := os.ReadFile(filename)
+			if code == 0 || calls.Load() != 1 || !strings.Contains(output, "output_exists") || err != nil || string(preserved) != string(data) {
+				t.Fatalf("overwrite exit=%d calls=%d err=%v output=%s", code, calls.Load(), err, output)
+			}
+		})
+	}
+}
+
+func TestTasksSnapshotFailuresDoNotPublishAFile(t *testing.T) {
+	filename := filepath.Join(t.TempDir(), "snapshot.json")
+	code, output := runTaskCommand(t, func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}, append(taskArgs("get"), "--output", filename)...)
+	if _, err := os.Lstat(filename); code == 0 || !os.IsNotExist(err) || !strings.Contains(output, "not_found") {
+		t.Fatalf("exit=%d file err=%v output=%s", code, err, output)
+	}
+}
 
 func taskFixture(status string) string {
 	return fmt.Sprintf(`{"thread_id":%q,"turn_id":%q,"conversation_turn_idx":1,"status":%q,"cloud_status":%q,"answer":"公开结论","artifacts":[],"execution_id":"private-execution","reasoning":"private-reasoning"}`, taskThread, taskTurn, status, status)

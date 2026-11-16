@@ -37,9 +37,9 @@ npx @validflow/ccneed-cli@latest install --agent codex
 | <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `claude` | Automatic registration |
 | <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `codex` | Automatic registration |
 | <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `workbuddy` | Import in desktop plugin manager |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code · Preview | `kimi` | Import via `/plugins`; paid collection unavailable |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code | `kimi` | Import via `/plugins` |
 
-Replace `codex` with your agent, or list several: `--agent codex,claude`. The installer updates the CLI and prepares the matching plugin with its shared Skill and hooks. Follow any returned setup steps, reload your Agent and keep manual approvals enabled. See [installation](INSTALL.md) for host requirements, including Kimi compatibility.
+Replace `codex` with your agent, or list several: `--agent codex,claude`. The installer updates the CLI and prepares its matching plugin. Follow the returned setup steps and reload your Agent. See [installation](INSTALL.md) for native permissions and host requirements.
 
 ```bash
 ccneed --help

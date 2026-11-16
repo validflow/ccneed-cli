@@ -37,9 +37,9 @@ npx @validflow/ccneed-cli@latest install --agent codex
 | <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `claude` | 自动注册 |
 | <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `codex` | 自动注册 |
 | <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `workbuddy` | 在桌面插件管理器导入 |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code · 预览 | `kimi` | 通过 `/plugins` 导入；暂不开放付费采集 |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code | `kimi` | 通过 `/plugins` 导入 |
 
-把 `codex` 换成自己的 Agent，或一次选择多个：`--agent codex,claude`。安装器更新 CLI，并准备包含统一 Skill 和 hooks 的配套插件。按返回结果完成接入，重新加载 Agent，保持人工审批。各宿主要求及 Kimi 兼容性见[安装指南](INSTALL.zh.md)。
+把 `codex` 换成自己的 Agent，或一次选择多个：`--agent codex,claude`。安装器更新 CLI 和配套插件；按返回结果完成接入，再重新加载 Agent。原生权限及宿主要求见[安装指南](INSTALL.zh.md)。
 
 ```bash
 ccneed --help

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/validflow/ccneed-cli/internal/api"
+	"github.com/validflow/ccneed-cli/internal/localfile"
 	"github.com/validflow/ccneed-cli/internal/tasks"
 )
 
@@ -37,7 +38,7 @@ func tasksCommand(connection *connectionConfig) *cobra.Command {
 //
 //	单个查询或观察命令。
 func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
-	var threadID, turnID string
+	var threadID, turnID, output string
 	var limit int
 	var beforeSeq, afterSeq int64
 	timeout := 60 * time.Second
@@ -51,6 +52,11 @@ func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
 			if err := validateTaskReadOptions(cmd, threadID, turnID, page, timeout, watch); err != nil {
 				return err
 			}
+			if output != "" {
+				if _, err := localfile.ValidateOutput(output); err != nil {
+					return err
+				}
+			}
 			client, err := connection.client(cmd.Context())
 			if err != nil {
 				return err
@@ -61,17 +67,18 @@ func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				return json.NewEncoder(cmd.OutOrStdout()).Encode(result)
+				return writeTaskSnapshot(cmd, result, output)
 			}
 			result, err := service.GetPage(cmd.Context(), threadID, turnID, page)
 			if err != nil {
 				return err
 			}
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(result)
+			return writeTaskSnapshot(cmd, result, output)
 		},
 	}
 	command.Flags().StringVar(&threadID, "thread-id", "", "Root conversation UUID")
 	command.Flags().StringVar(&turnID, "turn-id", "", "Durable conversation turn UUID")
+	command.Flags().StringVar(&output, "output", "", "Optional new file for the complete public snapshot; stdout is unchanged")
 	if watch {
 		command.Flags().DurationVar(&timeout, "timeout", timeout, "Local observation deadline (1s–10m); does not cancel the cloud task")
 	} else {
@@ -80,6 +87,30 @@ func taskReadCommand(connection *connectionConfig, watch bool) *cobra.Command {
 		command.Flags().Int64Var(&afterSeq, "after-seq", 0, "New progress after this exclusive sequence")
 	}
 	return command
+}
+
+// writeTaskSnapshot retains stdout and optionally saves the same public result for host hooks.
+//
+// Args:
+//
+//	cmd: Command output destination.
+//	result: Filtered public get or watch result.
+//	output: Optional new JSON snapshot path.
+//
+// Returns:
+//
+//	The persistence or stdout encoding error, or nil.
+//
+// Errors:
+//
+//	Propagates safe output errors without printing a successful result first.
+func writeTaskSnapshot(cmd *cobra.Command, result any, output string) error {
+	if output != "" {
+		if err := localfile.SaveJSON(result, output); err != nil {
+			return err
+		}
+	}
+	return json.NewEncoder(cmd.OutOrStdout()).Encode(result)
 }
 
 // validateTaskReadOptions rejects invalid pagination and watch arguments before connecting.

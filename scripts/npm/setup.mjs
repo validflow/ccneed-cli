@@ -174,7 +174,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
     }
     plugins.push(result);
   }
-  return { status: plugins.every(plugin => plugin.status === 'installed') ? 'installed' : 'action_required', version: desired.version, agents: selected, plugins, restart_required: true, hook_trust_required: true, manual_approval_required: true, auth: 'not_started' };
+  return { status: plugins.every(plugin => plugin.status === 'installed') ? 'installed' : 'action_required', version: desired.version, agents: selected, plugins, restart_required: true, hook_trust_required: true, manual_approval_required: selected.some(host => host !== 'kimi'), auth: 'not_started' };
 }
 
 /** installerMain 提供安装与更新共用的明确入口，帮助和参数错误不触发网络。
@@ -187,7 +187,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
  */
 export async function installerMain(args) {
   if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
-    return 'Install or update the global CLI and register same-version native plugins.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nRC: npx @validflow/ccneed-cli@next install --agent codex,workbuddy\nHosts: codex, claude, workbuddy, kimi. WorkBuddy and Kimi require native manager import. Kimi paid collection is blocked until per-operation native approval can be verified. Check each host result, restart, trust hooks, and keep manual approvals enabled.\n';
+    return 'Install or update the global CLI and register same-version native plugins.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nRC: npx @validflow/ccneed-cli@next install --agent codex,workbuddy\nHosts: codex, claude, workbuddy, kimi. WorkBuddy and Kimi require native manager import. Kimi follows the user-selected native permission mode; other hosts retain their documented manual approval configuration. Check each host result, review hooks and restart.\n';
   }
   if (args.length !== 2 || args[0] !== '--agent') throw new Error('Use install --agent codex,workbuddy,claude,kimi; see install --help');
   return JSON.stringify(await installIntegration({ agents: args[1] })) + '\n';

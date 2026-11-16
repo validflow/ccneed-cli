@@ -92,7 +92,8 @@ test('Kimi installation reports native manager steps without modifying profiles 
   const first = await installIntegration({ ...data.options, agents: 'kimi' });
   assert.equal(first.status, 'action_required');
   assert.equal(first.plugins[0].plugin_id, 'ccneed');
-  assert.equal(first.plugins[0].collection_supported, false);
+  assert.equal(first.plugins[0].collection_supported, true);
+  assert.equal(first.manual_approval_required, false);
   assert.ok(first.plugins[0].next_steps.some(step => step.includes('/plugins install') && step.includes(data.globalPackage.replaceAll('\\', '/'))));
   assert.equal(data.nativeCalls.length, 0);
   assert.equal(readFileSync(config, 'utf8'), '# keep custom profile\n');
