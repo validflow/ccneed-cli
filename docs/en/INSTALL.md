@@ -2,15 +2,14 @@
 
 English · [中文](../zh/INSTALL.md)
 
-The global CLI runs commands. Native plugins supply a shared Skill and collection hooks for Claude Code, Codex, WorkBuddy and Kimi Code.
+The global CLI runs commands. Native plugins and extensions load one shared Skill and collection validation using each host's own events and permission UI.
 
 ## Install or update
 
 Requires Node.js 22.14+, npm and the selected host. After reviewing the official source and obtaining permission to install:
 
 ```bash
-npx @validflow/ccneed-cli@latest install --agent claude
-# Or: --agent codex, --agent workbuddy, --agent claude,codex,workbuddy
+npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
 The installer installs the exact global CLI version and coordinates native registration only for named hosts. Include every host you want to update. It does not start login or cloud tasks. Keep npm's global command directory on the Agent's PATH; local installation does not install commands inside a remote sandbox.
@@ -21,10 +20,18 @@ The installer installs the exact global CLI version and coordinates native regis
 | Codex | Codex marketplace/plugin commands; verified installed version and enabled state | `~/.codex/rules/ccneed.rules` prompts for paid prefixes |
 | WorkBuddy desktop | Complete the native marketplace/plugin steps returned by the installer | `~/.workbuddy/settings.json`: compatible ask rules and `sandbox.commandSafety.ask` |
 | Kimi Code | `--agent kimi` returns native `/plugins` import steps | Follows the user's native permission mode and session authorization |
+| OpenClaw | `--agent openclaw`: native linked plugin | `before_tool_call` native per-call approval; requires 2026.11.4+ |
+| Pi | `--agent pi`: native Pi package and extension | `tool_call` and `ctx.ui.confirm`; interactive extension UI required |
+| ZCode | `--agent zcode`: local marketplace in the desktop plugin manager | Process hooks with argv; native PreToolUse `ask` |
+| Qoder | `--agent qoder`: native local plugin | Command hooks with argv; native PreToolUse `ask` |
+| Trae CLI 2.0 | `--agent trae`: dedicated native plugin | PreToolUse native approval; verified loader 0.215.0 |
+| DeepSeek Harness | `--agent dsh`: native Cordis bundle | Native tool guards and approval pipeline; compatible 0.2.x required |
 
 Claude Code, Codex and WorkBuddy use the local marketplace `ccneed` and plugin `ccneed@ccneed`; Kimi uses manifest ID `ccneed`. Native managers load the shared Skill and hooks without a second global Skill or user-level hook registration. Rerun the installer and complete each host's update steps; `npm install -g` alone does not refresh native caches.
 
 Check `plugins[]` in the JSON result. `installed` means the native manager reported the requested version enabled; hooks still require trust and a running session may need reloading. `action_required` or `failed` means integration is incomplete. WorkBuddy desktop currently has no verified public CLI registration command, so it remains pending until native desktop installation is completed. CodeBuddy CLI registration does not establish WorkBuddy desktop integration.
+
+Additional hosts return `action_required` with native manager commands or in-app import steps. The installer prepares the whole matching plugin payload; it does not edit their profiles or claim they are enabled. Complete those steps in the intended host/profile, verify the version and reload. Select multiple hosts with commas, for example `--agent codex,pi`.
 
 Restart the host, review/trust hooks and confirm the Skill loads. Installation trust is separate from permission to start each collection. Use native plugin controls for enable, disable and removal. Removing a plugin does not uninstall the global CLI or automatically remove extra Codex/WB permission rules. Retain those conservative rules until deliberately removing the corresponding CCNeed entries; preserve unrelated rules.
 
@@ -40,10 +47,22 @@ Collection and HITL execution follow Kimi's native permission policy. Manual/Ask
 
 Kimi loads instructions through `sessionStart.skill`; SessionStart/PostToolUse do not inject returned hook text. The Agent presents the full CLI result and saved JSON. For `kb plan` and HITL `tasks get/watch`, use a new absolute `--output` file so hooks can read the complete plan when Kimi truncates tool output to 2000 characters. Existing files are never overwritten. Hooks use local files; remote Bash output paths are not supported.
 
+## Additional host requirements
+
+- **OpenClaw:** collection needs 2026.11.4 or a compatible newer release. Set an absolute `workdir` on native `exec` calls. The plugin binds plan results by session and tool-call ID, then requests native allow-once/deny approval. Older hosts can still use read-only commands but cannot start paid collection through this plugin.
+- **Pi:** the native package enables one extension and the shared Skill. `tool_result` adds model context; `tool_call` uses `ctx.ui.confirm`. Print/headless mode cannot approve collection. Use `pi config` for resource toggles and `pi remove SOURCE` to remove the native package.
+- **ZCode/Qoder:** load the full native plugin with its explicit host hook file. Hooks use native argv execution, preserving spaces and Unicode paths. Complete the returned marketplace/local-plugin steps; desktop UI acceptance remains separate from protocol tests.
+- **Trae CLI 2.0:** tested with native 0.215.0. Install `traecli plugin install "PACKAGE_PATH/plugins/trae" --name ccneed`, then check `traecli plugin validate ccneed` reports **1 Skill and 3 hooks**. After updating the global CLI, run `traecli plugin upgrade ccneed` and reload the session. The native manager switches the complete active cache version; inactive caches remain under its control. This payload uses Trae CLI's supported `.codex-plugin` format in a separate plugin root, with the same-source Skill and hooks assembled at release time. It does not establish Trae IDE support.
+- **DeepSeek Harness:** use 0.2.2-rc.3 or a compatible 0.2.x release with **Node.js 24.9+**. The current npm `latest` tag can point to an older incompatible runtime. Select the profile used by your running host: `dsh plugin --profile <name> add "PACKAGE_PATH"`. Verify with `dsh --profile <name> --dump-config` and Plugins. The bundle registers one shared Skill and native tool guards, approval and result-context handlers. Remove with `dsh plugin --profile <name> remove @validflow/ccneed-cli`.
+
+OpenClaw, Pi and DSH use native extension events rather than shell hook names. All paths must refer to files accessible to the process running the plugin and CLI; a local plugin cannot validate a different remote filesystem. A truncated result is not a valid displayed plan.
+
+Protocol references: [OpenClaw tool policy](https://docs.openclaw.ai/plugins/hooks/tool-policy), [Pi packages](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md), [Pi extensions](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/extensions.md), [ZCode plugins](https://zcode.z.ai/cn/docs/plugin), [Qoder plugins](https://docs.qoder.com/cli/plugins), [Trae CLI 2.0](https://docs.trae.cn/cli_get-started-with-trae-cli-2), [DSH bundles](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.md).
+
 ## Collection confirmation
 
 1. The Agent prepares a plan; CCNeed validates it and compares estimated credits with balance.
-2. The Agent reads the complete plan through PostToolUse context in Claude Code/Codex/WorkBuddy, or CLI output and the saved snapshot in Kimi. Each confirmation presents the requirement, platform entity/other keywords, quota, total, credits, balance and adjustments. Both keyword groups are editable; retain a nonblank entity per platform, revalidate changes and show the full result. Internal T1/T2/T3 allocation stays out of the summary.
+2. The Agent reads the complete plan through native hook/tool-result context, or CLI output and the saved snapshot in Kimi. Each confirmation presents the requirement, platform entity/other keywords, quota, total, credits, balance and adjustments. Both keyword groups are editable; retain a nonblank entity per platform, revalidate changes and show the full result. Internal T1/T2/T3 allocation stays out of the summary.
 3. PreToolUse checks that exact plan; the Agent gives a short start reminder without repeating it. Native permissions govern execution, including Kimi's existing automatic/session authorization. Changed or expired plans require preparation and display again. Conversation HITL uses the same business checks.
 4. After collection finishes, the Agent normally exports CSV and delivers the local file. User-requested formats, destinations and analysis-only workflows take priority.
 
@@ -53,6 +72,10 @@ Kimi loads instructions through `sessionStart.skill`; SessionStart/PostToolUse d
 | Codex | `on-request`, `approvals_reviewer = "user"`, hooks/rules enabled |
 | WorkBuddy desktop | Default permission, native Bash, **allow once** |
 | Kimi Code | User-selected native permission mode, including automatic/session authorization |
+| OpenClaw | Native `requireApproval`, allow once / deny; absolute `exec` workdir |
+| Pi | Interactive UI or an RPC client implementing extension UI confirmation |
+| ZCode / Qoder / Trae CLI | Native synchronous PreToolUse approval |
+| DeepSeek Harness | Active native sandbox and per-call approval policy; unavailable approval channels cannot approve |
 
 Codex PreToolUse cannot return `ask`; native command rules supply confirmation. WorkBuddy's current PowerShell sandbox wrapper does not reliably match paid prefixes, so paid PowerShell calls are blocked. Use Bash, including Git Bash on Windows. Session-wide approval suppresses later confirmations for that prefix; open a fresh session to restore them. Known bypass/never/automatic-review modes are rejected.
 

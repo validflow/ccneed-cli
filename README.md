@@ -26,15 +26,22 @@ CCNeed connects your Agent to social data collection and cloud research through 
 
 ## Install or update
 
-<p>
-  <img src="assets/agents/claude-code.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Claude&nbsp;Code
-  &nbsp;·&nbsp;
-  <img src="assets/agents/codex.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Codex
-  &nbsp;·&nbsp;
-  <img src="assets/agents/workbuddy.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;WorkBuddy
-  &nbsp;·&nbsp;
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" align="absmiddle" alt=""></picture>&nbsp;Kimi&nbsp;Code
-</p>
+<table width="100%">
+  <tr>
+    <td width="20%" align="center" valign="top"><img src="assets/agents/claude-code.svg" width="28" height="28" alt=""><br>Claude&nbsp;Code<br><code>claude</code></td>
+    <td width="20%" align="center" valign="top"><img src="assets/agents/codex.svg" width="28" height="28" alt=""><br>Codex<br><code>codex</code></td>
+    <td width="20%" align="center" valign="top"><img src="assets/agents/workbuddy.svg" width="28" height="28" alt=""><br>WorkBuddy<br><code>workbuddy</code></td>
+    <td width="20%" align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" alt=""></picture><br>Kimi&nbsp;Code<br><code>kimi</code></td>
+    <td width="20%" align="center" valign="top"><img src="assets/agents/openclaw.svg" width="28" height="28" alt=""><br>OpenClaw<br><code>openclaw</code></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><img src="assets/agents/pi.svg" width="28" height="28" alt=""><br>Pi<br><code>pi</code></td>
+    <td align="center" valign="top"><img src="assets/agents/zcode.png" width="28" height="28" alt=""><br>ZCode<br><code>zcode</code></td>
+    <td align="center" valign="top"><img src="assets/agents/qoder.svg" width="28" height="28" alt=""><br>Qoder<br><code>qoder</code></td>
+    <td align="center" valign="top"><img src="assets/agents/trae.png" width="28" height="28" alt=""><br>Trae&nbsp;CLI<br><code>trae</code></td>
+    <td align="center" valign="top"><img src="assets/agents/dsh.svg" width="28" height="28" alt=""><br>DeepSeek&nbsp;Harness<br><code>dsh</code></td>
+  </tr>
+</table>
 
 Requires Node.js 22.14+ and npm.
 
@@ -53,9 +60,9 @@ Use one command to install or update the CLI and your chosen Agent's plugin:
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-Replace `codex` as needed: `claude` (Claude Code), `codex`, `workbuddy` or `kimi`. Select multiple with commas, e.g. `--agent claude,codex`.
+Replace `codex` with an identifier above. Select multiple with commas, e.g. `--agent codex,pi`. Only the hosts you select are configured.
 
-Follow the installer result to finish plugin setup, then restart your Agent. See the [installation guide](docs/en/INSTALL.md) for host requirements, native import steps and troubleshooting.
+Complete the native manager steps returned by the installer, then reload your Agent. Some hosts require an in-app import. See the [installation guide](docs/en/INSTALL.md) for compatibility and setup.
 
 ## Sign in
 

@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, parse, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { installBinary, packageRoot } from './install.mjs';
-import { prepareLegacySkillCleanup, removeLegacySkillLinks, parseAgents, validateBundledSkill } from './skills.mjs';
+import { prepareLegacySkillCleanup, removeLegacySkillLinks, parseAgents, supportedAgents, validateBundledSkill } from './skills.mjs';
 import { preparePluginIntegration, attachPluginIntegration, installNativePlugin, runNative } from './plugin.mjs';
 
 const exec = promisify(execFile);
@@ -134,7 +134,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
   // own environment snapshot without changing the installer's process.
   const nativeEnv = native === runNative ? process.env : env;
   const customProfiles = new Map(selected.map(host => [host, customNativeProfile(host, home, nativeEnv)]));
-  const automatic = selected.filter(host => host !== 'kimi' && !customProfiles.get(host));
+  const automatic = selected.filter(host => ['codex', 'claude', 'workbuddy'].includes(host) && !customProfiles.get(host));
   if (native === runNative && resolve(home) !== resolve(homedir()) && automatic.some(host => host !== 'workbuddy')) throw new Error('A custom home requires an injected native process boundary');
   validateBundledSkill(root);
   const globalRoot = (await npm(['root', '--global'])).trim();
@@ -160,7 +160,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
       continue;
     }
     const result = await installNativePlugin(native, host, globalPackage, desired.version);
-    if (result.status === 'installed' || (host === 'workbuddy' && result.status === 'action_required')) {
+    if (automatic.includes(host) && (result.status === 'installed' || (host === 'workbuddy' && result.status === 'action_required'))) {
       try {
         // Native managers can update settings during registration. Re-read
         // rather than overwriting their enabledPlugins or marketplace state.
@@ -174,7 +174,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
     }
     plugins.push(result);
   }
-  return { status: plugins.every(plugin => plugin.status === 'installed') ? 'installed' : 'action_required', version: desired.version, agents: selected, plugins, restart_required: true, hook_trust_required: true, manual_approval_required: selected.some(host => host !== 'kimi'), auth: 'not_started' };
+  return { status: plugins.every(plugin => plugin.status === 'installed') ? 'installed' : 'action_required', version: desired.version, agents: selected, plugins, restart_required: true, hook_trust_required: true, manual_approval_required: selected.some(host => ['codex', 'claude', 'workbuddy', 'pi'].includes(host)), auth: 'not_started' };
 }
 
 /** installerMain 提供安装与更新共用的明确入口，帮助和参数错误不触发网络。
@@ -187,8 +187,8 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
  */
 export async function installerMain(args) {
   if (args.length === 1 && ['--help', '-h'].includes(args[0])) {
-    return 'Install or update the global CLI and register same-version native plugins.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex,workbuddy\nRC: npx @validflow/ccneed-cli@next install --agent codex,workbuddy\nHosts: codex, claude, workbuddy, kimi. WorkBuddy and Kimi require native manager import. Kimi follows the user-selected native permission mode; other hosts retain their documented manual approval configuration. Check each host result, review hooks and restart.\n';
+    return 'Install or update the global CLI and same-version native plugins.\nUsage: npx @validflow/ccneed-cli@latest install --agent codex\nRC: npx @validflow/ccneed-cli@next install --agent codex\nHosts: ' + supportedAgents.join(', ') + '.\nSelect multiple hosts with commas. Complete each native manager import/update step reported in plugins[]. Check version, enable the plugin, trust hooks and restart.\n';
   }
-  if (args.length !== 2 || args[0] !== '--agent') throw new Error('Use install --agent codex,workbuddy,claude,kimi; see install --help');
+  if (args.length !== 2 || args[0] !== '--agent') throw new Error('Use install --agent HOST; see install --help');
   return JSON.stringify(await installIntegration({ agents: args[1] })) + '\n';
 }

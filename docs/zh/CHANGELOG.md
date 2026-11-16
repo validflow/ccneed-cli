@@ -2,6 +2,12 @@
 
 [English](../en/CHANGELOG.md) · 中文
 
+## 未发布
+
+- 新增 OpenClaw、Pi、ZCode、Qoder、Trae CLI、DeepSeek Harness 的原生插件／扩展入口，按宿主接入工具事件与执行审批，共用原有方案及 HITL 校验。
+- 安装器支持按需选择新宿主，返回原生管理器的接入和更新步骤；发行时校验同版本完整插件载荷。
+- README 使用小图标支持表，保留一个通用安装命令和让 Agent 安装的入口。
+
 ## 0.1.13
 
 - Kimi 清单迁入 `.kimi-plugin/plugin.json`，与其他宿主的插件目录保持一致；同步安装校验和发行打包。

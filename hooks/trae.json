@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host trae", "commandWindows": "node \"${env:CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host trae", "timeout": 10 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|exec_command",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host trae", "commandWindows": "node \"${env:CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host trae", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|PowerShell|exec_command",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host trae", "commandWindows": "node \"${env:CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host trae", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}

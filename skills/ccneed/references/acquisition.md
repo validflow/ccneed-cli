@@ -6,7 +6,7 @@
 
 1. 宿主根据完整研究需求生成结构化方案；不调用网页的“优化意图/解析意图”。用户未指定数量时，所有平台合计默认 **300 条**；明确的总量或分平台数量优先。
 2. 把方案写入普通 JSON 文件，用 `ccneed kb plan --plan-file ./plan.json --output ./prepared.json` 交平台校验、分配每词数量、计算积分并比较余额。这一步不创建知识库、不扣款、不采集。
-3. Claude Code、Codex、WorkBuddy 的 PostToolUse 把最终方案送入上下文；Kimi 由 Agent 读取 CLI 完整输出和 `--output` 文件。每次请用户确认时，用自然语言按下方要求完整展示，不能因前文展示过而省略关键词，也不原样粘贴内部说明。保存完整返回 JSON，不能只存 token 或自行改展示字段；不用 shell 重定向隐藏 stdout。`invalid_plan` 的字段错误应修复后重新提交。
+3. 插件通过 PostToolUse 或宿主原生工具事件把最终方案送入上下文；Kimi 由 Agent 读取 CLI 完整输出和 `--output` 文件。每次请用户确认时，用自然语言按下方要求完整展示，不能因前文展示过而省略关键词，也不原样粘贴内部说明。保存完整返回 JSON，不能只存 token 或自行改展示字段；不用 shell 重定向隐藏 stdout。`invalid_plan` 的字段错误应修复后重新提交。
 4. 等待用户在对话中确认或提出修改。用户可修改需求、平台、实体词、其他关键词或配额；两类关键词都可增删或替换，但每个平台至少保留一个有效实体词。修改后重新调用 `kb plan`，完整展示新结果再确认。`insufficient_credits`、无 token、过期或校验失败都不能执行。
 5. 对话确认后，使用同一 prepared 文件执行 `ccneed kb start --plan-file ./prepared.json --request-id REQUEST_UUID`。PreToolUse 检查版本、有效期和余额，执行前只短提示，不重复整份方案。命令必须独立调用；权限弹窗或已有授权按下方宿主规则处理，Kimi 自动／会话授权继续有效。接收未知时保留同一 request ID，先查状态，不换 ID 重发。Codex、Kimi 的 prepared 和 HITL 回答文件必须用绝对路径；Kimi 的 `--output` 也使用新的绝对文件路径。
 6. 按返回的真实 KB ID 查询状态；CLI 提交后由平台执行统一采集、打标流程，不另起打标任务。服务确认本次流程完成后，通常自动执行 `kb export --kb-id KB_ID --format csv` 并交付本地文件链接，无需再问是否导出。用户指定 JSON、两种格式或目录时按其要求；明确只需要云端分析时不额外导出。采集中、打标中继续有界查询同一 KB；失败或等待确认时说明实际状态，不以已接收、已有部分数据或云端回合结束代替任务完成。只需数据的用户不必创建云端分析会话或报告任务。
@@ -72,5 +72,6 @@ T1/T2/T3 是宿主与平台的内部字段，不向用户解释术语或逐词�
 
 - Kimi Code：执行权限交给 Kimi 原生策略，尊重用户选择的询问、自动模式和会话授权；Hook 继续验证最终方案、积分与版本，不额外禁止自动模式。不要伪造 `ask`、权限字段或改用 HTTP 绕过业务校验。
 - Kimi Code 2.5.3 的 SessionStart/PostToolUse 不注入 Hook 输出，且 Hook 只收到工具结果前 2000 字符。`kb plan` 与处理 HITL 的 `tasks get/watch` 使用新的绝对 `--output` 文件，由 Agent 读取完整方案，Hook 据同一文件校验。文件不能覆盖；本地 Hook 不读取远程 Bash 的文件，不根据截断内容推测方案。
+- OpenClaw、Pi、ZCode、Qoder、Trae、DeepSeek Harness 的接入方式和兼容要求见[安装说明](https://github.com/validflow/ccneed-cli/blob/main/docs/zh/INSTALL.md)。使用宿主原生插件管理器加载，不能用复制 Skill 代替。工具事件传递的是方案上下文，不是用户已经确认的证据；仍需展示并等待对话确认。Pi 需要交互式扩展 UI，不能在无 UI 模式替用户批准付费执行。
 
 所有宿主都不能以“配置文件存在”代替真实加载与权限验收，也不能在用户关闭 hook 或绕过全部权限后声称仍能强制确认。

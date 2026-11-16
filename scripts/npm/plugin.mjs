@@ -3,6 +3,7 @@ import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { additionalHosts, additionalPluginInstructions, validateAdditionalPayload } from './additional-plugins.mjs';
 
 const hostDirs = { codex: '.codex', claude: '.claude', workbuddy: '.workbuddy' };
 const commands = ['ccneed', 'ccneed.cmd', 'ccneed.exe'];
@@ -337,6 +338,7 @@ function samePath(actual, expected) {
  *   manifest、catalog 或 hooks 缺失、错版或越界时失败。
  */
 function validateNativePayload(root, host, version) {
+  if (additionalHosts.includes(host)) return validateAdditionalPayload(root, host, version, { requireProjected: true });
   if (host === 'kimi') {
     const manifest = JSON.parse(fileText(join(root, '.kimi-plugin', 'plugin.json')) ?? '{}');
     const hooks = ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 }));
@@ -428,9 +430,10 @@ async function installedPlugin(native, host) {
  *   原生安装结果；错误和 WorkBuddy 手动步骤不会伪装为 installed。
  */
 export async function installNativePlugin(native, host, root, version) {
-  const base = { host, plugin_id: host === 'kimi' ? 'ccneed' : 'ccneed@ccneed', requested_version: version, version: null, marketplace_root: root };
+  const base = { host, plugin_id: host === 'kimi' || additionalHosts.includes(host) ? 'ccneed' : 'ccneed@ccneed', requested_version: version, version: null, marketplace_root: root };
   try {
     validateNativePayload(root, host, version);
+    if (additionalHosts.includes(host)) return { ...base, status: 'action_required', error: 'native_plugin_import_required', next_steps: additionalPluginInstructions(host, root, version) };
     if (host === 'kimi') return { ...base, status: 'action_required', collection_supported: true, error: 'native_plugin_import_required', next_steps: ['In Kimi Code CLI 2.5.3 or a compatible newer native release, run /plugins install "' + root.replaceAll('\\', '/') + '"; deprecated Python kimi-cli 1.x is not supported', 'Enable ccneed in /plugins, verify version ' + version + ', then /reload or open a new session; repeat import after each CLI update because the native manager copies the plugin', 'Execution follows the active Kimi native permission mode, including automatic/session authorization. Plan, credit and version checks remain active. Save long kb plan and tasks get/watch responses with an absolute --output file. No user profile files or legacy Skill links were changed'] };
     if (host === 'workbuddy') return { ...base, status: 'action_required', next_steps: ['Open WorkBuddy desktop’s native plugin manager and register the local CCNeed marketplace at ' + root, 'Install and enable ccneed@ccneed version ' + version + '; verify that version in the desktop plugin manager', 'Trust the bundled hooks and restart WorkBuddy with default permissions; no supported desktop CLI registration API was used'] };
     await ensureMarketplace(native, host, root);
