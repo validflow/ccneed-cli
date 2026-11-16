@@ -2,9 +2,7 @@
 
 [English](INSTALL.md) · 中文
 
-全局 CLI 执行命令；Claude Code、Codex、WorkBuddy 桌面版通过各自原生插件加载统一 Skill 与采集 hooks，由宿主管理插件缓存和生命周期。
-
-> 发行准备：本分支版本为 0.1.11，请确认发布成功后升级；CLI 采集恢复打标还需要配套 Club 修复部署。
+全局 CLI 执行命令；Claude Code、Codex、WorkBuddy、Kimi Code 的原生插件提供统一 Skill 和采集 hooks。
 
 ## 安装与升级
 
@@ -22,8 +20,9 @@ npx @validflow/ccneed-cli@latest install --agent claude
 | Claude Code | 调用 Claude marketplace/plugin 命令，核实用户级版本及启用状态 | 插件 PreToolUse 请求原生 `ask` |
 | Codex | 调用 Codex marketplace/plugin 命令，核实已装版本及启用状态 | `~/.codex/rules/ccneed.rules` 为付费前缀设置 prompt |
 | WorkBuddy 桌面版 | 按结果完成桌面端原生 marketplace/plugin 操作 | `~/.workbuddy/settings.json` 的兼容 ask 与 `sandbox.commandSafety.ask` |
+| Kimi Code | `--agent kimi` 返回原生 `/plugins` 导入步骤 | 遵循用户选择的原生权限模式和会话授权 |
 
-全局包提供名为 `ccneed` 的本地 marketplace，插件为 `ccneed@ccneed`。宿主从插件加载 Skill 与 hooks，不重复注册独立全局 Skill 或用户级 hooks。原生缓存可以有副本；升级需重跑统一入口，不能认为单独 `npm install -g` 会刷新所有宿主。
+Claude Code、Codex、WorkBuddy 使用本地 marketplace `ccneed` 和插件 `ccneed@ccneed`；Kimi 使用 manifest ID `ccneed`。宿主从插件加载统一 Skill 和 hooks，不重复注册全局 Skill 或用户级 hooks。升级需重跑安装器并完成各宿主步骤，单独 `npm install -g` 不会刷新原生缓存。
 
 检查 JSON 的 `plugins[]`。`installed` 表示原生管理器报告目标版本已启用，仍需信任 hooks 并重载会话。`action_required`、`failed` 表示接入未完成。WorkBuddy 桌面端目前没有已验证的公开 CLI 注册命令，因此会明确等待桌面操作，不能用 CodeBuddy CLI 注册冒充桌面端成功。
 
@@ -31,11 +30,21 @@ npx @validflow/ccneed-cli@latest install --agent claude
 
 下载需要代理时设置 `HTTPS_PROXY` 或 `HTTP_PROXY`；下载器也识别 `NO_PROXY` 及小写形式。固定版本时替换 `@latest`；RC 使用 `@next`。
 
+## Kimi Code
+
+运行 `npx @validflow/ccneed-cli@latest install --agent kimi`，然后在 **Kimi Code CLI 2.5.3** 或兼容的更新原生版本中，按返回结果执行 `/plugins install "包路径"`。启用 `ccneed`、核对目标版本，再 `/reload` 或新开会话。原生管理器会复制插件，每次更新后都需重新导入。安装器不修改 Kimi profile、`KIMI_CODE_HOME` 或用户配置；这一步需要原生管理器操作，安装器返回 `action_required`。
+
+包内 manifest 遵循[官方插件文档](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins)。已用原生 2.5.3 的隔离 profile 验证安装、启停和更新到 0.1.12：识别 1 个 Skill、3 个 hooks，无加载错误。已停维的 Python `kimi-cli` 1.x 是不同产品，不能加载这套插件；请使用[官方原生安装器](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started)。
+
+正式采集和 HITL 执行遵循 Kimi 原生权限：手动／按需模式按配置询问，自动模式和会话授权按用户意愿执行，CCNeed 不额外强制弹窗或禁止这些模式。Hook 仍会拒绝无效、过期、被修改或余额不足的方案。
+
+Kimi 通过 `sessionStart.skill` 加载说明，SessionStart/PostToolUse 不注入返回的 Hook 文本。Agent 依据 CLI 完整结果和保存的 JSON 展示方案。`kb plan` 和处理 HITL 的 `tasks get/watch` 使用新的绝对 `--output` 文件，Hook 在结果被截成 2000 字符时从同一文件读取全文。不会覆盖已有文件；本地 Hook 不读取远程 Bash 的输出文件。
+
 ## 采集确认
 
 1. Agent 准备方案，CCNeed 校验并比较预计积分与余额。
-2. PostToolUse 把方案上下文交给 Agent。每次请用户确认时，完整展示研究需求、各平台实体词和其他关键词及配额、合计条数、预计积分、余额和调整说明；表格或列表均可。两类关键词都可调整，每个平台至少保留一个非空白实体词，修改后重新校验并完整展示再确认；不展示内部 T1/T2/T3 分配。
-3. PreToolUse 核对同一最终方案，只显示短提示，不重复整份方案；正式执行需宿主原生权限界面审批，不能用自然语言回答代替执行授权。修改或过期后重新校验和展示，对话 HITL 批准同样受保护。
+2. Claude Code、Codex、WorkBuddy 从 PostToolUse 上下文读取方案，Kimi 从 CLI 完整结果和快照读取。每次请用户确认时，完整展示需求、各平台实体词／其他关键词、配额、总条数、积分、余额及调整说明。两类词都可调整，每个平台至少保留一个非空白实体词，修改后重新校验并完整展示；不展示内部 T1/T2/T3 分配。
+3. PreToolUse 核对最终方案，Agent 执行前短提示，不重复整份方案；执行授权交给宿主原生策略，包括 Kimi 已有的自动／会话授权。修改或过期后重新校验和展示，对话 HITL 同样保留业务校验。
 4. 采集完成后，Agent 通常自动导出 CSV 并交付本地文件；用户指定格式、目录或明确只要云端分析时按其要求处理。
 
 | 宿主 | 支持的采集模式 |
@@ -43,10 +52,11 @@ npx @validflow/ccneed-cli@latest install --agent claude
 | Claude Code | 交互式 default/acceptEdits、人工审批 |
 | Codex | `on-request`、`approvals_reviewer = "user"`、启用 hooks/rules |
 | WorkBuddy 桌面版 | 默认权限、原生 Bash、每次仅允许本次 |
+| Kimi Code | 用户选择的原生模式，包括自动模式和会话授权 |
 
 Codex PreToolUse 不支持 `ask`，由原生命令规则确认。WorkBuddy 当前 PowerShell 沙箱包装无法可靠匹配付费前缀，因此会拦截付费 PowerShell；改用 Bash，Windows 可使用 Git Bash。允许整个会话会停止该前缀的逐次询问，需新会话恢复。已知 bypass/never/自动审批模式会被拒绝。
 
-正式采集使用独立 `ccneed kb start ...`，不套脚本、复合命令或重定向。Codex 方案/回答文件需用绝对路径，因为 hooks 收不到命令覆盖后的工作目录。停用 hooks/rules 或人工审批后，不再满足本接入的逐次确认要求。
+正式采集使用独立 `ccneed kb start ...`，不套脚本、复合命令或重定向；Codex、Kimi 的方案／回答文件需用绝对路径。业务 hooks 保持启用；Claude Code、Codex、WorkBuddy 还需保持各自文档要求的人工审批配置，Kimi 按原生权限策略执行。
 
 验收时准备方案并检查展示；拒绝原生采集确认，验证没有启动，再重新发起并批准。对话 HITL 同样验收。单元测试和文件存在不能代替桌面 UI 验收。
 

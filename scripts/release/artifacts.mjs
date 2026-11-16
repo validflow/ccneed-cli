@@ -49,6 +49,10 @@ function rejectLinks(path) {
  *   插件错版、目录缺失、越界链接或 Hook 缺失时禁止发行。
  */
 function validatePluginPayload(root, version) {
+  rejectLinks(join(root, 'kimi.plugin.json'));
+  const kimi = JSON.parse(readFileSync(join(root, 'kimi.plugin.json'), 'utf8'));
+  const events = ['SessionStart', 'PreToolUse', 'PostToolUse'];
+  if (kimi.name !== 'ccneed' || kimi.version !== version || kimi.skills !== './skills' || kimi.sessionStart?.skill !== 'ccneed' || !Array.isArray(kimi.hooks) || kimi.hooks.length !== events.length || events.some(event => !kimi.hooks.some(hook => hook.event === event && hook.command === 'node ./hooks/acquisition.mjs --host kimi' && hook.timeout === 10 && (event === 'SessionStart' || hook.matcher === 'Bash|Shell')))) throw new Error('Kimi plugin version or hooks mismatch');
   for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
     rejectLinks(join(root, directory));
     const plugin = JSON.parse(readFileSync(join(root, directory, 'plugin.json'), 'utf8'));
@@ -93,10 +97,9 @@ export function stagePackage(root, out, manifest) {
   writeFileSync(join(destination, 'checksums.json'), checksums);
   for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
   for (const file of ['README.md', 'INSTALL.md', 'LICENSE']) copyFileSync(join(root, file), join(destination, file));
-  const logo = join(root, 'assets', 'ccneed-logo.png');
-  rejectLinks(logo);
-  mkdirSync(join(destination, 'assets'));
-  copyFileSync(logo, join(destination, 'assets', 'ccneed-logo.png'));
+  rejectLinks(join(root, 'assets'));
+  cpSync(join(root, 'assets'), join(destination, 'assets'), { recursive: true });
+  copyFileSync(join(root, 'kimi.plugin.json'), join(destination, 'kimi.plugin.json'));
   cpSync(skill, join(destination, 'skills', 'ccneed'), { recursive: true });
   for (const directory of ['hooks', '.claude-plugin', '.codex-plugin', '.codebuddy-plugin', '.agents/plugins']) cpSync(join(root, directory), join(destination, directory), { recursive: true });
   return destination;

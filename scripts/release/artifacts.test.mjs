@@ -18,6 +18,8 @@ function fixture() {
   writeFileSync(join(root, 'INSTALL.md'), 'fixture agent installation');
   mkdirSync(join(root, 'assets'));
   writeFileSync(join(root, 'assets', 'ccneed-logo.png'), Buffer.from('fixture logo'));
+  mkdirSync(join(root, 'assets', 'agents'));
+  writeFileSync(join(root, 'assets', 'agents', 'kimi.svg'), '<svg/>');
   writeFileSync(join(root, 'LICENSE'), 'fixture license');
   mkdirSync(join(root, 'skills', 'ccneed'), { recursive: true });
   writeFileSync(join(root, 'skills', 'ccneed', 'SKILL.md'), 'fixture skill');
@@ -27,6 +29,7 @@ function fixture() {
   for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
   mkdirSync(join(root, 'hooks'));
   writeFileSync(join(root, 'hooks', 'acquisition.mjs'), 'fixture shared hook');
+  writeFileSync(join(root, 'kimi.plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
   for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
     mkdirSync(join(root, directory));
     writeFileSync(join(root, directory, 'plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', hooks: './hooks/' + host + '.json' }));
@@ -73,6 +76,17 @@ test('release staging includes installer imports and all native plugin payloads'
     assert.equal(JSON.parse(readFileSync(join(staged, directory, 'plugin.json'), 'utf8')).version, manifest.version);
   }
   assert.equal(JSON.parse(readFileSync(join(staged, '.agents/plugins/marketplace.json'), 'utf8')).name, 'ccneed');
+  assert.equal(JSON.parse(readFileSync(join(staged, 'kimi.plugin.json'), 'utf8')).version, manifest.version);
+  assert.equal(readFileSync(join(staged, 'assets/agents/kimi.svg'), 'utf8'), '<svg/>');
+});
+
+test('Kimi version or missing collection guard blocks publication', () => {
+  for (const change of [{ version: '0.0.1' }, { hooks: [] }]) {
+    const { root, out, manifest } = fixture();
+    const path = join(root, 'kimi.plugin.json');
+    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path)), ...change }));
+    assert.throws(() => stagePackage(root, out, manifest), /Kimi/);
+  }
 });
 
 test('mismatched native plugin versions and missing hook payloads block publication', () => {

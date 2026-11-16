@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="CCNeed mascot holding a magnifying glass" width="280">
   <h1>CCNeed CLI + Agent Plugins</h1>
-  <p>Collect data or run cloud research from Claude Code, Codex, or WorkBuddy.</p>
+  <p>Social data collection and cloud research for your Agent.</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
     <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed-333840?style=flat&amp;logo=x&amp;logoColor=white&amp;labelColor=15171A" alt="X: CCNeed"></a>
@@ -16,7 +16,7 @@
   </p>
 </div>
 
-CCNeed connects Claude Code, Codex and WorkBuddy to social data collection and cloud research through a CLI and native plugins.
+CCNeed connects your Agent to social data collection and cloud research through a CLI and native plugins.
 
 ## What you can do
 
@@ -24,40 +24,38 @@ CCNeed connects Claude Code, Codex and WorkBuddy to social data collection and c
 - **Run cloud research:** analyze knowledge bases and files with CCNeed's cloud Agent, then download the report.
 - **Review before collecting:** adjust keywords, collection targets and budget, confirm the plan, then approve execution in your Agent.
 
-## Install
+## Install or update
 
-Node.js 22.14+ and npm are required. Choose your agent: `codex`, `workbuddy` (local coding environment), or `claude`.
+<p>
+  <img src="assets/agents/claude-code.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Claude&nbsp;Code
+  &nbsp;·&nbsp;
+  <img src="assets/agents/codex.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Codex
+  &nbsp;·&nbsp;
+  <img src="assets/agents/workbuddy.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;WorkBuddy
+  &nbsp;·&nbsp;
+  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" align="absmiddle" alt=""></picture>&nbsp;Kimi&nbsp;Code
+</p>
+
+Requires Node.js 22.14+ and npm.
+
+### Ask your Agent
+
+```text
+Read https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md
+and install or update CCNeed CLI and its native plugin for my current Agent.
+```
+
+### Install manually
+
+Use one command to install or update the CLI and your chosen Agent's plugin:
 
 ```bash
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. The installer updates the global CLI and registers its same-version native plugin with Claude Code or Codex. WorkBuddy desktop requires the native plugin installation step shown in the result. The plugin bundles the shared Skill and collection hooks. Restart your agent, review/trust the hooks, and keep manual approval enabled. See [installation](INSTALL.md) for requirements and per-host results.
+Replace `codex` as needed: `claude` (Claude Code), `codex`, `workbuddy` or `kimi`. Select multiple with commas, e.g. `--agent claude,codex`.
 
-```bash
-ccneed --help
-```
-
-### Build from source
-
-For development, use Git and Go 1.25+:
-
-```bash
-git clone https://github.com/validflow/ccneed-cli.git
-cd ccneed-cli
-go install ./cmd/ccneed
-ccneed --help
-```
-
-This builds the development CLI only. The source Skill lives in `skills/ccneed`; `go install` does not register a plugin. Use the npm installer for coordinated CLI and native plugin updates. See the [installation guide](INSTALL.md) for PATH and source-build details.
-
-### Ask your agent to install it
-
-```text
-Read https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md.
-Install the official CCNeed CLI and native plugin for the agent I am using.
-Give me the website authorization link; I will approve the login myself.
-```
+Follow the installer result to finish plugin setup, then restart your Agent. See the [installation guide](INSTALL.md) for host requirements, native import steps and troubleshooting.
 
 ## Sign in
 
@@ -121,9 +119,7 @@ The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, includi
 
 Knowledge-base and file bindings can be added, but not removed. Use `ccneed <command> --help` for the required arguments.
 
-## Update and contribute
-
-Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update the CLI and native plugins together for every host you name. Check each host's result and complete any pending native installation or trust steps. Reload your agent afterward; update notifications never install software without your action.
+## Feedback and contributing
 
 Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues) with your OS, CLI version, and a redacted error message. Never post credentials or private files.
 
