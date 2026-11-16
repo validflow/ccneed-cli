@@ -1,0 +1,16 @@
+{
+  "name": "ccneed",
+  "version": "0.1.12",
+  "description": "CCNeed data export, research and collection plan review. Paid collection requires a host with verified native approval support.",
+  "skills": "./skills",
+  "sessionStart": { "skill": "ccneed" },
+  "interface": {
+    "displayName": "CCNeed",
+    "shortDescription": "Export data and review collection plans"
+  },
+  "hooks": [
+    { "event": "SessionStart", "command": "node ./hooks/acquisition.mjs --host kimi", "timeout": 10 },
+    { "event": "PreToolUse", "matcher": "Bash|Shell", "command": "node ./hooks/acquisition.mjs --host kimi", "timeout": 10 },
+    { "event": "PostToolUse", "matcher": "Bash|Shell", "command": "node ./hooks/acquisition.mjs --host kimi", "timeout": 10 }
+  ]
+}

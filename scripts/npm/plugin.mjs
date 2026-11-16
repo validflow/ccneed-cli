@@ -337,6 +337,12 @@ function samePath(actual, expected) {
  *   manifest、catalog 或 hooks 缺失、错版或越界时失败。
  */
 function validateNativePayload(root, host, version) {
+  if (host === 'kimi') {
+    const manifest = JSON.parse(fileText(join(root, 'kimi.plugin.json')) ?? '{}');
+    const hooks = ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 }));
+    if (manifest.name !== 'ccneed' || manifest.version !== version || manifest.skills !== './skills' || manifest.sessionStart?.skill !== 'ccneed' || !sameConfig(manifest.hooks, hooks)) throw new Error('Kimi native plugin payload does not match the CLI release');
+    return;
+  }
   const directories = { claude: '.claude-plugin', codex: '.codex-plugin', workbuddy: '.codebuddy-plugin' };
   const manifest = JSON.parse(fileText(join(root, directories[host], 'plugin.json')) ?? '{}');
   if (manifest.name !== 'ccneed' || manifest.version !== version || manifest.skills !== './skills' || manifest.hooks !== './hooks/' + host + '.json') throw new Error('Native plugin payload does not match the CLI release');
@@ -422,9 +428,10 @@ async function installedPlugin(native, host) {
  *   原生安装结果；错误和 WorkBuddy 手动步骤不会伪装为 installed。
  */
 export async function installNativePlugin(native, host, root, version) {
-  const base = { host, plugin_id: 'ccneed@ccneed', requested_version: version, version: null, marketplace_root: root };
+  const base = { host, plugin_id: host === 'kimi' ? 'ccneed' : 'ccneed@ccneed', requested_version: version, version: null, marketplace_root: root };
   try {
     validateNativePayload(root, host, version);
+    if (host === 'kimi') return { ...base, status: 'action_required', collection_supported: false, error: 'native_plugin_import_required', next_steps: ['In Kimi Code CLI 2.5.3 or a compatible newer native release, run /plugins install "' + root.replaceAll('\\', '/') + '"; deprecated Python kimi-cli 1.x is not supported', 'Enable ccneed in /plugins, verify version ' + version + ', then /reload or open a new session; repeat import after each CLI update because the native manager copies the plugin', 'Use the active Kimi profile; no profile files or legacy Skill links were changed. Paid kb start and collection HITL approval are blocked because automatic/session approvals can bypass native ask rules and hooks cannot verify those states'] };
     if (host === 'workbuddy') return { ...base, status: 'action_required', next_steps: ['Open WorkBuddy desktop’s native plugin manager and register the local CCNeed marketplace at ' + root, 'Install and enable ccneed@ccneed version ' + version + '; verify that version in the desktop plugin manager', 'Trust the bundled hooks and restart WorkBuddy with default permissions; no supported desktop CLI registration API was used'] };
     await ensureMarketplace(native, host, root);
     let installed = await installedPlugin(native, host);

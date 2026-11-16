@@ -2,9 +2,7 @@
 
 [English](INSTALL.md) · 中文
 
-全局 CLI 执行命令；Claude Code、Codex、WorkBuddy 桌面版通过各自原生插件加载统一 Skill 与采集 hooks，由宿主管理插件缓存和生命周期。
-
-> 发行准备：本分支版本为 0.1.11，请确认发布成功后升级；CLI 采集恢复打标还需要配套 Club 修复部署。
+全局 CLI 执行命令；原生插件提供统一 Skill 和各宿主的采集 hooks。Claude Code、Codex、WorkBuddy 支持采集；Kimi Code 为下述有限预览接入。
 
 ## 安装与升级
 
@@ -22,6 +20,7 @@ npx @validflow/ccneed-cli@latest install --agent claude
 | Claude Code | 调用 Claude marketplace/plugin 命令，核实用户级版本及启用状态 | 插件 PreToolUse 请求原生 `ask` |
 | Codex | 调用 Codex marketplace/plugin 命令，核实已装版本及启用状态 | `~/.codex/rules/ccneed.rules` 为付费前缀设置 prompt |
 | WorkBuddy 桌面版 | 按结果完成桌面端原生 marketplace/plugin 操作 | `~/.workbuddy/settings.json` 的兼容 ask 与 `sandbox.commandSafety.ask` |
+| Kimi Code · 预览 | `--agent kimi` 返回原生 `/plugins` 导入步骤 | 暂不开放付费采集，尚无已验证的逐次审批机制 |
 
 全局包提供名为 `ccneed` 的本地 marketplace，插件为 `ccneed@ccneed`。宿主从插件加载 Skill 与 hooks，不重复注册独立全局 Skill 或用户级 hooks。原生缓存可以有副本；升级需重跑统一入口，不能认为单独 `npm install -g` 会刷新所有宿主。
 
@@ -30,6 +29,16 @@ npx @validflow/ccneed-cli@latest install --agent claude
 重启宿主，审阅并信任 hooks，确认 Skill 能加载。安装时信任插件与每次采集前授权是两回事。启停、卸载使用宿主原生插件管理。卸载不会卸载全局 CLI，也不会自动清理额外的 Codex/WB 权限规则；可保留这些保守规则，确认移除接入后仅清理对应 CCNeed 项，不删除其他规则。
 
 下载需要代理时设置 `HTTPS_PROXY` 或 `HTTP_PROXY`；下载器也识别 `NO_PROXY` 及小写形式。固定版本时替换 `@latest`；RC 使用 `@next`。
+
+## Kimi Code 预览接入
+
+运行 `npx @validflow/ccneed-cli@latest install --agent kimi`，然后在 **Kimi Code CLI 2.5.3** 或兼容的更新原生版本中，按返回结果执行 `/plugins install "包路径"`。启用 `ccneed`、核对目标版本，再 `/reload` 或新开会话。原生管理器会复制插件，每次更新后都需重新导入。安装器不修改 Kimi profile、`KIMI_CODE_HOME` 或用户配置；这一步需要原生管理器操作，安装器返回 `action_required`。
+
+包内 manifest 遵循[官方插件文档](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins)。已用原生 2.5.3 的隔离 profile 验证安装、启停和更新到 0.1.12：识别 1 个 Skill、3 个 hooks，无加载错误。已停维的 Python `kimi-cli` 1.x 是不同产品，不能加载这套插件；请使用[官方原生安装器](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started)。
+
+预览范围为已有数据查询、CSV/JSON 导出及方案准备。`kb start` 和采集 HITL 批准会拦截：原生 2.5.3 的自动模式、会话级授权优先于配置的 `ask` 规则，而 [Hook 协议](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/hooks.html)不提供这两个状态，也不能强制 `ask`。不能用自然语言确认替代；正式采集请使用已支持的宿主。
+
+Kimi 通过 `sessionStart.skill` 加载启动说明，SessionStart/PostToolUse 不会把返回的 Hook 文本注入对话。Skill 依据 CLI 完整结果和绝对 `--output` 路径的 prepared 文件展示方案。外部 Hook 只收到工具输出前 2000 字符，较长的云端 HITL 卡片可能无法完整登记，预览接入不保证云端确认回复可用。
 
 ## 采集确认
 

@@ -2,6 +2,13 @@
 
 English · [中文](CHANGELOG.zh.md)
 
+## 0.1.12
+
+- Fix collection hooks blocking ordinary commands whose titles, search terms or paths contain `ccneed`; executable lookup and the unified installer also pass without touching collection state.
+- Preserve plan and native approval checks for actual collection calls, including shell wrappers, compound commands and command substitutions. Report command-format errors separately from plan-validation errors.
+- Add a Kimi Code preview manifest and manual native import instructions, with loading and updates verified on native 2.5.3. Existing-data queries, export and plan preparation are the preview scope; paid collection remains blocked because automatic/session approval can bypass native ask rules.
+- Add compact Agent support tables with 20px icons to both READMEs, including a dark-theme Kimi icon.
+
 ## 0.1.11
 
 - Describe platform quotas as collection targets and explain that complete result pages can exceed them, for direct collection and cloud confirmations across Claude Code, Codex and WorkBuddy.

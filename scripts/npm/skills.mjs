@@ -54,16 +54,16 @@ export function validateBundledSkill(root) {
 
 /** parseAgents 限定用户明确选中的宿主，不扫描或修改其他宿主。
  * Args:
- *   value: 逗号分隔的 codex、workbuddy 或 claude。
+ *   value: 逗号分隔的 codex、workbuddy、claude 或 kimi。
  * Returns:
  *   去重后的宿主名称。
  * Errors:
  *   空值、未知名称或重复分隔返回异常。
  */
 export function parseAgents(value) {
-  if (typeof value !== 'string' || !value.trim()) throw new Error('Choose a host with --agent codex,workbuddy,claude');
+  if (typeof value !== 'string' || !value.trim()) throw new Error('Choose a host with --agent codex,workbuddy,claude,kimi');
   const agents = value.split(',').map(value => value.trim());
-  if (agents.some(agent => !Object.hasOwn(hosts, agent))) throw new Error('Unsupported agent; use codex, workbuddy or claude');
+  if (agents.some(agent => !Object.hasOwn(hosts, agent) && agent !== 'kimi')) throw new Error('Unsupported agent; use codex, workbuddy, claude or kimi');
   return [...new Set(agents)];
 }
 

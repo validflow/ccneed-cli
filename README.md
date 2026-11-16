@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="CCNeed mascot holding a magnifying glass" width="280">
   <h1>CCNeed CLI + Agent Plugins</h1>
-  <p>Collect data or run cloud research from Claude Code, Codex, or WorkBuddy.</p>
+  <p>Social data collection and cloud research for your Agent.</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
     <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed-333840?style=flat&amp;logo=x&amp;logoColor=white&amp;labelColor=15171A" alt="X: CCNeed"></a>
@@ -16,7 +16,7 @@
   </p>
 </div>
 
-CCNeed connects Claude Code, Codex and WorkBuddy to social data collection and cloud research through a CLI and native plugins.
+CCNeed connects your Agent to social data collection and cloud research through a CLI and native plugins.
 
 ## What you can do
 
@@ -26,13 +26,20 @@ CCNeed connects Claude Code, Codex and WorkBuddy to social data collection and c
 
 ## Install
 
-Node.js 22.14+ and npm are required. Choose your agent: `codex`, `workbuddy` (local coding environment), or `claude`.
+Requires Node.js 22.14+ and npm.
 
 ```bash
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-Replace `codex` with your agent, or use `--agent codex,workbuddy` for both. The installer updates the global CLI and registers its same-version native plugin with Claude Code or Codex. WorkBuddy desktop requires the native plugin installation step shown in the result. The plugin bundles the shared Skill and collection hooks. Restart your agent, review/trust the hooks, and keep manual approval enabled. See [installation](INSTALL.md) for requirements and per-host results.
+| Agent | `--agent` | Native plugin setup |
+| --- | --- | --- |
+| <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `claude` | Automatic registration |
+| <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `codex` | Automatic registration |
+| <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `workbuddy` | Import in desktop plugin manager |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code · Preview | `kimi` | Import via `/plugins`; paid collection unavailable |
+
+Replace `codex` with your agent, or list several: `--agent codex,claude`. The installer updates the CLI and prepares the matching plugin with its shared Skill and hooks. Follow any returned setup steps, reload your Agent and keep manual approvals enabled. See [installation](INSTALL.md) for host requirements, including Kimi compatibility.
 
 ```bash
 ccneed --help

@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="拿着放大镜的 CCNeed 小河马" width="280">
   <h1>CCNeed CLI + Agent 插件</h1>
-  <p>在 Claude Code、Codex、WorkBuddy 中采集数据或调用云端分析。</p>
+  <p>让你的 Agent 获取社交数据，或交给云端 Agent 分析。</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
     <a href="https://x.com/CCNeed_ai"><img src="https://img.shields.io/badge/X-CCNeed-333840?style=flat&amp;logo=x&amp;logoColor=white&amp;labelColor=15171A" alt="X：CCNeed"></a>
@@ -16,7 +16,7 @@
   </p>
 </div>
 
-通过 CLI 和原生插件，在 Claude Code、Codex、WorkBuddy 中使用 CCNeed 的社媒数据采集与云端研究能力。
+通过 CLI 和原生插件，把你的 Agent 连接到 CCNeed 的社媒数据采集与云端研究能力。
 
 ## 可以做什么
 
@@ -26,13 +26,20 @@
 
 ## 安装
 
-需要 Node.js 22.14+ 和 npm。选择你使用的 Agent：`codex`、`workbuddy`（本地代码环境）或 `claude`。
+需要 Node.js 22.14+ 和 npm。
 
 ```bash
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-把 `codex` 换成自己的 Agent；同时接入两个 Agent 可写 `--agent codex,workbuddy`。安装器更新全局 CLI，并通过 Claude Code、Codex 的原生插件管理器注册同版本插件。WorkBuddy 桌面版需完成返回结果里的原生安装步骤。插件携带统一 Skill 与采集 hooks。安装后重新打开 Agent、审阅并信任 hooks，保持人工审批模式；逐宿主结果与要求见[安装指南](INSTALL.zh.md)。
+| Agent | `--agent` | 原生插件接入 |
+| --- | --- | --- |
+| <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `claude` | 自动注册 |
+| <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `codex` | 自动注册 |
+| <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `workbuddy` | 在桌面插件管理器导入 |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code · 预览 | `kimi` | 通过 `/plugins` 导入；暂不开放付费采集 |
+
+把 `codex` 换成自己的 Agent，或一次选择多个：`--agent codex,claude`。安装器更新 CLI，并准备包含统一 Skill 和 hooks 的配套插件。按返回结果完成接入，重新加载 Agent，保持人工审批。各宿主要求及 Kimi 兼容性见[安装指南](INSTALL.zh.md)。
 
 ```bash
 ccneed --help

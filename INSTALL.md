@@ -2,9 +2,7 @@
 
 English · [中文](INSTALL.zh.md)
 
-The global CLI runs commands. A native plugin supplies the shared Skill and collection hooks to Claude Code, Codex or WorkBuddy desktop; each host manages its plugin cache and lifecycle.
-
-> Release preparation: this branch targets 0.1.11. Verify publication before updating; restoring tagging for CLI collections also requires the matching Club deployment.
+The global CLI runs commands. Native plugins supply a shared Skill and host-specific collection hooks. Claude Code, Codex and WorkBuddy support collection; Kimi Code has a limited preview described below.
 
 ## Install or update
 
@@ -22,6 +20,7 @@ The installer installs the exact global CLI version and coordinates native regis
 | Claude Code | Claude marketplace/plugin commands; verified user-scope version and enabled state | Plugin PreToolUse requests native `ask` |
 | Codex | Codex marketplace/plugin commands; verified installed version and enabled state | `~/.codex/rules/ccneed.rules` prompts for paid prefixes |
 | WorkBuddy desktop | Complete the native marketplace/plugin steps returned by the installer | `~/.workbuddy/settings.json`: compatible ask rules and `sandbox.commandSafety.ask` |
+| Kimi Code · Preview | `--agent kimi` returns native `/plugins` import steps | Paid collection is blocked; no per-operation approval mechanism has been verified |
 
 The package provides a local marketplace named `ccneed`; the plugin is `ccneed@ccneed`. Native managers load the bundled Skill and hooks without a second global Skill or user-level hook registration. Native caches can contain copies: rerun this installer rather than assuming `npm install -g` refreshes every host.
 
@@ -30,6 +29,16 @@ Check `plugins[]` in the JSON result. `installed` means the native manager repor
 Restart the host, review/trust hooks and confirm the Skill loads. Installation trust is separate from permission to start each collection. Use native plugin controls for enable, disable and removal. Removing a plugin does not uninstall the global CLI or automatically remove extra Codex/WB permission rules. Retain those conservative rules until deliberately removing the corresponding CCNeed entries; preserve unrelated rules.
 
 If downloads require a proxy, set `HTTPS_PROXY` or `HTTP_PROXY`; the downloader also honors `NO_PROXY` and lowercase forms. Use an exact version instead of `@latest` for reproducibility. RC releases use `@next`.
+
+## Kimi Code preview
+
+Run `npx @validflow/ccneed-cli@latest install --agent kimi`, then follow the returned `/plugins install "PACKAGE_PATH"` instructions in **Kimi Code CLI 2.5.3** or a compatible newer native release. Enable `ccneed`, verify the requested version, and `/reload` or start a new session. Repeat the import after every update: the native manager copies the plugin. The installer leaves Kimi profiles, `KIMI_CODE_HOME` and user configuration untouched and reports `action_required` for this manual setup.
+
+The bundled manifest follows the [documented plugin format](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins). Native 2.5.3 was tested in an isolated profile: installation, enable/disable and update to 0.1.12 loaded one Skill and three hooks without diagnostics. The deprecated Python `kimi-cli` 1.x is a different product and cannot load this bundle; use the [official native installer](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started).
+
+Existing-data queries, CSV/JSON export and plan preparation are the preview scope. `kb start` and collection HITL approval are blocked: in native 2.5.3, automatic mode and session approval override configured `ask` rules, while the [Hook protocol](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/hooks.html) exposes neither state and cannot force `ask`. Natural-language confirmation cannot replace native approval. Use a supported host for collection.
+
+Kimi loads startup instructions through `sessionStart.skill`; its SessionStart/PostToolUse events do not inject returned hook text into the conversation. The Skill uses the CLI's full result and an absolute `--output` prepared file to present plans. External hooks receive only the first 2000 characters of tool output, so a long cloud HITL card may not be registered completely. The preview does not guarantee that cloud-confirmation replies are available.
 
 ## Collection confirmation
 

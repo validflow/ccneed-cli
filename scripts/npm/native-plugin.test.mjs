@@ -9,6 +9,21 @@ import { spawnSync } from 'node:child_process';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = path => JSON.parse(readFileSync(join(root, path), 'utf8'));
 
+test('Kimi native manifest shares the Skill and declares relocatable native hooks', () => {
+  const manifest = read('kimi.plugin.json');
+  assert.equal(manifest.name, 'ccneed');
+  assert.equal(manifest.version, read('package.json').version);
+  assert.equal(manifest.skills, './skills');
+  assert.equal(manifest.sessionStart.skill, 'ccneed');
+  for (const event of ['SessionStart', 'PreToolUse', 'PostToolUse']) {
+    const hook = manifest.hooks.find(hook => hook.event === event);
+    assert.equal(hook.command, 'node ./hooks/acquisition.mjs --host kimi');
+    assert.equal(hook.timeout, 10);
+    if (event !== 'SessionStart') assert.ok(new RegExp(hook.matcher).test('Bash'));
+  }
+  assert.ok(read('package.json').files.includes('kimi.plugin.json'));
+});
+
 for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
   test(host + ' native manifest loads shared skill and its own guarded hook payload', () => {
     const manifest = read(directory + '/plugin.json');

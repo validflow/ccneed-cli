@@ -1,6 +1,6 @@
 ---
 name: ccneed
-description: 使用 ccneed CLI 连接 CCNeed，准备和确认采集方案，创建或补充知识库、导出 CSV/JSON 数据供本地分析，或把资料交给云端 Agent 分析并下载报告；也可管理登录、会话、文件与账号积分。适用于 Codex、Claude Code、WorkBuddy 等可执行命令的宿主 Agent。
+description: 使用 ccneed CLI 连接 CCNeed，准备和确认采集方案，创建或补充知识库、导出 CSV/JSON 数据供本地分析，或把资料交给云端 Agent 分析并下载报告；也可管理登录、会话、文件与账号积分。适用于 Codex、Claude Code、WorkBuddy，以及有限预览接入的 Kimi Code。
 ---
 
 # CCNeed
@@ -27,6 +27,8 @@ CLI 与本 Skill 已正式发行；**部分云端命令仍取决于 CCNeed 正�
 - 产品命令默认 JSON；结果和错误均在 stdout，诊断及更新提醒在 stderr。先检查退出码，再解释业务状态：`pending`、`accepted`、`queued` 都不代表工作已完成。无需 Lark 的 `ok` 信封或 `--json` 参数。
 - 官网授权链接必须先展示并交还用户；用户确认后才运行完成登录步骤。任务 `waiting_user` 时原样说明问题和候选项，停下来等用户选择；不要为了验证流程而替用户选择、批准或补全答案。
 - 本 Skill 随原生插件加载，统一安装器逐宿主报告结果。安装 CLI 不等于插件已启用；`action_required`、`failed` 或待信任 hooks 时先完成宿主操作，不另外复制一份全局 Skill。
+- Kimi Code 当前仅预览查询、已有数据导出与方案准备；付费 `kb start` 和采集 HITL 批准暂时拦截，因为宿主 Hook 无法保证每次原生审批。不要伪造 `ask`、补写权限字段或改用脚本、HTTP 绕过；需要采集时说明限制并改用已支持宿主。安装、重载与版本兼容性见仓库安装指南。
+- Kimi Code 2.5.3 通过原生 `sessionStart.skill` 加载本说明，不会把 SessionStart/PostToolUse hook 输出注入对话。准备方案时用绝对 `--output` 路径，直接读取 CLI 完整输出和保存的 prepared JSON，按下述要求展示；不要等待 Hook 补充方案，也不能把 Hook 记账当作用户已看过方案。外部 Hook 的 `tool_output` 只有前 2000 字符。
 - PostToolUse 把校验后的方案作为上下文交给 Agent。每次请用户确认方案时，完整说明研究需求、每个平台的实体词／其他关键词／配额、合计条数、预计积分、余额及调整说明；表格或列表均可，不因前文展示过而省略关键词或只说“沿用之前方案”。不把内部 Markdown 说明原样贴给用户。
 - 实体词和其他关键词都可增删、替换，每个平台至少保留一个有效实体词。修改后重新校验并展示完整方案，等待用户在对话中确认。PreToolUse 只检查执行条件并短提示“即将按上述已确认方案开始采集”，实际执行由宿主原生权限界面批准或拒绝；自然语言回答、`--yes` 或 AskUserQuestion 不能替代原生审批。缺少 hooks、权限策略或可交互确认能力时停止正式采集，按[采集说明](references/acquisition.md)处理。
 - 创建或补采集被接收不代表任务完成。沿用真实 KB ID 查询状态，等待采集、打标流程完成后通常自动 `kb export --format csv` 并给出本地文件链接，不再询问是否导出；指定格式、目录或明确只要云端分析时遵从用户要求。采集中、打标中、失败或等待 HITL 时说明实际状态，不能提前宣称数据已完整交付。
