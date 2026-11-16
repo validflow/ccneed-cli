@@ -1,6 +1,6 @@
 # Contributing
 
-English · [中文](CONTRIBUTING.zh.md)
+English · [中文](docs/zh/CONTRIBUTING.md)
 
 ## Workflow
 
@@ -13,7 +13,7 @@ git switch -c feat/short-description
 make check
 ```
 
-Start a fresh branch from updated `main` after each Squash merge; do not reuse an already-merged branch. Read the [code style guide](CODE_STYLE.md) before changing code. Add a test that fails for a new behavior or bug before implementing the fix.
+Start a fresh branch from updated `main` after each Squash merge; do not reuse an already-merged branch. Read the [code style guide](docs/en/CODE_STYLE.md) before changing code. Add a test that fails for a new behavior or bug before implementing the fix.
 
 ## Branches, PRs, and commits
 
@@ -33,7 +33,9 @@ The Squash commit normally uses the reviewed PR title. Version numbers are chose
 
 `cmd/ccneed` contains only process entry. Command parsing belongs in `internal/cli`; API, credentials, output, and downloads are separate modules added as needed. Development tools in `tools/` are not CLI runtime dependencies.
 
-The host Skill is `skills/ccneed/SKILL.md` with Chinese guidance and references; it has no separate English translation. Native manifests in `.claude-plugin`, `.codex-plugin` and `.codebuddy-plugin` reference that shared Skill and host hook configuration in `hooks/`. Native managers own plugin caches and enable/disable/uninstall; the global npm package supplies the CLI and same-version local marketplace source. Keep all plugin manifests and marketplace versions aligned with `package.json` when preparing a release. The installer must preserve custom Skills/settings and report pending or failed host registration. Check actual host loading, not just files on disk.
+The host Skill is `skills/ccneed/SKILL.md` with Chinese guidance and references; it has no separate English translation. Native manifests in `.claude-plugin`, `.codex-plugin`, `.codebuddy-plugin` and `.kimi-plugin` reference that shared Skill and hooks in `hooks/`. Native managers own plugin caches and enable/disable/uninstall; the global npm package supplies the CLI and same-version plugin source. Keep all plugin manifests and marketplace versions aligned with `package.json` when preparing a release. The installer must preserve custom Skills/settings and report pending or failed host registration. Check actual host loading, not just files on disk.
+
+The English and Chinese READMEs stay at the root alongside GitHub's contribution and security entries. Detailed guides live in `docs/en/` and `docs/zh/`. Maintainer review configuration in `.codex/` and `.agents/skills/` is local and ignored; `.agents/plugins/marketplace.json` remains a tracked Codex product entry.
 
 ## Local tests before staging integration
 
@@ -56,6 +58,6 @@ An integration pass starts with local Go checks (`npm test` too when changing np
 
 ## PR and release
 
-Use the PR template to describe scope, evidence, risk, compatibility, and any maintainer prerequisites. Update README, installation guidance, and Skill when behavior changes. PR checks run without production credentials. The CX Review workflow and instructions remain in the repository but its job is disabled; do not run an external PR on a credential-bearing self-hosted runner.
+Use the PR template to describe scope, evidence, risk, compatibility, and any maintainer prerequisites. Update README, installation guidance, and Skill when behavior changes. PR checks run without production credentials. The CX Review workflow remains disabled; restoring it requires restoring local review configuration and reassessing the public-repository credential boundary. Do not run an external PR on a credential-bearing self-hosted runner.
 
-CLI versions use independent `vX.Y.Z` tags. npm, `ccneed version`, binary assets, and the bundled Skill share one release version. RCs use `vX.Y.Z-rc.N` and npm `next`; they do not enter `latest` or ordinary update notices. Only an explicit version-change PR merged into `main` triggers automated publishing; ordinary merges do not. Before a fully usable public release, confirm Club production compatibility and a controlled login/task smoke test, or clearly describe remaining server limitations. See [Releasing](RELEASING.md).
+CLI versions use independent `vX.Y.Z` tags. npm, `ccneed version`, binary assets, and the bundled Skill share one release version. RCs use `vX.Y.Z-rc.N` and npm `next`; they do not enter `latest` or ordinary update notices. Only an explicit version-change PR merged into `main` triggers automated publishing; ordinary merges do not. Before a fully usable public release, confirm Club production compatibility and a controlled login/task smoke test, or clearly describe remaining server limitations. See [Releasing](docs/en/RELEASING.md).

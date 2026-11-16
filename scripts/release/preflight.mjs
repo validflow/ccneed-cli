@@ -35,7 +35,7 @@ export function preflight(root, tag) {
   const manifest = JSON.parse(readFileSync(root + '/package.json', 'utf8'));
   validateManifest(manifest, tag);
   validateLock(manifest, JSON.parse(readFileSync(root + '/package-lock.json', 'utf8')));
-  for (const file of ['LICENSE', 'CHANGELOG.md', 'skills/ccneed/SKILL.md']) {
+  for (const file of ['LICENSE', 'docs/en/CHANGELOG.md', 'skills/ccneed/SKILL.md']) {
     if (!readFileSync(root + '/' + file, 'utf8').trim()) throw new Error('Release material is empty: ' + file);
   }
 }

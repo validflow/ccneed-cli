@@ -10,7 +10,7 @@
   </p>
   <p>
     <a href="https://ccneed.ai">Website</a> ·
-    <a href="INSTALL.md">Installation guide</a> ·
+    <a href="docs/en/INSTALL.md">Installation guide</a> ·
     <a href="skills/ccneed/SKILL.md">Agent Skill</a> ·
     <a href="https://github.com/validflow/ccneed-cli/issues">Issues</a>
   </p>
@@ -41,7 +41,7 @@ Requires Node.js 22.14+ and npm.
 ### Ask your Agent
 
 ```text
-Read https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md
+Read https://github.com/validflow/ccneed-cli/blob/main/docs/en/INSTALL.md
 and install or update CCNeed CLI and its native plugin for my current Agent.
 ```
 
@@ -55,7 +55,7 @@ npx @validflow/ccneed-cli@latest install --agent codex
 
 Replace `codex` as needed: `claude` (Claude Code), `codex`, `workbuddy` or `kimi`. Select multiple with commas, e.g. `--agent claude,codex`.
 
-Follow the installer result to finish plugin setup, then restart your Agent. See the [installation guide](INSTALL.md) for host requirements, native import steps and troubleshooting.
+Follow the installer result to finish plugin setup, then restart your Agent. See the [installation guide](docs/en/INSTALL.md) for host requirements, native import steps and troubleshooting.
 
 ## Sign in
 
@@ -125,4 +125,4 @@ Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues)
 
 For product news and guides, follow [CCNeed on X](https://x.com/CCNeed_ai), [Ccneedai on Medium](https://medium.com/@ccneedai), or [CC Need on DEV](https://dev.to/cc_need_be7954bac5ca859e1).
 
-[Installation](INSTALL.md) · [Contributing](CONTRIBUTING.md) · [Code style](CODE_STYLE.md) · [Security](SECURITY.md) · [Releasing](RELEASING.md) · [Changelog](CHANGELOG.md)
+[Installation](docs/en/INSTALL.md) · [Contributing](CONTRIBUTING.md) · [Code style](docs/en/CODE_STYLE.md) · [Security](SECURITY.md) · [Releasing](docs/en/RELEASING.md) · [Changelog](docs/en/CHANGELOG.md)

@@ -1,6 +1,6 @@
 # 代码规范
 
-[English](CODE_STYLE.md) · 中文
+[English](../en/CODE_STYLE.md) · 中文
 
 沿用 usight_agent 的模块化、Google 注释结构、真实行为测试与干净代码原则；Go 语法遵循 [Google Go Style](https://google.github.io/styleguide/go/) 与 gofmt，不机械复制 Python 的格式或继承体系。
 

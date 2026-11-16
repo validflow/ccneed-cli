@@ -1,6 +1,6 @@
 ﻿# 安装 CCNeed
 
-[English](INSTALL.md) · 中文
+[English](../en/INSTALL.md) · 中文
 
 全局 CLI 执行命令；Claude Code、Codex、WorkBuddy、Kimi Code 的原生插件提供统一 Skill 和采集 hooks。
 
@@ -79,7 +79,7 @@ ccneed auth login --complete --timeout 60s
 ccneed auth status --verify
 ```
 
-`auth: not_started` 表示还没登录。不替用户批准网站授权，不读浏览器 Cookie 或输出秘密。默认正式服务 `https://ccneed.ai`；仅获授权的开发者使用 `--api-url` 和隔离的 staging 账号，见[贡献说明](CONTRIBUTING.zh.md)。
+`auth: not_started` 表示还没登录。不替用户批准网站授权，不读浏览器 Cookie 或输出秘密。默认正式服务 `https://ccneed.ai`；仅获授权的开发者使用 `--api-url` 和隔离的 staging 账号，见[贡献说明](CONTRIBUTING.md)。
 
 ## 源码构建
 

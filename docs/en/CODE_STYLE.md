@@ -1,6 +1,6 @@
 # Code style
 
-English · [中文](CODE_STYLE.zh.md)
+English · [中文](../zh/CODE_STYLE.md)
 
 Follow the repository's modularity, Google-style documentation, real-behavior testing, and clean-code rules. For Go syntax, use [Google Go Style](https://google.github.io/styleguide/go/) and `gofmt`; do not copy Python's inheritance or formatting patterns mechanically.
 

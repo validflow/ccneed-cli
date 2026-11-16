@@ -10,7 +10,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = path => JSON.parse(readFileSync(join(root, path), 'utf8'));
 
 test('Kimi native manifest shares the Skill and declares relocatable native hooks', () => {
-  const manifest = read('kimi.plugin.json');
+  const manifest = read('.kimi-plugin/plugin.json');
   assert.equal(manifest.name, 'ccneed');
   assert.equal(manifest.version, read('package.json').version);
   assert.equal(manifest.skills, './skills');
@@ -21,7 +21,8 @@ test('Kimi native manifest shares the Skill and declares relocatable native hook
     assert.equal(hook.timeout, 10);
     if (event !== 'SessionStart') assert.ok(new RegExp(hook.matcher).test('Bash'));
   }
-  assert.ok(read('package.json').files.includes('kimi.plugin.json'));
+  assert.ok(read('package.json').files.includes('.kimi-plugin/'));
+  assert.equal(existsSync(join(root, 'kimi.plugin.json')), false);
 });
 
 for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {

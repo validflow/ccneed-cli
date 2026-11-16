@@ -338,7 +338,7 @@ function samePath(actual, expected) {
  */
 function validateNativePayload(root, host, version) {
   if (host === 'kimi') {
-    const manifest = JSON.parse(fileText(join(root, 'kimi.plugin.json')) ?? '{}');
+    const manifest = JSON.parse(fileText(join(root, '.kimi-plugin', 'plugin.json')) ?? '{}');
     const hooks = ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 }));
     if (manifest.name !== 'ccneed' || manifest.version !== version || manifest.skills !== './skills' || manifest.sessionStart?.skill !== 'ccneed' || !sameConfig(manifest.hooks, hooks)) throw new Error('Kimi native plugin payload does not match the CLI release');
     return;

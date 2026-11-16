@@ -69,7 +69,8 @@ function writePackage(root, version) {
   writeFileSync(join(root, 'hooks', 'acquisition.mjs'), '// Test package hook payload\n');
   mkdirSync(join(root, 'skills', 'ccneed', 'references'), { recursive: true });
   writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@validflow/ccneed-cli', version, private: false, license: 'MIT' }));
-  writeFileSync(join(root, 'kimi.plugin.json'), JSON.stringify({ name: 'ccneed', version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
+  mkdirSync(join(root, '.kimi-plugin'), { recursive: true });
+  writeFileSync(join(root, '.kimi-plugin', 'plugin.json'), JSON.stringify({ name: 'ccneed', version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
   for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
     mkdirSync(join(root, directory), { recursive: true });
     writeFileSync(join(root, directory, 'plugin.json'), JSON.stringify({ name: 'ccneed', version, skills: './skills', hooks: './hooks/' + host + '.json' }));
