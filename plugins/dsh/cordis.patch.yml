@@ -1,0 +1,3 @@
+- insert:
+    - id: ccneed
+      name: '@validflow/ccneed-cli/plugins/dsh/index.mjs'

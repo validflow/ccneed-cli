@@ -3,6 +3,7 @@ import { isAbsolute, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
 const hosts = { codex: '.agents', workbuddy: '.workbuddy', claude: '.claude' };
+export const supportedAgents = ['codex', 'claude', 'workbuddy', 'kimi', 'openclaw', 'pi', 'zcode', 'qoder', 'trae', 'dsh'];
 
 /** fingerprintSkill 为完整技能的文件名和字节生成稳定摘要，不跟随内部链接。
  * Args:
@@ -54,16 +55,16 @@ export function validateBundledSkill(root) {
 
 /** parseAgents 限定用户明确选中的宿主，不扫描或修改其他宿主。
  * Args:
- *   value: 逗号分隔的 codex、workbuddy、claude 或 kimi。
+ *   value: 逗号分隔的原生插件宿主名称。
  * Returns:
  *   去重后的宿主名称。
  * Errors:
  *   空值、未知名称或重复分隔返回异常。
  */
 export function parseAgents(value) {
-  if (typeof value !== 'string' || !value.trim()) throw new Error('Choose a host with --agent codex,workbuddy,claude,kimi');
+  if (typeof value !== 'string' || !value.trim()) throw new Error('Choose a host with --agent ' + supportedAgents.join(','));
   const agents = value.split(',').map(value => value.trim());
-  if (agents.some(agent => !Object.hasOwn(hosts, agent) && agent !== 'kimi')) throw new Error('Unsupported agent; use codex, workbuddy, claude or kimi');
+  if (agents.some(agent => !supportedAgents.includes(agent))) throw new Error('Unsupported agent; use ' + supportedAgents.join(', '));
   return [...new Set(agents)];
 }
 

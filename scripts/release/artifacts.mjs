@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { assetName } from '../npm/install.mjs';
 import { validateSkill, fingerprintSkill, validateBundledSkill } from '../npm/skills.mjs';
 import { validateManifest } from './version.mjs';
+import { additionalHosts, additionalPayloads, stageTraePayload, validateAdditionalPayload } from '../npm/additional-plugins.mjs';
 
 /** targets 定义安装器和发行构建共同支持的六个平台。
  * Args:
@@ -48,7 +49,9 @@ function rejectLinks(path) {
  * Errors:
  *   插件错版、目录缺失、越界链接或 Hook 缺失时禁止发行。
  */
-function validatePluginPayload(root, version) {
+function validatePluginPayload(root, version, requireProjected = false) {
+  for (const path of additionalPayloads) rejectLinks(join(root, path));
+  for (const host of additionalHosts) validateAdditionalPayload(root, host, version, { requireProjected });
   rejectLinks(join(root, '.kimi-plugin'));
   const kimi = JSON.parse(readFileSync(join(root, '.kimi-plugin', 'plugin.json'), 'utf8'));
   const events = ['SessionStart', 'PreToolUse', 'PostToolUse'];
@@ -95,14 +98,16 @@ export function stagePackage(root, out, manifest) {
   mkdirSync(join(destination, 'scripts', 'npm'), { recursive: true });
   writeFileSync(join(destination, 'package.json'), JSON.stringify(manifest, null, 2) + '\n');
   writeFileSync(join(destination, 'checksums.json'), checksums);
-  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
+  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs', 'additional-plugins.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
   for (const file of ['README.md', 'README.zh.md', 'CONTRIBUTING.md', 'SECURITY.md', 'LICENSE']) copyFileSync(join(root, file), join(destination, file));
   rejectLinks(join(root, 'docs'));
   cpSync(join(root, 'docs'), join(destination, 'docs'), { recursive: true });
   rejectLinks(join(root, 'assets'));
   cpSync(join(root, 'assets'), join(destination, 'assets'), { recursive: true });
   cpSync(skill, join(destination, 'skills', 'ccneed'), { recursive: true });
-  for (const directory of ['hooks', '.claude-plugin', '.codex-plugin', '.codebuddy-plugin', '.kimi-plugin', '.agents/plugins']) cpSync(join(root, directory), join(destination, directory), { recursive: true });
+  for (const directory of ['hooks', '.claude-plugin', '.codex-plugin', '.codebuddy-plugin', '.kimi-plugin', '.agents/plugins', ...additionalPayloads]) cpSync(join(root, directory), join(destination, directory), { recursive: true });
+  stageTraePayload(root, destination);
+  validateAdditionalPayload(destination, 'trae', manifest.version, { requireProjected: true });
   return destination;
 }
 
@@ -119,7 +124,7 @@ export function verifyArtifacts(out) {
   validateManifest(manifest);
   const checksums = JSON.parse(readFileSync(join(out, 'checksums.json'), 'utf8'));
   validateBundledSkill(join(out, 'npm'));
-  validatePluginPayload(join(out, 'npm'), manifest.version);
+  validatePluginPayload(join(out, 'npm'), manifest.version, true);
   if (checksums.version !== manifest.version || readFileSync(join(out, 'npm', 'checksums.json'), 'utf8') !== readFileSync(join(out, 'checksums.json'), 'utf8')) throw new Error('Artifact checksum version mismatch');
   const names = targets(manifest.version).map(({ asset }) => asset);
   if (Object.keys(checksums.assets).length !== names.length) throw new Error('Incomplete artifact checksums');

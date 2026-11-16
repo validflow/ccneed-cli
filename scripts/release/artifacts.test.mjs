@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, unlinkSync, existsSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync, readFileSync, unlinkSync, existsSync, cpSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stagePackage, verifyArtifacts, targets } from './artifacts.mjs';
 import { publicationDecision, npmPublishArgs } from './publish.mjs';
+import { additionalPayloads } from '../npm/additional-plugins.mjs';
+
+const source = fileURLToPath(new URL('../../', import.meta.url));
 
 /** fixture 创建可校验的跨平台产物与同版本 npm 内容，不执行编译或云端写入。
  * Returns:
@@ -12,8 +16,18 @@ import { publicationDecision, npmPublishArgs } from './publish.mjs';
  */
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'ccneed-artifacts-'));
-  const manifest = { name: '@validflow/ccneed-cli', version: '0.1.0', private: false, license: 'MIT' };
+  const manifest = { ...JSON.parse(readFileSync(join(source, 'package.json'))), version: '0.1.0' };
   writeFileSync(join(root, 'package.json'), JSON.stringify(manifest));
+  for (const path of additionalPayloads) cpSync(join(source, path), join(root, path), { recursive: true });
+  const openclawPath = join(root, 'openclaw.plugin.json');
+  writeFileSync(openclawPath, JSON.stringify({ ...JSON.parse(readFileSync(openclawPath)), version: manifest.version }));
+  for (const host of ['zcode', 'qoder', 'trae']) {
+    const path = join(root, host === 'trae' ? 'plugins/trae/.codex-plugin/plugin.json' : '.' + host + '-plugin/plugin.json');
+    writeFileSync(path, JSON.stringify({ ...JSON.parse(readFileSync(path)), version: manifest.version }));
+  }
+  const catalog = JSON.parse(readFileSync(join(root, 'marketplace.json')));
+  catalog.plugins.forEach(plugin => { plugin.version = manifest.version; });
+  writeFileSync(join(root, 'marketplace.json'), JSON.stringify(catalog));
   for (const name of ['README.md', 'README.zh.md', 'CONTRIBUTING.md', 'SECURITY.md']) writeFileSync(join(root, name), 'fixture');
   for (const language of ['en', 'zh']) {
     mkdirSync(join(root, 'docs', language), { recursive: true });
@@ -29,7 +43,7 @@ function fixture() {
   mkdirSync(join(root, 'skills', 'ccneed', 'references'));
   for (const name of ['auth', 'account', 'tasks', 'resources']) writeFileSync(join(root, 'skills', 'ccneed', 'references', name + '.md'), 'fixture reference');
   mkdirSync(join(root, 'scripts', 'npm'), { recursive: true });
-  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
+  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs', 'additional-plugins.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
   mkdirSync(join(root, 'hooks'));
   writeFileSync(join(root, 'hooks', 'acquisition.mjs'), 'fixture shared hook');
   mkdirSync(join(root, '.kimi-plugin'));
@@ -39,6 +53,7 @@ function fixture() {
     writeFileSync(join(root, directory, 'plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', hooks: './hooks/' + host + '.json' }));
     writeFileSync(join(root, 'hooks', host + '.json'), JSON.stringify({ hooks: { SessionStart: [], PreToolUse: [], PostToolUse: [] } }));
   }
+  for (const host of ['zcode', 'qoder', 'trae']) cpSync(join(source, 'hooks', host + '.json'), join(root, 'hooks', host + '.json'));
   for (const directory of ['.claude-plugin', '.codebuddy-plugin', '.agents/plugins']) {
     mkdirSync(join(root, directory), { recursive: true });
     writeFileSync(join(root, directory, 'marketplace.json'), JSON.stringify({ name: 'ccneed', plugins: [{ name: 'ccneed', source: './', version: manifest.version }] }));
@@ -85,6 +100,16 @@ test('release staging includes installer imports and all native plugin payloads'
   assert.equal(JSON.parse(readFileSync(join(staged, '.kimi-plugin/plugin.json'), 'utf8')).version, manifest.version);
   assert.equal(existsSync(join(staged, 'kimi.plugin.json')), false);
   assert.equal(readFileSync(join(staged, 'assets/agents/kimi.svg'), 'utf8'), '<svg/>');
+  for (const path of additionalPayloads) assert.equal(existsSync(join(staged, path)), true, path);
+  assert.equal(readFileSync(join(staged, 'scripts/npm/additional-plugins.mjs'), 'utf8'), 'fixture source');
+});
+
+test('release rejects an incomplete native package rather than shipping only a Skill', () => {
+  for (const entry of ['plugins/pi.mjs', 'plugins/openclaw.mjs', 'plugins/dsh/index.mjs', 'hooks/qoder.json']) {
+    const { root, out, manifest } = fixture();
+    unlinkSync(join(root, entry));
+    assert.throws(() => stagePackage(root, out, manifest), /ENOENT|plugin/i, entry);
+  }
 });
 
 test('Kimi version or missing collection guard blocks publication', () => {

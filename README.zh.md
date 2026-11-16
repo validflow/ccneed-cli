@@ -26,15 +26,22 @@
 
 ## 安装与更新
 
-<p>
-  <img src="assets/agents/claude-code.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Claude&nbsp;Code
-  &nbsp;·&nbsp;
-  <img src="assets/agents/codex.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;Codex
-  &nbsp;·&nbsp;
-  <img src="assets/agents/workbuddy.svg" width="28" height="28" align="absmiddle" alt="">&nbsp;WorkBuddy
-  &nbsp;·&nbsp;
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" align="absmiddle" alt=""></picture>&nbsp;Kimi&nbsp;Code
-</p>
+<table align="center">
+  <tr>
+    <td width="160" align="center" valign="top"><img src="assets/agents/claude-code.svg" width="28" height="28" alt=""><br>Claude&nbsp;Code</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/codex.svg" width="28" height="28" alt=""><br>Codex</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/workbuddy.svg" width="28" height="28" alt=""><br>WorkBuddy</td>
+    <td width="160" align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" alt=""></picture><br>Kimi&nbsp;Code</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/openclaw.svg" width="28" height="28" alt=""><br>OpenClaw</td>
+  </tr>
+  <tr>
+    <td width="160" align="center" valign="top"><img src="assets/agents/pi.svg" width="28" height="28" alt=""><br>Pi</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/zcode.png" width="28" height="28" alt=""><br>ZCode</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/qoder.svg" width="28" height="28" alt=""><br>Qoder</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/trae.png" width="28" height="28" alt=""><br>Trae&nbsp;CLI</td>
+    <td width="160" align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/dsh-dark.svg"><img src="assets/agents/dsh.svg" width="28" height="28" alt=""></picture><br>DeepSeek&nbsp;Harness</td>
+  </tr>
+</table>
 
 需要 Node.js 22.14+ 和 npm。
 
@@ -53,9 +60,9 @@
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-按需替换 `codex`：`claude`（Claude Code）、`codex`、`workbuddy` 或 `kimi`。多个 Agent 用逗号组合，例如 `--agent claude,codex`。
+在[安装指南](docs/zh/INSTALL.md)中选择所用 Agent 的安装标识；多个标识用逗号组合，只配置你选择的宿主。
 
-按安装结果完成插件接入，然后重启 Agent。宿主要求、原生导入步骤与排障见[安装指南](docs/zh/INSTALL.md)。
+按安装结果完成原生管理器中的操作，再重载 Agent；部分宿主需要在应用内导入插件。兼容要求和接入步骤见[安装指南](docs/zh/INSTALL.md)。
 
 ## 登录
 

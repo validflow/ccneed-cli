@@ -1,0 +1,6 @@
+{
+  "name": "ccneed",
+  "plugins": [
+    { "name": "ccneed", "source": "./", "version": "0.1.14", "description": "CCNeed collection and cloud research" }
+  ]
+}

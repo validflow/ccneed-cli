@@ -5,7 +5,7 @@ import { isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { hasCCNeedInvocation } from './command.mjs';
 
-const hosts = ['codex', 'claude', 'workbuddy', 'kimi'];
+const hosts = ['codex', 'claude', 'workbuddy', 'kimi', 'openclaw', 'pi', 'zcode', 'qoder', 'trae', 'dsh'];
 const platformNames = { xhs: '小红书', weibo: '微博', douyin: '抖音', bilibili: '哔哩哔哩', twitter: 'X', reddit: 'Reddit', tiktok: 'TikTok', youtube: 'YouTube', instagram: 'Instagram', lemon8: 'Lemon8' };
 const defaultStateDir = join(tmpdir(), 'ccneed-hooks-' + createHash('sha256').update(homedir()).digest('hex').slice(0, 12));
 
@@ -234,6 +234,7 @@ function planFile(host, input, args, flag) {
 function postTool(host, input, args, access) {
   const raw = input.tool_response ?? input.tool_output;
   let response = responseObject(raw);
+  if (!['codex', 'claude', 'workbuddy', 'kimi'].includes(host) && args[1] === 'tasks') access.save({ ...access.state, action: null });
   if (host === 'kimi') {
     access.save({ ...access.state, [args[1] === 'kb' ? 'plan' : 'action']: null });
     if (!response && typeof raw === 'string' && raw.length >= 2000 && flagValue(args, '--output')) {
@@ -311,6 +312,7 @@ function preTool(host, input, args, access) {
     message = '即将按上述已确认方案创建或补充知识库并开始采集，请在宿主权限窗口确认积分支出。';
   } else return {};
   if (host === 'kimi') return {};
+  if (['openclaw', 'pi', 'dsh', 'zcode', 'qoder', 'trae'].includes(host)) return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'ask', permissionDecisionReason: message } };
   if (!['default', 'acceptEdits'].includes(input.permission_mode)) return deny('正式采集需要宿主的人工权限确认；请关闭完全访问、自动批准或免确认模式后重试。');
   if (host === 'workbuddy' && input.tool_name !== 'Bash') return deny('WorkBuddy 正式采集请使用同一宿主的原生 Bash 工具。当前 PowerShell 沙箱路径无法保证采集前确认；无需关闭沙箱或修改安全删除保护。');
   if (host === 'codex') {
@@ -322,7 +324,7 @@ function preTool(host, input, args, access) {
 
 /** handleHook 为各宿主处理同一套展示和执行版本约束。
  * Args:
- *   host: claude、codex、workbuddy 或 kimi。
+ *   host: 原生插件或扩展注册的宿主名称。
  *   input: 宿主传入的 JSON hook 事件。
  *   options: 可注入隔离状态目录。
  * Returns:
@@ -330,6 +332,7 @@ function preTool(host, input, args, access) {
  */
 export function handleHook(host, input, { stateDir = defaultStateDir } = {}) {
   if (!hosts.includes(host)) return deny('未知的 CCNeed plugin 宿主。');
+  if (input.hook_event_name === 'SessionStart' && !['codex', 'claude', 'workbuddy', 'kimi'].includes(host)) return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed 原生插件已加载。由 Agent 展示完整研究需求、各平台实体词和其他关键词、配额、预计积分与余额，等待用户确认；调整后重新校验并展示。每个平台至少保留一个实体词。执行审批遵循宿主原生权限机制与用户所选模式，业务校验始终生效。采集和打标完成后通常自动导出 CSV 交付用户。' } };
   if (host === 'kimi' && input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed Kimi hooks 已加载。完整展示研究需求、各平台关键词、配额和积分余额，再按已确认方案执行。执行审批遵循用户选择的 Kimi 原生权限模式，包括自动模式和会话授权；业务校验仍然生效。长方案和 HITL 结果用绝对 --output 文件保留，不能依据截断结果推测内容。' } };
   if (input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed 采集 hooks 已加载。方案确认时由 Agent 完整展示研究需求、各平台实体词和其他关键词、配额及积分余额；两类关键词都可调整，每个平台实体词不能删空。对话确认后，kb start 前只显示短提示，由宿主原生权限界面审批执行，不能用自然语言回答代替。采集完成后通常自动导出 CSV 并交付用户；免确认模式禁止采集。' + (host === 'workbuddy' ? ' WorkBuddy 的付费采集使用原生 Bash 工具，每次选择“仅允许本次”；不要选择本会话不再询问。' : '') } };
   let args;
@@ -377,5 +380,5 @@ export async function runHookFromStdin(host) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const hostIndex = process.argv.indexOf('--host');
-  await runHookFromStdin(hostIndex < 0 ? '' : process.argv[hostIndex + 1]);
+  void runHookFromStdin(hostIndex < 0 ? '' : process.argv[hostIndex + 1]);
 }
