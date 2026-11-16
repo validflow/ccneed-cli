@@ -2,11 +2,11 @@
 
 English · [中文](../zh/CHANGELOG.md)
 
-## Unreleased
+## 0.1.14
 
 - Add native plugin/extension payloads for OpenClaw, Pi, ZCode, Qoder, Trae CLI and DeepSeek Harness, with host-specific tool events and execution approvals sharing the existing plan and HITL validation.
 - Extend the installer with explicit host selection and native manager setup/update steps. Validate complete same-version plugin payloads during packaging.
-- Organize the README's Agent support icons around one install command and the existing ask-your-Agent entry.
+- Center equal-width Agent icons, show each name once and support dark backgrounds. Keep one install command and the existing ask-your-Agent entry.
 
 ## 0.1.13
 

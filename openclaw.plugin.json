@@ -1,7 +1,7 @@
 {
   "id": "ccneed",
   "name": "CCNeed",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Collect, confirm and export CCNeed knowledge base data through the shared CLI and Skill.",
   "skills": ["./skills"],
   "configSchema": {
