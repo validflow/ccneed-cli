@@ -12,3 +12,5 @@ Additional icons are the unmodified official website favicons:
 - [Qoder](https://qoder.com/favIcon.svg)
 - [Trae](https://lf16-web-neutral.traecdn.ai/obj/trae-ai-static/trae_website/favicon.png)
 - [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/web/public/favicon.svg)
+
+`dsh-dark.svg` preserves the official geometry and changes its black fill to a light fill for dark backgrounds.

@@ -14,18 +14,18 @@ npx @validflow/ccneed-cli@latest install --agent codex
 
 安装器安装精确版本的全局 CLI，协调所选宿主的原生插件注册。升级时列出所有需要更新的宿主；不会自动登录或创建云端任务。npm 全局命令目录需在 Agent 的 PATH 中；本机安装不会把命令装进远程沙箱。
 
-| 宿主 | 原生注册 | 额外权限配置 |
-| --- | --- | --- |
-| Claude Code | 调用 Claude marketplace/plugin 命令，核实用户级版本及启用状态 | 插件 PreToolUse 请求原生 `ask` |
-| Codex | 调用 Codex marketplace/plugin 命令，核实已装版本及启用状态 | `~/.codex/rules/ccneed.rules` 为付费前缀设置 prompt |
-| WorkBuddy 桌面版 | 按结果完成桌面端原生 marketplace/plugin 操作 | `~/.workbuddy/settings.json` 的兼容 ask 与 `sandbox.commandSafety.ask` |
-| Kimi Code | `--agent kimi` 返回原生 `/plugins` 导入步骤 | 遵循用户选择的原生权限模式和会话授权 |
-| OpenClaw | `--agent openclaw`：原生链接插件 | `before_tool_call` 请求原生逐次审批；需要 2026.11.4+ |
-| Pi | `--agent pi`：原生 Pi package 和 extension | `tool_call` 与 `ctx.ui.confirm`；需要交互式扩展 UI |
-| ZCode | `--agent zcode`：桌面插件管理器导入本地 marketplace | process hooks 使用 argv，PreToolUse 原生 `ask` |
-| Qoder | `--agent qoder`：原生本地插件 | command hooks 使用 argv，PreToolUse 原生 `ask` |
-| Trae CLI 2.0 | `--agent trae`：独立原生插件 | PreToolUse 原生审批；已验证加载器 0.215.0 |
-| DeepSeek Harness | `--agent dsh`：原生 Cordis bundle | 原生工具 guard 与审批链路；需要兼容的 0.2.x |
+| 宿主 | 安装标识 | 原生注册 | 额外权限配置 |
+| --- | --- | --- | --- |
+| Claude Code | `claude` | 调用 Claude marketplace/plugin 命令，核实用户级版本及启用状态 | 插件 PreToolUse 请求原生 `ask` |
+| Codex | `codex` | 调用 Codex marketplace/plugin 命令，核实已装版本及启用状态 | `~/.codex/rules/ccneed.rules` 为付费前缀设置 prompt |
+| WorkBuddy 桌面版 | `workbuddy` | 按结果完成桌面端原生 marketplace/plugin 操作 | `~/.workbuddy/settings.json` 的兼容 ask 与 `sandbox.commandSafety.ask` |
+| Kimi Code | `kimi` | 原生 `/plugins` 导入步骤 | 遵循用户选择的原生权限模式和会话授权 |
+| OpenClaw | `openclaw` | 原生链接插件 | `before_tool_call` 请求原生逐次审批；需要 2026.11.4+ |
+| Pi | `pi` | 原生 Pi package 和 extension | `tool_call` 与 `ctx.ui.confirm`；需要交互式扩展 UI |
+| ZCode | `zcode` | 桌面插件管理器导入本地 marketplace | process hooks 使用 argv，PreToolUse 原生 `ask` |
+| Qoder | `qoder` | 原生本地插件 | command hooks 使用 argv，PreToolUse 原生 `ask` |
+| Trae CLI 2.0 | `trae` | 独立原生插件 | PreToolUse 原生审批；已验证加载器 0.215.0 |
+| DeepSeek Harness | `dsh` | 原生 Cordis bundle | 原生工具 guard 与审批链路；需要兼容的 0.2.x |
 
 Claude Code、Codex、WorkBuddy 使用本地 marketplace `ccneed` 和插件 `ccneed@ccneed`；Kimi 使用 manifest ID `ccneed`。宿主从插件加载统一 Skill 和 hooks，不重复注册全局 Skill 或用户级 hooks。升级需重跑安装器并完成各宿主步骤，单独 `npm install -g` 不会刷新原生缓存。
 

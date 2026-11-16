@@ -26,20 +26,20 @@
 
 ## 安装与更新
 
-<table width="100%">
+<table align="center">
   <tr>
-    <td width="20%" align="center" valign="top"><img src="assets/agents/claude-code.svg" width="28" height="28" alt=""><br>Claude&nbsp;Code<br><code>claude</code></td>
-    <td width="20%" align="center" valign="top"><img src="assets/agents/codex.svg" width="28" height="28" alt=""><br>Codex<br><code>codex</code></td>
-    <td width="20%" align="center" valign="top"><img src="assets/agents/workbuddy.svg" width="28" height="28" alt=""><br>WorkBuddy<br><code>workbuddy</code></td>
-    <td width="20%" align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" alt=""></picture><br>Kimi&nbsp;Code<br><code>kimi</code></td>
-    <td width="20%" align="center" valign="top"><img src="assets/agents/openclaw.svg" width="28" height="28" alt=""><br>OpenClaw<br><code>openclaw</code></td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/claude-code.svg" width="28" height="28" alt=""><br>Claude&nbsp;Code</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/codex.svg" width="28" height="28" alt=""><br>Codex</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/workbuddy.svg" width="28" height="28" alt=""><br>WorkBuddy</td>
+    <td width="160" align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="28" height="28" alt=""></picture><br>Kimi&nbsp;Code</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/openclaw.svg" width="28" height="28" alt=""><br>OpenClaw</td>
   </tr>
   <tr>
-    <td align="center" valign="top"><img src="assets/agents/pi.svg" width="28" height="28" alt=""><br>Pi<br><code>pi</code></td>
-    <td align="center" valign="top"><img src="assets/agents/zcode.png" width="28" height="28" alt=""><br>ZCode<br><code>zcode</code></td>
-    <td align="center" valign="top"><img src="assets/agents/qoder.svg" width="28" height="28" alt=""><br>Qoder<br><code>qoder</code></td>
-    <td align="center" valign="top"><img src="assets/agents/trae.png" width="28" height="28" alt=""><br>Trae&nbsp;CLI<br><code>trae</code></td>
-    <td align="center" valign="top"><img src="assets/agents/dsh.svg" width="28" height="28" alt=""><br>DeepSeek&nbsp;Harness<br><code>dsh</code></td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/pi.svg" width="28" height="28" alt=""><br>Pi</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/zcode.png" width="28" height="28" alt=""><br>ZCode</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/qoder.svg" width="28" height="28" alt=""><br>Qoder</td>
+    <td width="160" align="center" valign="top"><img src="assets/agents/trae.png" width="28" height="28" alt=""><br>Trae&nbsp;CLI</td>
+    <td width="160" align="center" valign="top"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/dsh-dark.svg"><img src="assets/agents/dsh.svg" width="28" height="28" alt=""></picture><br>DeepSeek&nbsp;Harness</td>
   </tr>
 </table>
 
@@ -60,7 +60,7 @@
 npx @validflow/ccneed-cli@latest install --agent codex
 ```
 
-将 `codex` 换成上表中的标识即可。多个 Agent 用逗号组合，例如 `--agent codex,pi`；只配置你选择的宿主。
+在[安装指南](docs/zh/INSTALL.md)中选择所用 Agent 的安装标识；多个标识用逗号组合，只配置你选择的宿主。
 
 按安装结果完成原生管理器中的操作，再重载 Agent；部分宿主需要在应用内导入插件。兼容要求和接入步骤见[安装指南](docs/zh/INSTALL.md)。
 

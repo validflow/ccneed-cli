@@ -14,18 +14,18 @@ npx @validflow/ccneed-cli@latest install --agent codex
 
 The installer installs the exact global CLI version and coordinates native registration only for named hosts. Include every host you want to update. It does not start login or cloud tasks. Keep npm's global command directory on the Agent's PATH; local installation does not install commands inside a remote sandbox.
 
-| Host | Native registration | Additional approval configuration |
-| --- | --- | --- |
-| Claude Code | Claude marketplace/plugin commands; verified user-scope version and enabled state | Plugin PreToolUse requests native `ask` |
-| Codex | Codex marketplace/plugin commands; verified installed version and enabled state | `~/.codex/rules/ccneed.rules` prompts for paid prefixes |
-| WorkBuddy desktop | Complete the native marketplace/plugin steps returned by the installer | `~/.workbuddy/settings.json`: compatible ask rules and `sandbox.commandSafety.ask` |
-| Kimi Code | `--agent kimi` returns native `/plugins` import steps | Follows the user's native permission mode and session authorization |
-| OpenClaw | `--agent openclaw`: native linked plugin | `before_tool_call` native per-call approval; requires 2026.11.4+ |
-| Pi | `--agent pi`: native Pi package and extension | `tool_call` and `ctx.ui.confirm`; interactive extension UI required |
-| ZCode | `--agent zcode`: local marketplace in the desktop plugin manager | Process hooks with argv; native PreToolUse `ask` |
-| Qoder | `--agent qoder`: native local plugin | Command hooks with argv; native PreToolUse `ask` |
-| Trae CLI 2.0 | `--agent trae`: dedicated native plugin | PreToolUse native approval; verified loader 0.215.0 |
-| DeepSeek Harness | `--agent dsh`: native Cordis bundle | Native tool guards and approval pipeline; compatible 0.2.x required |
+| Host | Agent ID | Native registration | Additional approval configuration |
+| --- | --- | --- | --- |
+| Claude Code | `claude` | Claude marketplace/plugin commands; verified user-scope version and enabled state | Plugin PreToolUse requests native `ask` |
+| Codex | `codex` | Codex marketplace/plugin commands; verified installed version and enabled state | `~/.codex/rules/ccneed.rules` prompts for paid prefixes |
+| WorkBuddy desktop | `workbuddy` | Complete the native marketplace/plugin steps returned by the installer | `~/.workbuddy/settings.json`: compatible ask rules and `sandbox.commandSafety.ask` |
+| Kimi Code | `kimi` | Native `/plugins` import steps | Follows the user's native permission mode and session authorization |
+| OpenClaw | `openclaw` | Native linked plugin | `before_tool_call` native per-call approval; requires 2026.11.4+ |
+| Pi | `pi` | Native Pi package and extension | `tool_call` and `ctx.ui.confirm`; interactive extension UI required |
+| ZCode | `zcode` | Local marketplace in the desktop plugin manager | Process hooks with argv; native PreToolUse `ask` |
+| Qoder | `qoder` | Native local plugin | Command hooks with argv; native PreToolUse `ask` |
+| Trae CLI 2.0 | `trae` | Dedicated native plugin | PreToolUse native approval; verified loader 0.215.0 |
+| DeepSeek Harness | `dsh` | Native Cordis bundle | Native tool guards and approval pipeline; compatible 0.2.x required |
 
 Claude Code, Codex and WorkBuddy use the local marketplace `ccneed` and plugin `ccneed@ccneed`; Kimi uses manifest ID `ccneed`. Native managers load the shared Skill and hooks without a second global Skill or user-level hook registration. Rerun the installer and complete each host's update steps; `npm install -g` alone does not refresh native caches.
 
