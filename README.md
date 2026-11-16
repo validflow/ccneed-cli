@@ -24,47 +24,20 @@ CCNeed connects your Agent to social data collection and cloud research through 
 - **Run cloud research:** analyze knowledge bases and files with CCNeed's cloud Agent, then download the report.
 - **Review before collecting:** adjust keywords, collection targets and budget, confirm the plan, then approve execution in your Agent.
 
-## Install
+## Install or update
 
-Requires Node.js 22.14+ and npm.
+Requires Node.js 22.14+, npm and your preferred Agent. Run its command in a terminal:
 
-```bash
-npx @validflow/ccneed-cli@latest install --agent codex
-```
-
-| Agent | `--agent` | Native plugin setup |
+| Agent | Install / update command | Plugin setup |
 | --- | --- | --- |
-| <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `claude` | Automatic registration |
-| <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `codex` | Automatic registration |
-| <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `workbuddy` | Import in desktop plugin manager |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code | `kimi` | Import via `/plugins` |
+| <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `npx @validflow/ccneed-cli@latest install --agent claude` | Automatic registration |
+| <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `npx @validflow/ccneed-cli@latest install --agent codex` | Automatic registration |
+| <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `npx @validflow/ccneed-cli@latest install --agent workbuddy` | Import in desktop plugin manager |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code | `npx @validflow/ccneed-cli@latest install --agent kimi` | Import via `/plugins` |
 
-Replace `codex` with your agent, or list several: `--agent codex,claude`. The installer updates the CLI and prepares its matching plugin. Follow the returned setup steps and reload your Agent. See [installation](INSTALL.md) for native permissions and host requirements.
+Follow any remaining setup steps in the installer result, then restart your Agent. Use the same command to update both the CLI and its plugin.
 
-```bash
-ccneed --help
-```
-
-### Build from source
-
-For development, use Git and Go 1.25+:
-
-```bash
-git clone https://github.com/validflow/ccneed-cli.git
-cd ccneed-cli
-go install ./cmd/ccneed
-ccneed --help
-```
-
-This builds the development CLI only. The source Skill lives in `skills/ccneed`; `go install` does not register a plugin. Use the npm installer for coordinated CLI and native plugin updates. See the [installation guide](INSTALL.md) for PATH and source-build details.
-
-### Ask your agent to install it
-
-```text
-Read https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md.
-Install the official CCNeed CLI and native plugin for the agent I am using.
-Give me the website authorization link; I will approve the login myself.
-```
+For multiple Agents, list them together: `--agent claude,codex,workbuddy,kimi`. See the [installation guide](INSTALL.md) for host requirements, source builds and troubleshooting.
 
 ## Sign in
 
@@ -128,9 +101,7 @@ The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, includi
 
 Knowledge-base and file bindings can be added, but not removed. Use `ccneed <command> --help` for the required arguments.
 
-## Update and contribute
-
-Run the same `npx @validflow/ccneed-cli@latest install --agent ...` command to update the CLI and native plugins together for every host you name. Check each host's result and complete any pending native installation or trust steps. Reload your agent afterward; update notifications never install software without your action.
+## Feedback and contributing
 
 Found a problem? [Open an issue](https://github.com/validflow/ccneed-cli/issues) with your OS, CLI version, and a redacted error message. Never post credentials or private files.
 

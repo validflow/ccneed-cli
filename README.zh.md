@@ -24,47 +24,20 @@
 - **云端研究：**让 CCNeed 云端 Agent 分析知识库和文件，下载研究报告。
 - **采集前确认：**调整关键词、采集目标和预算，确认方案后通过 Agent 原生权限界面批准执行。
 
-## 安装
+## 安装与更新
 
-需要 Node.js 22.14+ 和 npm。
+需要 Node.js 22.14+、npm，以及你使用的 Agent。在终端运行对应命令：
 
-```bash
-npx @validflow/ccneed-cli@latest install --agent codex
-```
-
-| Agent | `--agent` | 原生插件接入 |
+| Agent | 安装 / 更新命令 | 插件接入 |
 | --- | --- | --- |
-| <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `claude` | 自动注册 |
-| <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `codex` | 自动注册 |
-| <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `workbuddy` | 在桌面插件管理器导入 |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code | `kimi` | 通过 `/plugins` 导入 |
+| <img src="assets/agents/claude-code.svg" width="20" height="20" alt=""> Claude Code | `npx @validflow/ccneed-cli@latest install --agent claude` | 自动注册 |
+| <img src="assets/agents/codex.svg" width="20" height="20" alt=""> Codex | `npx @validflow/ccneed-cli@latest install --agent codex` | 自动注册 |
+| <img src="assets/agents/workbuddy.svg" width="20" height="20" alt=""> WorkBuddy | `npx @validflow/ccneed-cli@latest install --agent workbuddy` | 在桌面插件管理器导入 |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="assets/agents/kimi-dark.svg"><img src="assets/agents/kimi.svg" width="20" height="20" alt=""></picture> Kimi Code | `npx @validflow/ccneed-cli@latest install --agent kimi` | 通过 `/plugins` 导入 |
 
-把 `codex` 换成自己的 Agent，或一次选择多个：`--agent codex,claude`。安装器更新 CLI 和配套插件；按返回结果完成接入，再重新加载 Agent。原生权限及宿主要求见[安装指南](INSTALL.zh.md)。
+按安装结果完成剩余接入步骤，然后重启 Agent。后续使用同一条命令更新 CLI 和配套插件。
 
-```bash
-ccneed --help
-```
-
-### 从源码构建
-
-想查看或修改源码时，需要 Git 和 Go 1.25+：
-
-```bash
-git clone https://github.com/validflow/ccneed-cli.git
-cd ccneed-cli
-go install ./cmd/ccneed
-ccneed --help
-```
-
-这条路径只构建开发版 CLI。源码 Skill 位于 `skills/ccneed`；`go install` 不注册插件。CLI 与原生插件的配套升级使用上面的 npm 安装方式。PATH 与源码构建说明见[安装指南](INSTALL.zh.md)。
-
-### 让 Agent 帮你安装
-
-```text
-请阅读 https://github.com/validflow/ccneed-cli/blob/main/INSTALL.md。
-为我当前使用的 Agent 安装官方 CCNeed CLI 和原生插件。
-登录时把官网授权链接发给我，由我自己确认授权。
-```
+多个 Agent 可一起安装：`--agent claude,codex,workbuddy,kimi`。宿主要求、源码构建与排障见[安装指南](INSTALL.zh.md)。
 
 ## 登录
 
@@ -128,9 +101,7 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 
 知识库和文件绑定只追加、不解绑。具体参数可用 `ccneed <命令> --help` 查看。
 
-## 更新与反馈
-
-重新运行 `npx @validflow/ccneed-cli@latest install --agent ...`，列出所有需要更新的宿主，一起更新 CLI 与原生插件。检查各宿主的结果，完成待办的原生安装或信任步骤。更新后重载 Agent；更新提醒不会自动安装。
+## 反馈与贡献
 
 遇到问题请 [提交 Issue](https://github.com/validflow/ccneed-cli/issues)，附上操作系统、CLI 版本和脱敏后的错误。不要上传凭证或私人文件。
 
