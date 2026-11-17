@@ -98,7 +98,7 @@ export function stagePackage(root, out, manifest) {
   mkdirSync(join(destination, 'scripts', 'npm'), { recursive: true });
   writeFileSync(join(destination, 'package.json'), JSON.stringify(manifest, null, 2) + '\n');
   writeFileSync(join(destination, 'checksums.json'), checksums);
-  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs', 'additional-plugins.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
+  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs', 'additional-plugins.mjs', 'install-errors.mjs']) copyFileSync(join(root, 'scripts', 'npm', file), join(destination, 'scripts', 'npm', file));
   for (const file of ['README.md', 'README.zh.md', 'CONTRIBUTING.md', 'SECURITY.md', 'LICENSE']) copyFileSync(join(root, file), join(destination, file));
   rejectLinks(join(root, 'docs'));
   cpSync(join(root, 'docs'), join(destination, 'docs'), { recursive: true });

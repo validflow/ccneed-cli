@@ -172,6 +172,21 @@ test('native plugin failures are reported per host after the CLI succeeds', asyn
   assert.equal(JSON.parse(readFileSync(join(data.globalPackage, 'package.json'))).version, result.version);
 });
 
+test('native registration retains safe diagnostics after global CLI installation', async () => {
+  const data = fixture();
+  const result = await installIntegration({ ...data.options, agents: 'codex,workbuddy', native: async () => {
+    throw Object.assign(new Error('fixture-secret'), { code: 'EPERM', stderr: 'Authorization: fixture-secret' });
+  } });
+  assert.equal(result.status, 'action_required');
+  assert.equal(result.plugins[0].error, 'native_plugin_registration_failed');
+  assert.equal(result.plugins[0].diagnostic.stage, 'codex marketplace registration');
+  assert.equal(result.plugins[0].diagnostic.code, 'EPERM');
+  assert.match(result.plugins[0].diagnostic.message, /permission|write access/i);
+  assert.equal(result.plugins[1].status, 'action_required');
+  assert.equal(JSON.parse(readFileSync(join(data.globalPackage, 'package.json'))).version, result.version);
+  assert.doesNotMatch(JSON.stringify(result), /fixture-secret|Authorization/);
+});
+
 test('Codex verifies actual installed plugin state and keeps native prompt rules', async () => {
   const data = fixture();
   const result = await installIntegration({ ...data.options, agents: 'codex' });

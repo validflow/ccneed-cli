@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 import { installBinary, packageRoot } from './install.mjs';
 import { prepareLegacySkillCleanup, removeLegacySkillLinks, parseAgents, supportedAgents, validateBundledSkill } from './skills.mjs';
 import { preparePluginIntegration, attachPluginIntegration, installNativePlugin, runNative } from './plugin.mjs';
+import { installationError } from './install-errors.mjs';
 
 const exec = promisify(execFile);
 const officialPackage = '@validflow/ccneed-cli';
@@ -36,19 +37,20 @@ function releaseManifest(root) {
  *   npm 不可用、超时或失败返回脱敏异常。
  */
 export async function runNpm(args) {
+  const stage = args[0] === 'install' ? 'global npm install' : args[0] === 'root' ? 'global npm directory lookup' : 'npm command';
   let command = 'npm';
   let parameters = args;
-  if (process.platform === 'win32') {
-    const candidates = [process.env.npm_execpath, join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')];
-    const script = candidates.find(path => path && isAbsolute(path) && path.endsWith('npm-cli.js') && existsSync(path));
-    if (!script) throw new Error('npm launcher unavailable; run the installer through npx');
-    command = process.execPath;
-    parameters = [script, ...args];
-  }
   try {
+    if (process.platform === 'win32') {
+      const candidates = [process.env.npm_execpath, join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')];
+      const script = candidates.find(path => path && isAbsolute(path) && path.endsWith('npm-cli.js') && existsSync(path));
+      if (!script) throw Object.assign(new Error('npm launcher unavailable'), { code: 'ENOENT' });
+      command = process.execPath;
+      parameters = [script, ...args];
+    }
     const result = await exec(command, parameters, { timeout: 180_000, maxBuffer: 1024 * 1024, windowsHide: true, shell: false });
     return result.stdout;
-  } catch { throw new Error('npm operation failed; installation is not complete. Check npm access and retry the same installer.'); }
+  } catch (error) { throw installationError(error, stage); }
 }
 
 /** verifyInstalledBinary 校验包内程序摘要和程序实际版本。

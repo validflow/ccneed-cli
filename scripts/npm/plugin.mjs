@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { additionalHosts, additionalPluginInstructions, validateAdditionalPayload } from './additional-plugins.mjs';
+import { installationError } from './install-errors.mjs';
 
 const hostDirs = { codex: '.codex', claude: '.claude', workbuddy: '.workbuddy' };
 const commands = ['ccneed', 'ccneed.cmd', 'ccneed.exe'];
@@ -304,6 +305,9 @@ async function nativeLauncher(host) {
  */
 export async function runNative(host, args) {
   if (!['claude', 'codex'].includes(host)) throw new Error('Native plugin manager unavailable');
+  const category = args[1] === 'marketplace' ? 'marketplace' : 'plugin';
+  const verb = args[category === 'marketplace' ? 2 : 1];
+  const stage = host + ' ' + category + ' ' + (['list', 'add', 'install', 'update'].includes(verb) ? verb : 'command');
   const options = { timeout: 180_000, maxBuffer: 1024 * 1024, windowsHide: true, shell: false };
   try {
     if (process.platform !== 'win32') return (await exec(host, args, options)).stdout;
@@ -311,7 +315,7 @@ export async function runNative(host, args) {
     catch (error) { if (error.code !== 'ENOENT') throw error; }
     const launcher = await nativeLauncher(host);
     return (await exec(process.execPath, [launcher, ...args], options)).stdout;
-  } catch { throw new Error('Native plugin manager failed; check the selected host installation and retry'); }
+  } catch (error) { throw installationError(error, stage); }
 }
 
 /** samePath 规范本地来源路径，包括 Windows 原生工具返回的扩展路径前缀。
@@ -431,21 +435,29 @@ async function installedPlugin(native, host) {
  */
 export async function installNativePlugin(native, host, root, version) {
   const base = { host, plugin_id: host === 'kimi' || additionalHosts.includes(host) ? 'ccneed' : 'ccneed@ccneed', requested_version: version, version: null, marketplace_root: root };
+  let stage = host + ' plugin payload validation';
   try {
     validateNativePayload(root, host, version);
     if (additionalHosts.includes(host)) return { ...base, status: 'action_required', error: 'native_plugin_import_required', next_steps: additionalPluginInstructions(host, root, version) };
     if (host === 'kimi') return { ...base, status: 'action_required', collection_supported: true, error: 'native_plugin_import_required', next_steps: ['In Kimi Code CLI 2.5.3 or a compatible newer native release, run /plugins install "' + root.replaceAll('\\', '/') + '"; deprecated Python kimi-cli 1.x is not supported', 'Enable ccneed in /plugins, verify version ' + version + ', then /reload or open a new session; repeat import after each CLI update because the native manager copies the plugin', 'Execution follows the active Kimi native permission mode, including automatic/session authorization. Plan, credit and version checks remain active. Save long kb plan and tasks get/watch responses with an absolute --output file. No user profile files or legacy Skill links were changed'] };
     if (host === 'workbuddy') return { ...base, status: 'action_required', next_steps: ['Open WorkBuddy desktop’s native plugin manager and register the local CCNeed marketplace at ' + root, 'Install and enable ccneed@ccneed version ' + version + '; verify that version in the desktop plugin manager', 'Trust the bundled hooks and restart WorkBuddy with default permissions; no supported desktop CLI registration API was used'] };
+    stage = host + ' marketplace registration';
     await ensureMarketplace(native, host, root);
+    stage = host + ' plugin status lookup';
     let installed = await installedPlugin(native, host);
     if (installed?.enabled === false) return { ...base, status: 'action_required', version: installed.version ?? null, next_steps: ['The native plugin is disabled; review and enable it in the host plugin manager before retrying'] };
     if (!installed || installed.version !== version) {
+      stage = host + ' plugin installation';
       if (host === 'claude' && installed) await native(host, ['plugin', 'marketplace', 'update', 'ccneed']);
       await native(host, ['plugin', host === 'claude' ? (installed ? 'update' : 'install') : 'add', 'ccneed@ccneed', ...(host === 'claude' ? ['--scope', 'user'] : ['--json'])]);
+      stage = host + ' plugin verification';
       installed = await installedPlugin(native, host);
     }
     const sourceMatches = host === 'claude' || (installed?.installed === true && installed?.source?.source === 'local' && samePath(installed.source.path, root));
     if (!installed || installed.version !== version || installed.enabled !== true || !sourceMatches) return { ...base, status: 'action_required', version: installed?.version ?? null, next_steps: ['The native manager did not verify the requested enabled plugin version; complete installation in the host plugin manager and retry'] };
     return { ...base, status: 'installed', version: installed.version, restart_required: true, hook_trust_required: true };
-  } catch { return { ...base, status: 'failed', error: 'native_plugin_registration_failed', next_steps: ['Check the selected host supports native plugin marketplaces and that ccneed is sourced from this exact package directory, then retry; existing custom configuration was preserved'] }; }
+  } catch (error) {
+    const failure = installationError(error, stage);
+    return { ...base, status: 'failed', error: 'native_plugin_registration_failed', diagnostic: { stage: failure.stage, code: failure.code, message: failure.message, ...(failure.exitCode === undefined ? {} : { exit_code: failure.exitCode }) }, next_steps: [failure.message, 'Check the selected host supports native plugin marketplaces and that ccneed is sourced from this exact package directory, then retry; existing custom configuration was preserved'] };
+  }
 }

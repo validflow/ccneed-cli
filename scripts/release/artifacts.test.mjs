@@ -43,7 +43,7 @@ function fixture() {
   mkdirSync(join(root, 'skills', 'ccneed', 'references'));
   for (const name of ['auth', 'account', 'tasks', 'resources']) writeFileSync(join(root, 'skills', 'ccneed', 'references', name + '.md'), 'fixture reference');
   mkdirSync(join(root, 'scripts', 'npm'), { recursive: true });
-  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs', 'additional-plugins.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
+  for (const file of ['install.mjs', 'run.mjs', 'setup.mjs', 'skills.mjs', 'plugin.mjs', 'additional-plugins.mjs', 'install-errors.mjs']) writeFileSync(join(root, 'scripts', 'npm', file), 'fixture source');
   mkdirSync(join(root, 'hooks'));
   writeFileSync(join(root, 'hooks', 'acquisition.mjs'), 'fixture shared hook');
   mkdirSync(join(root, '.kimi-plugin'));
@@ -92,6 +92,8 @@ test('release staging includes installer imports and all native plugin payloads'
   const { root, out, manifest } = fixture();
   const staged = stagePackage(root, out, manifest);
   assert.equal(readFileSync(join(staged, 'scripts/npm/plugin.mjs'), 'utf8'), 'fixture source');
+  assert.equal(readFileSync(join(staged, 'scripts/npm/install-errors.mjs'), 'utf8'), 'fixture source');
+  assert.ok(JSON.parse(readFileSync(join(staged, 'package.json'))).files.includes('scripts/npm/install-errors.mjs'));
   assert.equal(readFileSync(join(staged, 'hooks/acquisition.mjs'), 'utf8'), 'fixture shared hook');
   for (const directory of ['.claude-plugin', '.codex-plugin', '.codebuddy-plugin']) {
     assert.equal(JSON.parse(readFileSync(join(staged, directory, 'plugin.json'), 'utf8')).version, manifest.version);

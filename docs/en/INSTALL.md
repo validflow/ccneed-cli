@@ -89,6 +89,18 @@ The installer preserves unrelated settings and custom Skills. It migrates only r
 
 Native failures are reported per host after CLI installation, never as overall success. Fix the reported cause and retry. npm replacement and native managers are not one transaction. Conflicting same-name marketplaces are not redirected. Ordinary npm `postinstall` does not modify host configuration.
 
+Installation errors identify the failed stage and a safe error code. A failed native plugin also includes `plugins[].diagnostic`; the CLI may already be updated, so check each host's status before using it.
+
+| Error | What to do |
+| --- | --- |
+| `EPERM` / `EACCES` | Check the path in the local npm log. The current terminal or Agent session needs write access to that cache or installation directory. Retry in a session with that access. |
+| `EBUSY` | A file is occupied. Close the process using it and retry. If the occupied path is in the npm cache, a fresh writable cache can help. |
+| `ENOENT` | Check Node.js, npm and the selected host are installed and available on PATH. |
+| `MARKETPLACE_UNAVAILABLE` | Run the host's marketplace list command locally and repair the source it reports, which may belong to another plugin. |
+| Other failures | Inspect the local npm log or reported host operation; network errors also require checking registry and proxy access. Raw child output is withheld to avoid exposing credentials. |
+
+An npm/npx error **before the CCNeed installer starts** cannot be handled by this diagnostic code. For a cache problem, rerun the same installation command with `npx --cache <new-writable-cache-directory> ...`. Changing the cache does not grant permission to write the global npm directory. The installer does not automatically elevate privileges, delete caches or stop processes.
+
 Non-default `CODEX_HOME` or `CLAUDE_CONFIG_DIR` is reported as requiring manual profile setup; the installer does not register plugins or write approval rules into a different profile. Use the default profile for coordinated installation, or configure and verify the native plugin and its permission rules together in your chosen profile.
 
 ## Verify and authorize
