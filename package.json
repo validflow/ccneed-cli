@@ -14,7 +14,7 @@
   "dsh": { "bundle": { "patch": "./plugins/dsh/cordis.patch.yml" } },
   "exports": { "./plugins/dsh/index.mjs": "./plugins/dsh/index.mjs" },
   "bin": { "ccneed": "scripts/npm/run.mjs" },
-  "files": ["scripts/npm/install.mjs", "scripts/npm/run.mjs", "scripts/npm/setup.mjs", "scripts/npm/skills.mjs", "scripts/npm/plugin.mjs", "scripts/npm/additional-plugins.mjs", "plugins/", "openclaw.plugin.json", "marketplace.json", "hooks/", ".claude-plugin/", ".codex-plugin/", ".codebuddy-plugin/", ".kimi-plugin/", ".zcode-plugin/", ".qoder-plugin/", ".agents/plugins/", "checksums.json", "skills/", "assets/", "docs/", "README.md", "README.zh.md", "CONTRIBUTING.md", "SECURITY.md"],
+  "files": ["scripts/npm/install.mjs", "scripts/npm/run.mjs", "scripts/npm/setup.mjs", "scripts/npm/skills.mjs", "scripts/npm/plugin.mjs", "scripts/npm/additional-plugins.mjs", "scripts/npm/install-errors.mjs", "plugins/", "openclaw.plugin.json", "marketplace.json", "hooks/", ".claude-plugin/", ".codex-plugin/", ".codebuddy-plugin/", ".kimi-plugin/", ".zcode-plugin/", ".qoder-plugin/", ".agents/plugins/", "checksums.json", "skills/", "assets/", "docs/", "README.md", "README.zh.md", "CONTRIBUTING.md", "SECURITY.md"],
   "scripts": {
     "postinstall": "node scripts/npm/install.mjs",
     "test": "node --test scripts/release/*.test.mjs scripts/npm/*.test.mjs scripts/review/*.test.mjs"
