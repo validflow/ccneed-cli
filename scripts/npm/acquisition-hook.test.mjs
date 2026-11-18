@@ -17,6 +17,19 @@ function fixture() {
 const quoted = value => '"' + value.replaceAll('\\', '/') + '"';
 
 for (const host of ['claude', 'codex', 'workbuddy', 'kimi']) {
+  test(host + ' allows platform discovery without acquisition state or approval', () => {
+    const data = fixture();
+    for (const hook_event_name of ['PreToolUse', 'PostToolUse']) {
+      const result = handleHook(host, { hook_event_name,
+        tool_input: { command: 'ccneed kb platforms' },
+        tool_response: { stdout: '{"platforms":["twitter","wechat_channels"]}' } }, data.options);
+      assert.deepEqual(result, {});
+      assert.equal(existsSync(data.options.stateDir), false);
+    }
+  });
+}
+
+for (const host of ['claude', 'codex', 'workbuddy', 'kimi']) {
   test(host + ' ignores product names in data without reading acquisition state', () => {
     const data = fixture();
     for (const command of [

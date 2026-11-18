@@ -2,6 +2,13 @@
 
 [English](../en/CHANGELOG.md) · 中文
 
+## 0.1.15
+
+- 新增 `ccneed kb platforms`，查询当前部署可采集的平台 ID；共享 Skill 在新建或补采集方案前先查询，自动识别服务端新增的平台。
+- 安装失败时区分权限不足、文件占用、网络错误等 npm 问题，提供可执行的处理建议并隐藏凭据信息。
+
+平台查询需要配套 Club 部署，允许 CLI 凭证访问现有平台接口。
+
 ## 0.1.14
 
 - 新增 OpenClaw、Pi、ZCode、Qoder、Trae CLI、DeepSeek Harness 的原生插件／扩展入口，按宿主接入工具事件与执行审批，共用原有方案及 HITL 校验。
