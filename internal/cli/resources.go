@@ -20,6 +20,7 @@ func kbCommand(connection *connectionConfig) *cobra.Command {
 	command := commandGroup("kb", "Plan collection, start an approved plan, and export knowledge-base data")
 	command.AddCommand(kbListCommand(connection), kbCreateCommand(connection))
 	command.AddCommand(kbGetCommand(connection))
+	command.AddCommand(kbPlatformsCommand(connection))
 	command.AddCommand(kbStatsCommand(connection))
 	command.AddCommand(kbPlanCommand(connection), kbStartCommand(connection), kbExportCommand(connection))
 	return command

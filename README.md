@@ -113,6 +113,7 @@ The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, includi
 | 💬 Find conversations | `ccneed threads list` |
 | 🚀 Start research | `ccneed run "Your question" --kb-id KB_ID` |
 | 📚 Explore knowledge bases | `ccneed kb list` |
+| Query collection platforms (next release; requires compatible Club deployment) | `ccneed kb platforms` |
 | 📊 Check a knowledge base's data mix | `ccneed kb stats --kb-id KB_ID` |
 | Export data for your own agent | `ccneed kb export --kb-id KB_ID --format csv` |
 | Prepare a collection plan | `ccneed kb plan --plan-file ./plan.json --output ./prepared.json` |

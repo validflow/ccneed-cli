@@ -113,6 +113,7 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 | 💬 查看会话 | `ccneed threads list` |
 | 🚀 开启研究 | `ccneed run "你的研究问题" --kb-id KB_ID` |
 | 📚 查看知识库 | `ccneed kb list` |
+| 查询可采集平台（下次发行，需配套 Club 部署） | `ccneed kb platforms` |
 | 📊 查看知识库数据分布 | `ccneed kb stats --kb-id KB_ID` |
 | 导出数据交给自己的 Agent | `ccneed kb export --kb-id KB_ID --format csv` |
 | 准备采集方案 | `ccneed kb plan --plan-file ./plan.json --output ./prepared.json` |
