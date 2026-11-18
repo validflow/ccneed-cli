@@ -2,6 +2,13 @@
 
 English · [中文](../zh/CHANGELOG.md)
 
+## 0.1.15
+
+- Add `ccneed kb platforms` to query the deployment's collection platform IDs. The shared Skill checks this list before preparing create or supplement plans, including newly enabled platforms.
+- Explain installation failures with actionable diagnostics for permissions, occupied files, network errors and other npm failures, while redacting credentials.
+
+Platform discovery requires the corresponding Club deployment to allow CLI credentials on the existing platform endpoint.
+
 ## 0.1.14
 
 - Add native plugin/extension payloads for OpenClaw, Pi, ZCode, Qoder, Trae CLI and DeepSeek Harness, with host-specific tool events and execution approvals sharing the existing plan and HITL validation.
