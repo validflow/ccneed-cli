@@ -109,23 +109,14 @@ The [Agent Skill](skills/ccneed/SKILL.md) covers the remaining commands, includi
 
 | What you need | Command |
 | --- | --- |
-| 💳 Check credits and subscription | `ccneed account credits` / `ccneed account overview` |
-| 💬 Find conversations | `ccneed threads list` |
-| 🚀 Start research | `ccneed run "Your question" --kb-id KB_ID` |
+| 💳 Check credits and subscription | `ccneed account overview` |
+| 🌐 Discover collection platforms | `ccneed kb platforms` |
 | 📚 Explore knowledge bases | `ccneed kb list` |
-| Query collection platforms (0.1.15; requires compatible Club deployment) | `ccneed kb platforms` |
-| 📊 Check a knowledge base's data mix | `ccneed kb stats --kb-id KB_ID` |
-| Export data for your own agent | `ccneed kb export --kb-id KB_ID --format csv` |
-| Prepare a collection plan | `ccneed kb plan --plan-file ./plan.json --output ./prepared.json` |
-| ➕ Create a knowledge base in the browser | `ccneed kb create` |
-| 📎 List or upload your own files | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
-| 🗂️ View or add conversation resources | `ccneed threads resources` / `ccneed threads append` |
-| 🕘 Review task history | `ccneed tasks list --thread-id THREAD_UUID` |
-| 🔎 Follow a research turn | `ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID` |
-| ⏳ Wait for a result or question | `ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s` |
-| 🚪 Sign out | `ccneed auth logout` |
+| 📝 Prepare a collection plan | `ccneed kb plan --plan-file plan.json --output prepared.json` |
+| 📤 Export knowledge-base data | `ccneed kb export --kb-id KB_ID --format csv` |
+| 🚀 Start cloud research | `ccneed run "Your question" --kb-id KB_ID` |
 
-Knowledge-base and file bindings can be added, but not removed. Use `ccneed <command> --help` for the required arguments.
+Use `ccneed <command> --help` for options and required arguments.
 
 ## Feedback and contributing
 

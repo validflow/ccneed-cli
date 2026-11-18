@@ -109,23 +109,14 @@ ccneed run "研究 iPhone 18 的相关讨论并生成报告" --kb-id KB_ID --fil
 
 | 想做什么 | 命令 |
 | --- | --- |
-| 💳 查看积分、订阅 | `ccneed account credits` / `ccneed account overview` |
-| 💬 查看会话 | `ccneed threads list` |
-| 🚀 开启研究 | `ccneed run "你的研究问题" --kb-id KB_ID` |
+| 💳 查看积分、订阅 | `ccneed account overview` |
+| 🌐 查询可采集平台 | `ccneed kb platforms` |
 | 📚 查看知识库 | `ccneed kb list` |
-| 查询可采集平台（0.1.15，需配套 Club 部署） | `ccneed kb platforms` |
-| 📊 查看知识库数据分布 | `ccneed kb stats --kb-id KB_ID` |
-| 导出数据交给自己的 Agent | `ccneed kb export --kb-id KB_ID --format csv` |
-| 准备采集方案 | `ccneed kb plan --plan-file ./plan.json --output ./prepared.json` |
-| ➕ 在网页创建知识库 | `ccneed kb create` |
-| 📎 查看、上传自己的文件 | `ccneed files list` / `ccneed files upload ./research-brief.pdf` |
-| 🗂️ 查看、追加会话资料 | `ccneed threads resources` / `ccneed threads append` |
-| 🕘 查看任务历史 | `ccneed tasks list --thread-id THREAD_UUID` |
-| 🔎 查看本轮研究进度 | `ccneed tasks get --thread-id THREAD_UUID --turn-id TURN_UUID` |
-| ⏳ 等待本轮结果或确认 | `ccneed tasks watch --thread-id THREAD_UUID --turn-id TURN_UUID --timeout 60s` |
-| 🚪 退出登录 | `ccneed auth logout` |
+| 📝 准备采集方案 | `ccneed kb plan --plan-file plan.json --output prepared.json` |
+| 📤 导出知识库数据 | `ccneed kb export --kb-id KB_ID --format csv` |
+| 🚀 开启云端研究 | `ccneed run "你的研究问题" --kb-id KB_ID` |
 
-知识库和文件绑定只追加、不解绑。具体参数可用 `ccneed <命令> --help` 查看。
+具体参数可用 `ccneed <命令> --help` 查看。
 
 ## 反馈与贡献
 
