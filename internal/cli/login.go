@@ -23,9 +23,11 @@ import (
 //	不接收终端秘密参数的登录命令。
 func loginCommand(connection *connectionConfig, vault *credential.Vault) *cobra.Command {
 	complete := false
+	agent := "cli"
 	timeout := time.Minute
 	command := &cobra.Command{Use: "login", Short: "Start website authorization immediately, or complete it after user approval", Args: cobra.NoArgs}
 	command.Flags().BoolVar(&complete, "complete", false, "Complete the pending authorization for this origin after website approval")
+	command.Flags().StringVar(&agent, "agent", "cli", "Requesting host: codex, claude, workbuddy, kimi, openclaw, pi, zcode, qoder, trae or dsh (plain terminal: cli)")
 	command.Flags().DurationVar(&timeout, "timeout", time.Minute, "Bounded wait for --complete (1s to 10m); timeout does not grant authorization")
 	command.RunE = func(cmd *cobra.Command, _ []string) error {
 		newClient := api.New
@@ -39,12 +41,15 @@ func loginCommand(connection *connectionConfig, vault *credential.Vault) *cobra.
 		service := auth.New(client, connection.vault(vault), nil)
 		var outcome auth.Outcome
 		if complete {
+			if cmd.Flags().Changed("agent") {
+				return &api.Error{Code: "invalid_input"}
+			}
 			outcome, err = service.Complete(cmd.Context(), timeout)
 		} else {
 			if cmd.Flags().Changed("timeout") {
 				return &api.Error{Code: "invalid_input"}
 			}
-			outcome, err = service.Begin(cmd.Context())
+			outcome, err = service.Begin(cmd.Context(), agent)
 		}
 		if err != nil {
 			return err

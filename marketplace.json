@@ -1,6 +1,6 @@
 {
   "name": "ccneed",
   "plugins": [
-    { "name": "ccneed", "source": "./", "version": "0.1.15", "description": "CCNeed collection and cloud research" }
+    { "name": "ccneed", "source": "./", "version": "0.1.16", "description": "CCNeed collection and cloud research" }
   ]
 }

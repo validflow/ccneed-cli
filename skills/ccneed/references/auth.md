@@ -8,6 +8,8 @@
 ccneed auth login --no-update-check
 ```
 
+在已知宿主中发起登录时，附带 `--agent <宿主标识>`，例如 Codex 使用 `ccneed auth login --agent codex --no-update-check`。标识为 `codex`、`claude`、`workbuddy`、`kimi`、`openclaw`、`pi`、`zcode`、`qoder`、`trae`、`dsh`；依据当前原生宿主，不依据模型名或电脑安装列表猜测。普通终端或宿主未知时不传，显示 CCNeed CLI。该标识只用于授权页展示，不改变授权范围。旧版 CLI 没有此参数时按原登录流程运行。
+
 JSON 返回 `status: pending`、`origin`、`verification_url`、`user_code`、`expires_at`。原样展示链接、确认码和到期时间，请用户核对网站账号及确认码，在官网明确批准或拒绝。**结束本轮，把控制权交还用户**；不能展示链接后立即阻塞轮询，也不能替用户点击批准。
 
 用户回复已授权后，在下一轮执行：

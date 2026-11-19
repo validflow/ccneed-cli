@@ -332,9 +332,10 @@ function preTool(host, input, args, access) {
  */
 export function handleHook(host, input, { stateDir = defaultStateDir } = {}) {
   if (!hosts.includes(host)) return deny('未知的 CCNeed plugin 宿主。');
-  if (input.hook_event_name === 'SessionStart' && !['codex', 'claude', 'workbuddy', 'kimi'].includes(host)) return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed 原生插件已加载。由 Agent 展示完整研究需求、各平台实体词和其他关键词、配额、预计积分与余额，等待用户确认；调整后重新校验并展示。每个平台至少保留一个实体词。执行审批遵循宿主原生权限机制与用户所选模式，业务校验始终生效。采集和打标完成后通常自动导出 CSV 交付用户。' } };
-  if (host === 'kimi' && input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed Kimi hooks 已加载。完整展示研究需求、各平台关键词、配额和积分余额，再按已确认方案执行。执行审批遵循用户选择的 Kimi 原生权限模式，包括自动模式和会话授权；业务校验仍然生效。长方案和 HITL 结果用绝对 --output 文件保留，不能依据截断结果推测内容。' } };
-  if (input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'CCNeed 采集 hooks 已加载。方案确认时由 Agent 完整展示研究需求、各平台实体词和其他关键词、配额及积分余额；两类关键词都可调整，每个平台实体词不能删空。对话确认后，kb start 前只显示短提示，由宿主原生权限界面审批执行，不能用自然语言回答代替。采集完成后通常自动导出 CSV 并交付用户；免确认模式禁止采集。' + (host === 'workbuddy' ? ' WorkBuddy 的付费采集使用原生 Bash 工具，每次选择“仅允许本次”；不要选择本会话不再询问。' : '') } };
+  const loginContext = `当前原生宿主为 ${host}。需要登录时使用 ccneed auth login --agent ${host} --no-update-check；完成授权时只运行原有 --complete 命令，不重复传 --agent。 `;
+  if (input.hook_event_name === 'SessionStart' && !['codex', 'claude', 'workbuddy', 'kimi'].includes(host)) return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: loginContext + 'CCNeed 原生插件已加载。由 Agent 展示完整研究需求、各平台实体词和其他关键词、配额、预计积分与余额，等待用户确认；调整后重新校验并展示。每个平台至少保留一个实体词。执行审批遵循宿主原生权限机制与用户所选模式，业务校验始终生效。采集和打标完成后通常自动导出 CSV 交付用户。' } };
+  if (host === 'kimi' && input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: loginContext + 'CCNeed Kimi hooks 已加载。完整展示研究需求、各平台关键词、配额和积分余额，再按已确认方案执行。执行审批遵循用户选择的 Kimi 原生权限模式，包括自动模式和会话授权；业务校验仍然生效。长方案和 HITL 结果用绝对 --output 文件保留，不能依据截断结果推测内容。' } };
+  if (input.hook_event_name === 'SessionStart') return { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: loginContext + 'CCNeed 采集 hooks 已加载。方案确认时由 Agent 完整展示研究需求、各平台实体词和其他关键词、配额及积分余额；两类关键词都可调整，每个平台实体词不能删空。对话确认后，kb start 前只显示短提示，由宿主原生权限界面审批执行，不能用自然语言回答代替。采集完成后通常自动导出 CSV 并交付用户；免确认模式禁止采集。' + (host === 'workbuddy' ? ' WorkBuddy 的付费采集使用原生 Bash 工具，每次选择“仅允许本次”；不要选择本会话不再询问。' : '') } };
   let args;
   try {
     args = parseCommand(input.tool_input?.command ?? input.tool_input?.cmd);

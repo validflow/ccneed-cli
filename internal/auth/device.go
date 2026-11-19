@@ -57,6 +57,7 @@ func New(client *api.Client, vault *credential.Vault, now func() time.Time) *Ser
 // Args:
 //
 //	ctx: 本地请求上下文。
+//	agent: 已知原生宿主标识；普通终端使用 cli。
 //
 // Returns:
 //
@@ -65,7 +66,11 @@ func New(client *api.Client, vault *credential.Vault, now func() time.Time) *Ser
 // Errors:
 //
 //	已有有效凭证、配置错误、网络失败或系统存储失败时不静默覆盖。
-func (s *Service) Begin(ctx context.Context) (Outcome, error) {
+func (s *Service) Begin(ctx context.Context, agent string) (Outcome, error) {
+	agent, err := NormalizeAgent(agent)
+	if err != nil {
+		return Outcome{}, err
+	}
 	origin := s.client.Origin()
 	local, err := s.vault.Inspect(ctx, origin)
 	if err != nil {
@@ -88,7 +93,11 @@ func (s *Service) Begin(ctx context.Context) (Outcome, error) {
 		ExpiresIn        int    `json:"expires_in"`
 		Interval         int    `json:"interval"`
 	}
-	err = s.client.DoJSON(ctx, http.MethodPost, "/api/v1/client/auth/device", nil, map[string]string{"challenge": challenge}, &response)
+	body := map[string]string{"challenge": challenge}
+	if agent != "cli" {
+		body["agent"] = agent
+	}
+	err = s.client.DoJSON(ctx, http.MethodPost, "/api/v1/client/auth/device", nil, body, &response)
 	if err != nil {
 		return Outcome{}, err
 	}
