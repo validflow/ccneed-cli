@@ -2,6 +2,14 @@
 
 English · [中文](../zh/CHANGELOG.md)
 
+## 0.1.16
+
+- Add optional `ccneed auth login --agent` metadata to display the host that initiated sign-in, such as Codex, Claude Code or WorkBuddy. Omitting it keeps the generic CCNeed CLI authorization flow; the parameter does not change permissions or bind credentials to a host.
+- Update the shared Skill and native startup guidance to identify the current executing host. Prefer `--agent` when the native plugin explicitly supplies that identity; never infer it from the model, installed applications or user content. Unknown hosts omit the parameter, and `--complete` keeps the existing proof without repeating it.
+- Clarify that agents sharing the same OS user, credential store and service origin can reuse an existing valid CLI sign-in. Switching agents does not require fresh authorization.
+
+Host display and the redesigned browser authorization page require the matching Club migration and deployment before publishing this CLI version. Updating the CLI alone does not deploy the website changes.
+
 ## 0.1.15
 
 - Add `ccneed kb platforms` to query the deployment's collection platform IDs. The shared Skill checks this list before preparing create or supplement plans, including newly enabled platforms.
