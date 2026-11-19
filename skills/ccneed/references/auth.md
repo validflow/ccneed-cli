@@ -8,7 +8,9 @@
 ccneed auth login --no-update-check
 ```
 
-在已知宿主中发起登录时，附带 `--agent <宿主标识>`，例如 Codex 使用 `ccneed auth login --agent codex --no-update-check`。标识为 `codex`、`claude`、`workbuddy`、`kimi`、`openclaw`、`pi`、`zcode`、`qoder`、`trae`、`dsh`；依据当前原生宿主，不依据模型名或电脑安装列表猜测。普通终端或宿主未知时不传，显示 CCNeed CLI。该标识只用于授权页展示，不改变授权范围。旧版 CLI 没有此参数时按原登录流程运行。
+需要发起登录、且原生插件明确提供了当前宿主身份时，建议优先附带 `--agent <宿主标识>`，例如 Codex 使用 `ccneed auth login --agent codex --no-update-check`。标识为 `codex`、`claude`、`workbuddy`、`kimi`、`openclaw`、`pi`、`zcode`、`qoder`、`trae`、`dsh`；这里指执行命令的当前宿主，不是模型。在 WorkBuddy 中使用 Codex 模型仍传 `workbuddy`，不能根据模型名、电脑安装列表或用户内容猜测。普通终端或宿主未知时省略，授权页标题为“CCNeed CLI 登录授权”，关联应用使用“外部客户端”及通用图标。该标识仅说明本次登录由谁发起，不证明宿主身份，也不改变授权范围或绑定凭据。旧版 CLI 没有此参数时按原登录流程运行。
+
+登录态属于 CCNeed CLI。在同一系统用户、同一凭证库及服务 origin 下，Codex 完成登录后，WorkBuddy 等其他宿主可复用已有有效凭据。先检查当前登录状态；账号正确且服务端验证有效时继续用户任务，不因更换宿主重新申请授权。
 
 JSON 返回 `status: pending`、`origin`、`verification_url`、`user_code`、`expires_at`。原样展示链接、确认码和到期时间，请用户核对网站账号及确认码，在官网明确批准或拒绝。**结束本轮，把控制权交还用户**；不能展示链接后立即阻塞轮询，也不能替用户点击批准。
 
