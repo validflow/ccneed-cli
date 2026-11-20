@@ -1,10 +1,10 @@
 <div align="center">
-  <h1><picture>
+  <p><picture>
     <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="assets/wordmark-dark.png">
     <source media="(prefers-reduced-motion: reduce)" srcset="assets/wordmark-light.png">
     <source media="(prefers-color-scheme: dark)" srcset="assets/wordmark-dark.gif">
     <img src="assets/wordmark-light.gif" width="550" alt="CCNEED CLI">
-  </picture></h1>
+  </picture></p>
   <p>Social data collection and cloud research for your Agent.</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
