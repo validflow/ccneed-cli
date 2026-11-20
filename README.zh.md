@@ -1,6 +1,10 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/validflow/ccneed-cli/main/assets/ccneed-logo.png" alt="拿着放大镜的 CCNeed 小河马" width="280">
-  <h1>CCNeed CLI + Agent 插件</h1>
+  <h1><picture>
+    <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: dark)" srcset="assets/wordmark-dark.png">
+    <source media="(prefers-reduced-motion: reduce)" srcset="assets/wordmark-light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/wordmark-dark.gif">
+    <img src="assets/wordmark-light.gif" width="550" alt="CCNEED CLI">
+  </picture></h1>
   <p>让你的 Agent 获取社交数据，或交给云端 Agent 分析。</p>
   <p><a href="README.zh.md">中文</a> | <a href="README.md">English</a></p>
   <p>
