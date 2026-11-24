@@ -2,6 +2,11 @@
 
 English · [中文](../zh/CHANGELOG.md)
 
+## 0.1.17
+
+- Clear an earlier cloud confirmation when a new task read has no pending action, and restore ZCode startup guidance when a session resumes.
+- Clarify Codex's native command approval and Qoder's permission pipeline.
+
 ## 0.1.16
 
 - Add optional `ccneed auth login --agent` metadata to display the host that initiated sign-in, such as Codex, Claude Code or WorkBuddy. Omitting it keeps the generic CCNeed CLI authorization flow; the parameter does not change permissions or bind credentials to a host.

@@ -52,6 +52,7 @@ Kimi 通过 `sessionStart.skill` 加载说明，SessionStart/PostToolUse 不注�
 - **OpenClaw：**正式采集需要 2026.11.4 或兼容的更新版本；原生 `exec` 调用填写绝对 `workdir`。插件按会话和工具调用 ID 关联方案，再请求原生允许本次／拒绝审批。旧宿主仍可使用只读命令，但不能通过本插件开始付费采集。
 - **Pi：**原生 package 加载一份扩展和统一 Skill；`tool_result` 提供模型上下文，`tool_call` 使用 `ctx.ui.confirm`。print／无 UI 模式不能批准采集；资源启停使用 `pi config`，移除使用 `pi remove SOURCE`。
 - **ZCode／Qoder：**导入完整原生插件，加载各自显式声明的 hook 文件；使用原生 argv 执行，保留空格和中文路径。按结果完成 marketplace／本地插件操作；协议测试不能替代桌面界面验收。
+- **Qoder 确认：**hook 的 `ask` 会继续进入 Qoder 原生权限流程。如需交互式逐次询问，把安装器输出的 `permissions.ask` 规则添加到当前 Qoder 配置。安装器不修改你的配置；实际结果由 Qoder 当前模式和规则决定。
 - **Trae CLI 2.0：**已用原生 0.215.0 验证。执行 `traecli plugin install "包路径/plugins/trae" --name ccneed`，再用 `traecli plugin validate ccneed` 核对 **1 个 Skill、3 个 hooks**。全局 CLI 升级后执行 `traecli plugin upgrade ccneed` 并重载会话；原生管理器切换完整活动缓存，旧缓存由它管理。Trae CLI 使用受支持的 `.codex-plugin` 格式，因此独立插件根目录内的 Skill/hooks 在发行时从同一源码装配，不与 Codex 入口冲突；这不代表 Trae IDE 已适配。
 - **DeepSeek Harness：**使用 0.2.2-rc.3 或兼容的 0.2.x，宿主自身需要 **Node.js 24.9+**。当前 npm `latest` 可能指向不兼容的旧版本。选择正在使用的 profile：`dsh plugin --profile <name> add "包路径"`，用 `dsh --profile <name> --dump-config` 和 Plugins 页核对。原生 bundle 注册同一份 Skill、工具 guard、审批与结果上下文事件；移除使用 `dsh plugin --profile <name> remove @validflow/ccneed-cli`。
 
@@ -74,7 +75,8 @@ OpenClaw、Pi、DSH 使用原生扩展事件，不套用 shell hook 名称。文
 | Kimi Code | 用户选择的原生模式，包括自动模式和会话授权 |
 | OpenClaw | 原生 `requireApproval`，允许本次／拒绝；`exec` 使用绝对 workdir |
 | Pi | 交互式 UI，或实现扩展 UI 确认的 RPC 客户端 |
-| ZCode / Qoder / Trae CLI | 同步 PreToolUse 原生审批 |
+| ZCode / Trae CLI | 同步 PreToolUse 原生审批 |
+| Qoder | PreToolUse 的 `ask` 进入原生权限流程；是否询问取决于当前模式和规则 |
 | DeepSeek Harness | 当前原生沙箱与逐次审批策略；审批通道不可用时不能批准 |
 
 Codex PreToolUse 不支持 `ask`，由原生命令规则确认。WorkBuddy 当前 PowerShell 沙箱包装无法可靠匹配付费前缀，因此会拦截付费 PowerShell；改用 Bash，Windows 可使用 Git Bash。允许整个会话会停止该前缀的逐次询问，需新会话恢复。已知 bypass/never/自动审批模式会被拒绝。

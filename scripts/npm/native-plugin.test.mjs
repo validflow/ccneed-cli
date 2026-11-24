@@ -25,6 +25,12 @@ test('Kimi native manifest shares the Skill and declares relocatable native hook
   assert.equal(existsSync(join(root, 'kimi.plugin.json')), false);
 });
 
+test('ZCode session context is loaded when an existing session resumes', () => {
+  const config = read('hooks/zcode.json');
+  const matchers = config.hooks.SessionStart.map(entry => entry.matcher);
+  assert.ok(matchers.some(matcher => new RegExp('^(?:' + matcher + ')$').test('resume')));
+});
+
 for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
   test(host + ' native manifest loads shared skill and its own guarded hook payload', () => {
     const manifest = read(directory + '/plugin.json');

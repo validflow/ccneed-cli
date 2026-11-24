@@ -2,6 +2,11 @@
 
 [English](../en/CHANGELOG.md) · 中文
 
+## 0.1.17
+
+- 云端任务重新查询后没有待确认项时，清除旧的确认记录；恢复 ZCode 会话时重新加载启动提示。
+- 澄清 Codex 原生命令审批与 Qoder 权限流程。
+
 ## 0.1.16
 
 - 新增可选 `ccneed auth login --agent`，让授权页展示本次登录由 Codex、Claude Code、WorkBuddy 等哪个宿主发起；省略时使用统一的 CCNeed CLI 授权流程。该参数不改变权限，也不将凭据绑定到某个宿主。

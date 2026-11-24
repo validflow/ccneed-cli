@@ -234,7 +234,7 @@ function planFile(host, input, args, flag) {
 function postTool(host, input, args, access) {
   const raw = input.tool_response ?? input.tool_output;
   let response = responseObject(raw);
-  if (!['codex', 'claude', 'workbuddy', 'kimi'].includes(host) && args[1] === 'tasks') access.save({ ...access.state, action: null });
+  if (args[1] === 'tasks') access.save({ ...access.state, action: null });
   if (host === 'kimi') {
     access.save({ ...access.state, [args[1] === 'kb' ? 'plan' : 'action']: null });
     if (!response && typeof raw === 'string' && raw.length >= 2000 && flagValue(args, '--output')) {

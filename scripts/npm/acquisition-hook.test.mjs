@@ -401,3 +401,29 @@ test('cloud approval refuses an unavailable or insufficient wallet quotation', (
   const result = handleHook('workbuddy', { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed tasks reply --thread-id thread --turn-id turn --action-id action --answer-file ' + quoted(filename) } }, data.options);
   assert.equal(result.hookSpecificOutput.permissionDecision, 'deny');
 });
+
+for (const host of ['codex', 'claude', 'workbuddy', 'kimi', 'zcode', 'qoder', 'trae', 'openclaw', 'pi', 'dsh']) {
+  test(host + ' rejects a stale cloud approval after the current task has no pending action', () => {
+    const data = fixture();
+    const suggested = { mode: 'create', kb_description: data.plan.research_requirement, quotas: { twitter: 300 }, search_plan: data.plan.search_plan, estimated_credits: 300, balance: 1000 };
+    const read = { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed tasks get --thread-id thread --turn-id turn' } };
+    handleHook(host, { ...read, tool_response: { thread_id: 'thread', turn_id: 'turn', pending_action: { action_id: 'action', suggested } } }, data.options);
+    handleHook(host, { ...read, tool_response: { stdout: JSON.stringify({ thread_id: 'thread', turn_id: 'turn', status: 'completed' }) } }, data.options);
+    const filename = join(data.directory, 'answer.json');
+    writeFileSync(filename, '{"decision":"approved"}');
+    const result = handleHook(host, { ...data.input, hook_event_name: 'PreToolUse', tool_input: { command: 'ccneed tasks reply --thread-id thread --turn-id turn --action-id action --answer-file ' + quoted(filename) } }, data.options);
+    assert.equal(result.hookSpecificOutput?.permissionDecision, 'deny');
+  });
+
+  test(host + ' discards a cloud approval candidate after sending a reply', () => {
+    const data = fixture();
+    const suggested = { mode: 'create', kb_description: data.plan.research_requirement, quotas: { twitter: 300 }, search_plan: data.plan.search_plan, estimated_credits: 300, balance: 1000 };
+    handleHook(host, { ...data.input, hook_event_name: 'PostToolUse', tool_input: { command: 'ccneed tasks get --thread-id thread --turn-id turn' }, tool_response: { thread_id: 'thread', turn_id: 'turn', pending_action: { action_id: 'action', suggested } } }, data.options);
+    const filename = join(data.directory, 'answer.json');
+    writeFileSync(filename, '{"decision":"approved"}');
+    const reply = { ...data.input, tool_input: { command: 'ccneed tasks reply --thread-id thread --turn-id turn --action-id action --answer-file ' + quoted(filename) } };
+    handleHook(host, { ...reply, hook_event_name: 'PostToolUse', tool_response: { stdout: '{"status":"accepted"}' } }, data.options);
+    const result = handleHook(host, { ...reply, hook_event_name: 'PreToolUse' }, data.options);
+    assert.equal(result.hookSpecificOutput?.permissionDecision, 'deny');
+  });
+}

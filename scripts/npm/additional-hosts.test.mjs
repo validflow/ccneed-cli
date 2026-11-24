@@ -5,8 +5,18 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseAgents } from './skills.mjs';
 import { handleHook } from '../../hooks/acquisition.mjs';
+import { additionalPluginInstructions } from './additional-plugins.mjs';
 
 const additional = ['openclaw', 'pi', 'zcode', 'qoder', 'trae', 'dsh'];
+
+test('Qoder installation reports the native permission rules needed for collection prompts', () => {
+  const instructions = additionalPluginInstructions('qoder', 'C:/package', '0.1.17').join('\n');
+  for (const binary of ['ccneed', 'ccneed.cmd', 'ccneed.exe']) {
+    for (const command of ['kb start', 'tasks reply']) assert.ok(instructions.includes(`Bash(${binary} ${command}:*)`));
+  }
+  assert.match(instructions, /permissions\.ask/);
+  assert.match(instructions, /mode/i);
+});
 
 test('explicit host selection accepts native plugin hosts without selecting others', () => {
   assert.deepEqual(parseAgents(additional.join(',')), additional);
