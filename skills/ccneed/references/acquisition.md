@@ -67,11 +67,11 @@ T1/T2/T3 是宿主与平台的内部字段，不向用户解释术语或逐词�
 安装/升级后重新加载宿主，并核对 hook 已加载、原生权限策略有效。CLI 本身是 Bash/执行命令工具运行的子进程，不能在 CLI 内伪造宿主权限弹窗。
 
 - Claude Code：PreToolUse 可请求 `ask`；禁止用 bypass/dontAsk/自动批准模式执行采集。
-- Codex：使用 `prefix_rule(..., decision="prompt")`。该规则保护受支持的沙箱外执行路径；付费命令必须通过人工审批的该路径执行。PreToolUse 的 `ask` 不受支持，不能返回它假装有效。禁用 hook/rules、忽略配置或自动审批时不得继续采集。
+- Codex：安装器为 `kb start` 和 `tasks reply` 配置原生 `prefix_rule(..., decision="prompt")`；使用独立的 `ccneed` 命令，按需由 Codex 弹出权限确认，每次选择仅允许本次。PreToolUse 的 `ask` 不受支持，不能返回它假装有效。禁用 hook/rules、忽略配置或自动审批时不得继续采集。
 - WorkBuddy：桌面端使用 `~/.workbuddy` 的 Skill 与 hooks，付费采集使用同一宿主的**原生 Bash 工具**，保持默认权限与现有沙箱。沙箱内由安装器添加的 `sandbox.commandSafety.ask` 请求原生确认；当前 PowerShell 的安全删除包装不能可靠命中该规则，因此付费执行会拒绝并提示改用 Bash，不关闭沙箱。每次选择“仅允许本次”；选择“本会话不再询问”会主动扩大授权，需新建宿主会话恢复逐次确认。旧 `.codebuddy` 本地代码配置不代表桌面端已加载。
 
 - Kimi Code：执行权限交给 Kimi 原生策略，尊重用户选择的询问、自动模式和会话授权；Hook 继续验证最终方案、积分与版本，不额外禁止自动模式。不要伪造 `ask`、权限字段或改用 HTTP 绕过业务校验。
 - Kimi Code 2.5.3 的 SessionStart/PostToolUse 不注入 Hook 输出，且 Hook 只收到工具结果前 2000 字符。`kb plan` 与处理 HITL 的 `tasks get/watch` 使用新的绝对 `--output` 文件，由 Agent 读取完整方案，Hook 据同一文件校验。文件不能覆盖；本地 Hook 不读取远程 Bash 的文件，不根据截断内容推测方案。
-- OpenClaw、Pi、ZCode、Qoder、Trae、DeepSeek Harness 的接入方式和兼容要求见[安装说明](https://github.com/validflow/ccneed-cli/blob/main/docs/zh/INSTALL.md)。使用宿主原生插件管理器加载，不能用复制 Skill 代替。工具事件传递的是方案上下文，不是用户已经确认的证据；仍需展示并等待对话确认。Pi 需要交互式扩展 UI，不能在无 UI 模式替用户批准付费执行。
+- OpenClaw、Pi、ZCode、Qoder、Trae、DeepSeek Harness 的接入方式和兼容要求见[安装说明](https://github.com/validflow/ccneed-cli/blob/main/docs/zh/INSTALL.md)。使用宿主原生插件管理器加载，不能用复制 Skill 代替。工具事件传递的是方案上下文，不是用户已经确认的证据；仍需展示并等待对话确认。Pi 需要交互式扩展 UI。Qoder 的 hook `ask` 继续进入宿主权限判断，是否弹窗取决于用户的模式及规则，不把 hook 输出当成审批已完成。
 
 所有宿主都不能以“配置文件存在”代替真实加载与权限验收，也不能在用户关闭 hook 或绕过全部权限后声称仍能强制确认。

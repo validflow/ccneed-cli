@@ -52,6 +52,7 @@ Kimi loads instructions through `sessionStart.skill`; SessionStart/PostToolUse d
 - **OpenClaw:** collection needs 2026.11.4 or a compatible newer release. Set an absolute `workdir` on native `exec` calls. The plugin binds plan results by session and tool-call ID, then requests native allow-once/deny approval. Older hosts can still use read-only commands but cannot start paid collection through this plugin.
 - **Pi:** the native package enables one extension and the shared Skill. `tool_result` adds model context; `tool_call` uses `ctx.ui.confirm`. Print/headless mode cannot approve collection. Use `pi config` for resource toggles and `pi remove SOURCE` to remove the native package.
 - **ZCode/Qoder:** load the full native plugin with its explicit host hook file. Hooks use native argv execution, preserving spaces and Unicode paths. Complete the returned marketplace/local-plugin steps; desktop UI acceptance remains separate from protocol tests.
+- **Qoder confirmation:** the hook's `ask` continues through Qoder's permission pipeline. For interactive per-call prompts, add the exact `permissions.ask` entries printed by the installer to the active Qoder settings. The installer preserves your settings; Qoder's selected mode and rules govern the outcome.
 - **Trae CLI 2.0:** tested with native 0.215.0. Install `traecli plugin install "PACKAGE_PATH/plugins/trae" --name ccneed`, then check `traecli plugin validate ccneed` reports **1 Skill and 3 hooks**. After updating the global CLI, run `traecli plugin upgrade ccneed` and reload the session. The native manager switches the complete active cache version; inactive caches remain under its control. This payload uses Trae CLI's supported `.codex-plugin` format in a separate plugin root, with the same-source Skill and hooks assembled at release time. It does not establish Trae IDE support.
 - **DeepSeek Harness:** use 0.2.2-rc.3 or a compatible 0.2.x release with **Node.js 24.9+**. The current npm `latest` tag can point to an older incompatible runtime. Select the profile used by your running host: `dsh plugin --profile <name> add "PACKAGE_PATH"`. Verify with `dsh --profile <name> --dump-config` and Plugins. The bundle registers one shared Skill and native tool guards, approval and result-context handlers. Remove with `dsh plugin --profile <name> remove @validflow/ccneed-cli`.
 
@@ -74,7 +75,8 @@ Protocol references: [OpenClaw tool policy](https://docs.openclaw.ai/plugins/hoo
 | Kimi Code | User-selected native permission mode, including automatic/session authorization |
 | OpenClaw | Native `requireApproval`, allow once / deny; absolute `exec` workdir |
 | Pi | Interactive UI or an RPC client implementing extension UI confirmation |
-| ZCode / Qoder / Trae CLI | Native synchronous PreToolUse approval |
+| ZCode / Trae CLI | Native synchronous PreToolUse approval |
+| Qoder | PreToolUse delegates `ask` to its native permission pipeline; actual prompts follow the active mode and rules |
 | DeepSeek Harness | Active native sandbox and per-call approval policy; unavailable approval channels cannot approve |
 
 Codex PreToolUse cannot return `ask`; native command rules supply confirmation. WorkBuddy's current PowerShell sandbox wrapper does not reliably match paid prefixes, so paid PowerShell calls are blocked. Use Bash, including Git Bash on Windows. Session-wide approval suppresses later confirmations for that prefix; open a fresh session to restore them. Known bypass/never/automatic-review modes are rejected.
