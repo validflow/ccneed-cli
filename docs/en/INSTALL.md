@@ -14,18 +14,18 @@ npx @validflow/ccneed-cli@latest install --agent codex
 
 The installer installs the exact global CLI version and coordinates native registration only for named hosts. Include every host you want to update. It does not start login or cloud tasks. Keep npm's global command directory on the Agent's PATH; local installation does not install commands inside a remote sandbox.
 
-| Host | Agent ID | Native registration | Additional approval configuration |
-| --- | --- | --- | --- |
-| Claude Code | `claude` | Claude marketplace/plugin commands; verified user-scope version and enabled state | Existing host permissions |
-| Codex | `codex` | Codex marketplace/plugin commands; verified installed version and enabled state | Existing host permissions |
-| WorkBuddy desktop | `workbuddy` | Complete the native marketplace/plugin steps returned by the installer | Existing host permissions |
-| Kimi Code | `kimi` | Native `/plugins` import steps | Existing host permissions |
-| OpenClaw | `openclaw` | Native linked plugin | Existing host permissions |
-| Pi | `pi` | Native Pi package and extension | Existing host permissions |
-| ZCode | `zcode` | Local marketplace in the desktop plugin manager | Existing host permissions |
-| Qoder | `qoder` | Native local plugin | Existing host permissions |
-| Trae CLI 2.0 | `trae` | Dedicated native plugin | Existing host permissions |
-| DeepSeek Harness | `dsh` | Native Cordis bundle | Existing host permissions |
+| Host | Agent ID | Native registration |
+| --- | --- | --- |
+| Claude Code | `claude` | Claude marketplace/plugin commands; verified user-scope version and enabled state |
+| Codex | `codex` | Codex marketplace/plugin commands; verified installed version and enabled state |
+| WorkBuddy desktop | `workbuddy` | Complete the native marketplace/plugin steps returned by the installer |
+| Kimi Code | `kimi` | Native `/plugins` import steps |
+| OpenClaw | `openclaw` | Native linked plugin |
+| Pi | `pi` | Native Pi package and extension |
+| ZCode | `zcode` | Local marketplace in the desktop plugin manager |
+| Qoder | `qoder` | Native local plugin |
+| Trae CLI 2.0 | `trae` | Dedicated native plugin |
+| DeepSeek Harness | `dsh` | Native Cordis bundle |
 
 Claude Code, Codex and WorkBuddy use the local marketplace `ccneed` and plugin `ccneed@ccneed`; Kimi uses manifest ID `ccneed`. Native managers load the shared Skill and hooks without a second global Skill or user-level hook registration. Rerun the installer and complete each host's update steps; `npm install -g` alone does not refresh native caches.
 
@@ -33,7 +33,7 @@ Check `plugins[]` in the JSON result. `installed` means the native manager repor
 
 Additional hosts return `action_required` with native manager commands or in-app import steps. The installer prepares the whole matching plugin payload; it does not edit their profiles or claim they are enabled. Complete those steps in the intended host/profile, verify the version and reload. Select multiple hosts with commas, for example `--agent codex,pi`.
 
-Restart the host, review/trust hooks and confirm the Skill loads. Installation trust is separate from permission to start each collection. Use native plugin controls for enable, disable and removal. Removing a plugin does not uninstall the global CLI or automatically remove extra Codex/WB permission rules. Retain those conservative rules until deliberately removing the corresponding CCNeed entries; preserve unrelated rules.
+Restart the host, review/trust hooks and confirm the Skill loads. Use native plugin controls for enable, disable and removal. Removing a plugin does not uninstall the global CLI or automatically remove extra Codex/WB permission rules. Retain those conservative rules until deliberately removing the corresponding CCNeed entries; preserve unrelated rules.
 
 If downloads require a proxy, set `HTTPS_PROXY` or `HTTP_PROXY`; the downloader also honors `NO_PROXY` and lowercase forms. Use an exact version instead of `@latest` for reproducibility. RC releases use `@next`.
 
@@ -43,24 +43,22 @@ Run `npx @validflow/ccneed-cli@latest install --agent kimi`, then follow the ret
 
 The bundled manifest follows the [documented plugin format](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins). Native 2.5.3 was tested in an isolated profile: installation, enable/disable and update to 0.1.12 loaded one Skill and three hooks without diagnostics. The deprecated Python `kimi-cli` 1.x is a different product and cannot load this bundle; use the [official native installer](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started).
 
-Collection and HITL execution follow Kimi's native permission policy. Manual/Ask When Needed modes prompt as configured; automatic mode and session authorization remain the user's choice. CCNeed does not force another prompt or reject those modes. The agent checks the plan before submitting it.
-
-Kimi loads instructions through `sessionStart.skill`; SessionStart/PostToolUse do not inject returned hook text. The Agent presents the full CLI result and saved JSON. For `kb plan` and HITL `tasks get/watch`, use a new absolute `--output` file so hooks can read the complete plan when Kimi truncates tool output to 2000 characters. Existing files are never overwritten. Hooks use local files; remote Bash output paths are not supported.
+Kimi loads instructions through `sessionStart.skill`; SessionStart/PostToolUse do not inject returned hook text. The Agent presents the full CLI result and saved JSON. For `kb plan` and HITL `tasks get/watch`, use a new absolute `--output` file so the Agent can read complete results when tool output is truncated. Existing files are never overwritten.
 
 ## Additional host requirements
 
-- **OpenClaw and Pi:** load CCNeed through the native plugin manager; permissions follow the host settings.
+- **OpenClaw and Pi:** load CCNeed through the native plugin manager.
 - **ZCode/Qoder:** load the full native plugin with its explicit host hook file. Hooks use native argv execution, preserving spaces and Unicode paths. Complete the returned marketplace/local-plugin steps; desktop UI acceptance remains separate from protocol tests.
-- **Trae CLI 2.0:** tested with native 0.215.0. Install `traecli plugin install "PACKAGE_PATH/plugins/trae" --name ccneed`, then check `traecli plugin validate ccneed` reports **1 Skill and 2 hooks**. After updating the global CLI, run `traecli plugin upgrade ccneed` and reload the session. The native manager switches the complete active cache version; inactive caches remain under its control. This payload uses Trae CLI's supported `.codex-plugin` format in a separate plugin root, with the same-source Skill and hooks assembled at release time. It does not establish Trae IDE support.
+- **Trae CLI 2.0:** use native 0.215.0 or a compatible release. Install `traecli plugin install "PACKAGE_PATH/plugins/trae" --name ccneed`, then check `traecli plugin validate ccneed` reports **1 Skill and 2 hooks**. After updating the global CLI, run `traecli plugin upgrade ccneed` and reload the session. The native manager switches the complete active cache version; inactive caches remain under its control. This payload uses Trae CLI's supported `.codex-plugin` format in a separate plugin root, with the same-source Skill and hooks assembled at release time. It does not establish Trae IDE support.
 - **DeepSeek Harness:** use 0.2.2-rc.3 or a compatible 0.2.x release with **Node.js 24.9+**. The current npm `latest` tag can point to an older incompatible runtime. Select the profile used by your running host: `dsh plugin --profile <name> add "PACKAGE_PATH"`. Verify with `dsh --profile <name> --dump-config` and Plugins. The bundle registers one shared Skill and result-context handlers. Remove with `dsh plugin --profile <name> remove @validflow/ccneed-cli`.
 
-OpenClaw, Pi and DSH use native extension events rather than shell hook names. All paths must refer to files accessible to the process running the plugin and CLI; a local plugin cannot validate a different remote filesystem. A truncated result is not a valid displayed plan.
+OpenClaw, Pi and DSH use native extension events rather than shell hook names. Paths must be accessible to the process running the CLI. A truncated result is not a valid displayed plan.
 
 Protocol references: [OpenClaw tool policy](https://docs.openclaw.ai/plugins/hooks/tool-policy), [Pi packages](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md), [Pi extensions](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/extensions.md), [ZCode plugins](https://zcode.z.ai/cn/docs/plugin), [Qoder plugins](https://docs.qoder.com/cli/plugins), [Trae CLI 2.0](https://docs.trae.cn/cli_get-started-with-trae-cli-2), [DSH bundles](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.md).
 
 ## Collection confirmation
 
-The agent displays the complete plan and waits for user confirmation. Changes require a fresh validated plan and confirmation. After confirmation it runs `kb start` under existing host permissions and sandbox settings; the plugin adds no execution approval and cannot guarantee a host prompt. The CLI validates the displayed content against the plan token; the server is responsible for validating the signature and expiry. Submit cloud HITL answers according to `resume_schema`.
+The agent displays the complete plan and waits for user confirmation. Changes require a fresh validated plan and confirmation. After confirmation it runs `kb start`. The CLI checks the prepared file against the plan token; the server is responsible for validating the signature and expiry. Submit cloud HITL answers according to `resume_schema`.
 
 On upgrade, only an exact legacy installer-generated Codex `ccneed.rules` file is migrated; custom rules are preserved. Review rules in other hosts or modified files yourself. Restart and trust the updated hooks.
 
@@ -82,7 +80,7 @@ Installation errors identify the failed stage and a safe error code. A failed na
 
 An npm/npx error **before the CCNeed installer starts** cannot be handled by this diagnostic code. For a cache problem, rerun the same installation command with `npx --cache <new-writable-cache-directory> ...`. Changing the cache does not grant permission to write the global npm directory. The installer does not automatically elevate privileges, delete caches or stop processes.
 
-Non-default `CODEX_HOME` or `CLAUDE_CONFIG_DIR` is reported as requiring manual profile setup; the installer does not register plugins or write approval rules into a different profile. Use the default profile for coordinated installation, or configure and verify the native plugin in your chosen profile.
+Non-default `CODEX_HOME` or `CLAUDE_CONFIG_DIR` is reported as requiring manual profile setup; the installer does not register plugins in a different profile. Use the default profile for coordinated installation, or configure and verify the native plugin in your chosen profile.
 
 ## Verify and authorize
 
