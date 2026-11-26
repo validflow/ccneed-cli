@@ -158,7 +158,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
   for (const host of selected) {
     const variable = customProfiles.get(host);
     if (variable) {
-      plugins.push({ host, plugin_id: 'ccneed@ccneed', requested_version: desired.version, version: null, status: 'action_required', error: 'custom_profile', next_steps: [variable + ' selects a nondefault native profile; automatic registration, default-profile rules and legacy cleanup were not performed for this host', 'Use that profile’s native plugin manager to register ' + globalPackage + ' and install/enable ccneed@ccneed version ' + desired.version, 'Set up the required native permission rules in the same active profile, review and trust the hooks, and restart the host before collection'] });
+      plugins.push({ host, plugin_id: 'ccneed@ccneed', requested_version: desired.version, version: null, status: 'action_required', error: 'custom_profile', next_steps: [variable + ' selects a nondefault native profile; automatic registration, default-profile rules and legacy cleanup were not performed for this host', 'Use that profile’s native plugin manager to register ' + globalPackage + ' and install/enable ccneed@ccneed version ' + desired.version, 'Review and trust the hooks, and restart the host before collection'] });
       continue;
     }
     const result = await installNativePlugin(native, host, globalPackage, desired.version);
@@ -176,7 +176,7 @@ export async function installIntegration({ root = packageRoot, agents, home = ho
     }
     plugins.push(result);
   }
-  return { status: plugins.every(plugin => plugin.status === 'installed') ? 'installed' : 'action_required', version: desired.version, agents: selected, plugins, restart_required: true, hook_trust_required: true, manual_approval_required: selected.some(host => ['codex', 'claude', 'workbuddy', 'pi'].includes(host)), auth: 'not_started' };
+  return { status: plugins.every(plugin => plugin.status === 'installed') ? 'installed' : 'action_required', version: desired.version, agents: selected, plugins, restart_required: true, hook_trust_required: true, manual_approval_required: false, auth: 'not_started' };
 }
 
 /** installerMain 提供安装与更新共用的明确入口，帮助和参数错误不触发网络。

@@ -16,16 +16,16 @@ npx @validflow/ccneed-cli@latest install --agent codex
 
 | 宿主 | 安装标识 | 原生注册 | 额外权限配置 |
 | --- | --- | --- | --- |
-| Claude Code | `claude` | 调用 Claude marketplace/plugin 命令，核实用户级版本及启用状态 | 插件 PreToolUse 请求原生 `ask` |
-| Codex | `codex` | 调用 Codex marketplace/plugin 命令，核实已装版本及启用状态 | `~/.codex/rules/ccneed.rules` 为付费前缀设置 prompt |
-| WorkBuddy 桌面版 | `workbuddy` | 按结果完成桌面端原生 marketplace/plugin 操作 | `~/.workbuddy/settings.json` 的兼容 ask 与 `sandbox.commandSafety.ask` |
-| Kimi Code | `kimi` | 原生 `/plugins` 导入步骤 | 遵循用户选择的原生权限模式和会话授权 |
-| OpenClaw | `openclaw` | 原生链接插件 | `before_tool_call` 请求原生逐次审批；需要 2026.11.4+ |
-| Pi | `pi` | 原生 Pi package 和 extension | `tool_call` 与 `ctx.ui.confirm`；需要交互式扩展 UI |
-| ZCode | `zcode` | 桌面插件管理器导入本地 marketplace | process hooks 使用 argv，PreToolUse 原生 `ask` |
-| Qoder | `qoder` | 原生本地插件 | command hooks 使用 argv，PreToolUse 原生 `ask` |
-| Trae CLI 2.0 | `trae` | 独立原生插件 | PreToolUse 原生审批；已验证加载器 0.215.0 |
-| DeepSeek Harness | `dsh` | 原生 Cordis bundle | 原生工具 guard 与审批链路；需要兼容的 0.2.x |
+| Claude Code | `claude` | 调用 Claude marketplace/plugin 命令，核实用户级版本及启用状态 | 宿主现有权限 |
+| Codex | `codex` | 调用 Codex marketplace/plugin 命令，核实已装版本及启用状态 | 宿主现有权限 |
+| WorkBuddy 桌面版 | `workbuddy` | 按结果完成桌面端原生 marketplace/plugin 操作 | 宿主现有权限 |
+| Kimi Code | `kimi` | 原生 `/plugins` 导入步骤 | 宿主现有权限 |
+| OpenClaw | `openclaw` | 原生链接插件 | 宿主现有权限 |
+| Pi | `pi` | 原生 Pi package 和 extension | 宿主现有权限 |
+| ZCode | `zcode` | 桌面插件管理器导入本地 marketplace | 宿主现有权限 |
+| Qoder | `qoder` | 原生本地插件 | 宿主现有权限 |
+| Trae CLI 2.0 | `trae` | 独立原生插件 | 宿主现有权限 |
+| DeepSeek Harness | `dsh` | 原生 Cordis bundle | 宿主现有权限 |
 
 Claude Code、Codex、WorkBuddy 使用本地 marketplace `ccneed` 和插件 `ccneed@ccneed`；Kimi 使用 manifest ID `ccneed`。宿主从插件加载统一 Skill 和 hooks，不重复注册全局 Skill 或用户级 hooks。升级需重跑安装器并完成各宿主步骤，单独 `npm install -g` 不会刷新原生缓存。
 
@@ -43,18 +43,16 @@ Claude Code、Codex、WorkBuddy 使用本地 marketplace `ccneed` 和插件 `ccn
 
 包内 manifest 遵循[官方插件文档](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins)。已用原生 2.5.3 的隔离 profile 验证安装、启停和更新到 0.1.12：识别 1 个 Skill、3 个 hooks，无加载错误。已停维的 Python `kimi-cli` 1.x 是不同产品，不能加载这套插件；请使用[官方原生安装器](https://www.kimi.com/code/docs/en/kimi-code-cli/guides/getting-started)。
 
-正式采集和 HITL 执行遵循 Kimi 原生权限：手动／按需模式按配置询问，自动模式和会话授权按用户意愿执行，CCNeed 不额外强制弹窗或禁止这些模式。Hook 仍会拒绝无效、过期、被修改或余额不足的方案。
+正式采集和 HITL 执行遵循 Kimi 原生权限：手动／按需模式按配置询问，自动模式和会话授权按用户意愿执行，CCNeed 不额外强制弹窗或禁止这些模式。Agent 在提交前检查方案。
 
 Kimi 通过 `sessionStart.skill` 加载说明，SessionStart/PostToolUse 不注入返回的 Hook 文本。Agent 依据 CLI 完整结果和保存的 JSON 展示方案。`kb plan` 和处理 HITL 的 `tasks get/watch` 使用新的绝对 `--output` 文件，Hook 在结果被截成 2000 字符时从同一文件读取全文。不会覆盖已有文件；本地 Hook 不读取远程 Bash 的输出文件。
 
 ## 新增宿主的兼容要求
 
-- **OpenClaw：**正式采集需要 2026.11.4 或兼容的更新版本；原生 `exec` 调用填写绝对 `workdir`。插件按会话和工具调用 ID 关联方案，再请求原生允许本次／拒绝审批。旧宿主仍可使用只读命令，但不能通过本插件开始付费采集。
-- **Pi：**原生 package 加载一份扩展和统一 Skill；`tool_result` 提供模型上下文，`tool_call` 使用 `ctx.ui.confirm`。print／无 UI 模式不能批准采集；资源启停使用 `pi config`，移除使用 `pi remove SOURCE`。
+- **OpenClaw 和 Pi：**通过原生插件管理器加载 CCNeed，权限遵循当前设置。
 - **ZCode／Qoder：**导入完整原生插件，加载各自显式声明的 hook 文件；使用原生 argv 执行，保留空格和中文路径。按结果完成 marketplace／本地插件操作；协议测试不能替代桌面界面验收。
-- **Qoder 确认：**hook 的 `ask` 会继续进入 Qoder 原生权限流程。如需交互式逐次询问，把安装器输出的 `permissions.ask` 规则添加到当前 Qoder 配置。安装器不修改你的配置；实际结果由 Qoder 当前模式和规则决定。
-- **Trae CLI 2.0：**已用原生 0.215.0 验证。执行 `traecli plugin install "包路径/plugins/trae" --name ccneed`，再用 `traecli plugin validate ccneed` 核对 **1 个 Skill、3 个 hooks**。全局 CLI 升级后执行 `traecli plugin upgrade ccneed` 并重载会话；原生管理器切换完整活动缓存，旧缓存由它管理。Trae CLI 使用受支持的 `.codex-plugin` 格式，因此独立插件根目录内的 Skill/hooks 在发行时从同一源码装配，不与 Codex 入口冲突；这不代表 Trae IDE 已适配。
-- **DeepSeek Harness：**使用 0.2.2-rc.3 或兼容的 0.2.x，宿主自身需要 **Node.js 24.9+**。当前 npm `latest` 可能指向不兼容的旧版本。选择正在使用的 profile：`dsh plugin --profile <name> add "包路径"`，用 `dsh --profile <name> --dump-config` 和 Plugins 页核对。原生 bundle 注册同一份 Skill、工具 guard、审批与结果上下文事件；移除使用 `dsh plugin --profile <name> remove @validflow/ccneed-cli`。
+- **Trae CLI 2.0：**已用原生 0.215.0 验证。执行 `traecli plugin install "包路径/plugins/trae" --name ccneed`，再用 `traecli plugin validate ccneed` 核对 **1 个 Skill、2 个 hooks**。全局 CLI 升级后执行 `traecli plugin upgrade ccneed` 并重载会话；原生管理器切换完整活动缓存，旧缓存由它管理。Trae CLI 使用受支持的 `.codex-plugin` 格式，因此独立插件根目录内的 Skill/hooks 在发行时从同一源码装配，不与 Codex 入口冲突；这不代表 Trae IDE 已适配。
+- **DeepSeek Harness：**使用 0.2.2-rc.3 或兼容的 0.2.x，宿主自身需要 **Node.js 24.9+**。当前 npm `latest` 可能指向不兼容的旧版本。选择正在使用的 profile：`dsh plugin --profile <name> add "包路径"`，用 `dsh --profile <name> --dump-config` 和 Plugins 页核对。原生 bundle 注册同一份 Skill和结果上下文事件；移除使用 `dsh plugin --profile <name> remove @validflow/ccneed-cli`。
 
 OpenClaw、Pi、DSH 使用原生扩展事件，不套用 shell hook 名称。文件路径需能被运行插件和 CLI 的进程读取；本地插件不能校验另一套远程文件系统。截断的结果不能视为有效的已展示方案。
 
@@ -62,28 +60,9 @@ OpenClaw、Pi、DSH 使用原生扩展事件，不套用 shell hook 名称。文
 
 ## 采集确认
 
-1. Agent 准备方案，CCNeed 校验并比较预计积分与余额。
-2. Agent 从原生 hook／工具结果上下文读取方案，Kimi 从 CLI 完整结果和快照读取。每次请用户确认时，完整展示需求、各平台实体词／其他关键词、配额、总条数、积分、余额及调整说明。两类词都可调整，每个平台至少保留一个非空白实体词，修改后重新校验并完整展示；不展示内部 T1/T2/T3 分配。
-3. PreToolUse 核对最终方案，Agent 执行前短提示，不重复整份方案；执行授权交给宿主原生策略，包括 Kimi 已有的自动／会话授权。修改或过期后重新校验和展示，对话 HITL 同样保留业务校验。
-4. 采集完成后，Agent 通常自动导出 CSV 并交付本地文件；用户指定格式、目录或明确只要云端分析时按其要求处理。
+Agent 展示完整方案并等待用户确认，修改后重新校验和展示；确认后执行 `kb start`，遵循宿主现有权限和沙箱。插件不追加执行审批，不能保证宿主每次弹窗。CLI 校验展示内容与 token 一致，服务端负责签名及有效期校验（线上可用性需另行验证）。云端 HITL 按 `resume_schema` 提交用户回答。
 
-| 宿主 | 支持的采集模式 |
-| --- | --- |
-| Claude Code | 交互式 default/acceptEdits、人工审批 |
-| Codex | `on-request`、`approvals_reviewer = "user"`、启用 hooks/rules |
-| WorkBuddy 桌面版 | 默认权限、原生 Bash、每次仅允许本次 |
-| Kimi Code | 用户选择的原生模式，包括自动模式和会话授权 |
-| OpenClaw | 原生 `requireApproval`，允许本次／拒绝；`exec` 使用绝对 workdir |
-| Pi | 交互式 UI，或实现扩展 UI 确认的 RPC 客户端 |
-| ZCode / Trae CLI | 同步 PreToolUse 原生审批 |
-| Qoder | PreToolUse 的 `ask` 进入原生权限流程；是否询问取决于当前模式和规则 |
-| DeepSeek Harness | 当前原生沙箱与逐次审批策略；审批通道不可用时不能批准 |
-
-Codex PreToolUse 不支持 `ask`，由原生命令规则确认。WorkBuddy 当前 PowerShell 沙箱包装无法可靠匹配付费前缀，因此会拦截付费 PowerShell；改用 Bash，Windows 可使用 Git Bash。允许整个会话会停止该前缀的逐次询问，需新会话恢复。已知 bypass/never/自动审批模式会被拒绝。
-
-正式采集使用独立 `ccneed kb start ...`，不套脚本、复合命令或重定向；Codex、Kimi 的方案／回答文件需用绝对路径。业务 hooks 保持启用；Claude Code、Codex、WorkBuddy 还需保持各自文档要求的人工审批配置，Kimi 按原生权限策略执行。
-
-验收时准备方案并检查展示；拒绝原生采集确认，验证没有启动，再重新发起并批准。对话 HITL 同样验收。单元测试和文件存在不能代替桌面 UI 验收。
+升级时仅迁移内容完全匹配旧安装器模板的 Codex `ccneed.rules`，自定义规则保留；其他宿主或已修改的规则需由用户自行检查。重启并信任新插件 hooks。
 
 ## 已有配置与失败处理
 
@@ -103,7 +82,7 @@ CLI 成功但原生注册失败会逐宿主报告，不算整体成功。解决�
 
 **CCNeed 安装器启动前**发生的 npm/npx 错误，无法由安装器捕获。缓存出错时，可在原安装命令中使用 `npx --cache <新的可写缓存目录> ...` 重试。换缓存不会解决 npm 全局目录无写权限的问题；安装器不会自动提权、删除缓存或结束进程。
 
-非默认 `CODEX_HOME` 或 `CLAUDE_CONFIG_DIR` 会返回需手动配置 profile，不会把插件与确认规则写到不同目录。统一安装使用默认 profile；自定义 profile 需将原生插件和权限规则一起配置并验证。
+非默认 `CODEX_HOME` 或 `CLAUDE_CONFIG_DIR` 会返回需手动配置 profile，不会把插件与确认规则写到不同目录。统一安装使用默认 profile；自定义 profile 需自行配置并验证原生插件。
 
 ## 验证与登录
 

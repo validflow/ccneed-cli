@@ -142,7 +142,7 @@ function removeOwnedAskRules(settings) {
   if (!Object.keys(permissions).length) delete settings.permissions;
 }
 
-/** mergeSettings 清理自有旧 hooks，仅为 WorkBuddy 保留独立原生执行规则。
+/** mergeSettings 清理自有旧 hooks，保留用户现有原生执行规则。
  * Args:
  *   before: 已有配置原文或 null。
  *   root: 固定全局 npm 包目录。
@@ -157,27 +157,10 @@ function mergeSettings(before, root, host) {
   if (!settings || Array.isArray(settings) || typeof settings !== 'object') throw new Error('Plugin settings must be a JSON object');
   const previous = JSON.stringify(settings);
   if (removeOwnedHooks(settings, root, host) && host !== 'codex') removeOwnedAskRules(settings);
-  if (host === 'workbuddy') {
-    settings.permissions ??= {};
-    if (!settings.permissions || Array.isArray(settings.permissions) || typeof settings.permissions !== 'object') throw new Error('WorkBuddy permissions must be a JSON object');
-    const permissionAsk = settings.permissions.ask ?? [];
-    if (!Array.isArray(permissionAsk) || permissionAsk.some(value => typeof value !== 'string')) throw new Error('WorkBuddy ask rules must be strings');
-    const compatibleAsk = commands.flatMap(binary => ['Bash', 'PowerShell'].flatMap(tool => [`${tool}(${binary} kb start *)`, `${tool}(${binary} tasks reply *)`]));
-    settings.permissions.ask = [...new Set([...permissionAsk, ...compatibleAsk])];
-    settings.sandbox ??= {};
-    if (!settings.sandbox || Array.isArray(settings.sandbox) || typeof settings.sandbox !== 'object') throw new Error('WorkBuddy sandbox must be a JSON object');
-    settings.sandbox.commandSafety ??= {};
-    const safety = settings.sandbox.commandSafety;
-    if (!safety || Array.isArray(safety) || typeof safety !== 'object') throw new Error('WorkBuddy command safety must be a JSON object');
-    const ask = safety.ask ?? [];
-    if (!Array.isArray(ask) || ask.some(rule => !Array.isArray(rule?.prefix) || !rule.prefix.length || rule.prefix.some(value => typeof value !== 'string'))) throw new Error('WorkBuddy command safety ask rules must contain command prefixes');
-    const added = commands.flatMap(binary => [['kb', 'start'], ['tasks', 'reply']].map(words => ({ prefix: [binary, ...words] })));
-    safety.ask = [...ask, ...added.filter(rule => !ask.some(existing => JSON.stringify(existing.prefix) === JSON.stringify(rule.prefix)))];
-  }
   return previous === JSON.stringify(settings) && before !== null ? before : JSON.stringify(settings, null, 2) + '\n';
 }
 
-/** codexRules 生成原生逐次确认策略，保留只读命令自动执行。
+/** codexRules 还原旧版安装器规则，仅供识别可迁移文件。
  * Returns:
  *   Codex Starlark 规则原文。
  */
@@ -204,14 +187,12 @@ export function preparePluginIntegration(home, agents, root) {
     const target = join(directory, host === 'codex' ? 'hooks.json' : 'settings.json');
     checkParents(home, dirname(target));
     const before = fileText(target);
-    const files = before === null && host !== 'workbuddy' ? [] : [{ home, host, target, before, after: mergeSettings(before, root, host), root }];
+    const files = before === null ? [] : [{ home, host, target, before, after: mergeSettings(before, root, host), root }];
     if (host === 'codex') {
       const target = join(directory, 'rules', 'ccneed.rules');
       checkParents(home, dirname(target));
       const before = fileText(target);
-      const after = codexRules();
-      if (before !== null && before !== after) throw new Error('Existing custom CCNeed rules will not be overwritten');
-      files.unshift({ home, host, target, before, after, root });
+      if (before === codexRules()) files.unshift({ home, host, target, before, after: '# Retired CCNeed installer rules; native permissions apply.\n', root });
     }
     return files;
   });
@@ -345,7 +326,7 @@ function validateNativePayload(root, host, version) {
   if (additionalHosts.includes(host)) return validateAdditionalPayload(root, host, version, { requireProjected: true });
   if (host === 'kimi') {
     const manifest = JSON.parse(fileText(join(root, '.kimi-plugin', 'plugin.json')) ?? '{}');
-    const hooks = ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 }));
+    const hooks = ['SessionStart', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 }));
     if (manifest.name !== 'ccneed' || manifest.version !== version || manifest.skills !== './skills' || manifest.sessionStart?.skill !== 'ccneed' || !sameConfig(manifest.hooks, hooks)) throw new Error('Kimi native plugin payload does not match the CLI release');
     return;
   }
@@ -439,8 +420,8 @@ export async function installNativePlugin(native, host, root, version) {
   try {
     validateNativePayload(root, host, version);
     if (additionalHosts.includes(host)) return { ...base, status: 'action_required', error: 'native_plugin_import_required', next_steps: additionalPluginInstructions(host, root, version) };
-    if (host === 'kimi') return { ...base, status: 'action_required', collection_supported: true, error: 'native_plugin_import_required', next_steps: ['In Kimi Code CLI 2.5.3 or a compatible newer native release, run /plugins install "' + root.replaceAll('\\', '/') + '"; deprecated Python kimi-cli 1.x is not supported', 'Enable ccneed in /plugins, verify version ' + version + ', then /reload or open a new session; repeat import after each CLI update because the native manager copies the plugin', 'Execution follows the active Kimi native permission mode, including automatic/session authorization. Plan, credit and version checks remain active. Save long kb plan and tasks get/watch responses with an absolute --output file. No user profile files or legacy Skill links were changed'] };
-    if (host === 'workbuddy') return { ...base, status: 'action_required', next_steps: ['Open WorkBuddy desktop’s native plugin manager and register the local CCNeed marketplace at ' + root, 'Install and enable ccneed@ccneed version ' + version + '; verify that version in the desktop plugin manager', 'Trust the bundled hooks and restart WorkBuddy with default permissions; no supported desktop CLI registration API was used'] };
+    if (host === 'kimi') return { ...base, status: 'action_required', collection_supported: true, error: 'native_plugin_import_required', next_steps: ['In Kimi Code CLI 2.5.3 or a compatible newer native release, run /plugins install "' + root.replaceAll('\\', '/') + '"; deprecated Python kimi-cli 1.x is not supported', 'Enable ccneed in /plugins, verify version ' + version + ', then /reload or open a new session; repeat import after each CLI update because the native manager copies the plugin', 'Execution follows the active Kimi native permission mode, including automatic/session authorization. The agent reviews the plan, credits and version before submitting. Save long kb plan and tasks get/watch responses with an absolute --output file. No user profile files or legacy Skill links were changed'] };
+    if (host === 'workbuddy') return { ...base, status: 'action_required', next_steps: ['Open WorkBuddy desktop’s native plugin manager and register the local CCNeed marketplace at ' + root, 'Install and enable ccneed@ccneed version ' + version + '; verify that version in the desktop plugin manager', 'Trust the bundled hooks and restart WorkBuddy. Existing CCNeed ask rules may have been added by an older installer; review them in settings and preserve custom rules. No supported desktop CLI registration API was used'] };
     stage = host + ' marketplace registration';
     await ensureMarketplace(native, host, root);
     stage = host + ' plugin status lookup';

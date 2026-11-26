@@ -3,15 +3,16 @@
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "node", "args": ["${QODER_PLUGIN_ROOT}/hooks/acquisition.mjs", "--host", "qoder"], "timeout": 10 }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          { "type": "command", "command": "node", "args": ["${QODER_PLUGIN_ROOT}/hooks/acquisition.mjs", "--host", "qoder"], "timeout": 10 }
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${QODER_PLUGIN_ROOT}/hooks/acquisition.mjs",
+              "--host",
+              "qoder"
+            ],
+            "timeout": 10
+          }
         ]
       }
     ],
@@ -19,7 +20,16 @@
       {
         "matcher": "Bash|PowerShell",
         "hooks": [
-          { "type": "command", "command": "node", "args": ["${QODER_PLUGIN_ROOT}/hooks/acquisition.mjs", "--host", "qoder"], "timeout": 10 }
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${QODER_PLUGIN_ROOT}/hooks/acquisition.mjs",
+              "--host",
+              "qoder"
+            ],
+            "timeout": 10
+          }
         ]
       }
     ]

@@ -26,7 +26,7 @@
 
 - **获取数据：**采集到知识库，导出 CSV 或 JSON，交给自己的 Agent 分析。
 - **云端研究：**让 CCNeed 云端 Agent 分析知识库和文件，下载研究报告。
-- **采集前确认：**调整关键词、采集目标和预算，确认方案后通过 Agent 原生权限界面批准执行。
+- **采集前确认：**调整关键词、采集目标和预算，在对话中确认方案后执行采集。
 
 ## 安装与更新
 
@@ -98,7 +98,7 @@ ccneed kb export --kb-id KB_ID --format csv
 ccneed kb export --kb-id KB_ID --format json
 ```
 
-需要新数据时，Agent 通过 `kb plan` 准备方案，用自然语言展示并等待对话确认，再在 `kb start` 前请求原生权限。采集、打标完成后，Agent 通常自动导出 CSV 并交付本地文件；指定格式与目录优先。详见[采集说明](skills/ccneed/references/acquisition.md)；原来的 `kb create` 网页入口继续保留。
+需要新数据时，Agent 通过 `kb plan` 准备方案，用自然语言展示并等待对话确认，确认后按宿主已有权限执行 `kb start`。采集、打标完成后，Agent 通常自动导出 CSV 并交付本地文件；指定格式与目录优先。详见[采集说明](skills/ccneed/references/acquisition.md)；原来的 `kb create` 网页入口继续保留。
 
 需要云端分析时，带上第一句话和知识库 ID 开启会话。如果还要绑定文件，先上传，再使用返回的文件 ID：
 

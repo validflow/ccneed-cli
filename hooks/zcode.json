@@ -4,15 +4,16 @@
       {
         "matcher": "startup|resume|clear|compact",
         "hooks": [
-          { "type": "process", "command": "node", "args": ["${ZCODE_PLUGIN_ROOT}/hooks/acquisition.mjs", "--host", "zcode"], "timeoutMs": 10000 }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          { "type": "process", "command": "node", "args": ["${ZCODE_PLUGIN_ROOT}/hooks/acquisition.mjs", "--host", "zcode"], "timeoutMs": 10000 }
+          {
+            "type": "process",
+            "command": "node",
+            "args": [
+              "${ZCODE_PLUGIN_ROOT}/hooks/acquisition.mjs",
+              "--host",
+              "zcode"
+            ],
+            "timeoutMs": 10000
+          }
         ]
       }
     ],
@@ -20,7 +21,16 @@
       {
         "matcher": "Bash|PowerShell",
         "hooks": [
-          { "type": "process", "command": "node", "args": ["${ZCODE_PLUGIN_ROOT}/hooks/acquisition.mjs", "--host", "zcode"], "timeoutMs": 10000 }
+          {
+            "type": "process",
+            "command": "node",
+            "args": [
+              "${ZCODE_PLUGIN_ROOT}/hooks/acquisition.mjs",
+              "--host",
+              "zcode"
+            ],
+            "timeoutMs": 10000
+          }
         ]
       }
     ]

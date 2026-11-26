@@ -3,15 +3,11 @@
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host claude", "timeout": 10 }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|PowerShell",
-        "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host claude", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host claude",
+            "timeout": 10
+          }
         ]
       }
     ],
@@ -19,7 +15,11 @@
       {
         "matcher": "Bash|PowerShell",
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host claude", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/acquisition.mjs\" --host claude",
+            "timeout": 10
+          }
         ]
       }
     ]

@@ -54,7 +54,7 @@ function validatePluginPayload(root, version, requireProjected = false) {
   for (const host of additionalHosts) validateAdditionalPayload(root, host, version, { requireProjected });
   rejectLinks(join(root, '.kimi-plugin'));
   const kimi = JSON.parse(readFileSync(join(root, '.kimi-plugin', 'plugin.json'), 'utf8'));
-  const events = ['SessionStart', 'PreToolUse', 'PostToolUse'];
+  const events = ['SessionStart', 'PostToolUse'];
   if (kimi.name !== 'ccneed' || kimi.version !== version || kimi.skills !== './skills' || kimi.sessionStart?.skill !== 'ccneed' || !Array.isArray(kimi.hooks) || kimi.hooks.length !== events.length || events.some(event => !kimi.hooks.some(hook => hook.event === event && hook.command === 'node ./hooks/acquisition.mjs --host kimi' && hook.timeout === 10 && (event === 'SessionStart' || hook.matcher === 'Bash|Shell')))) throw new Error('Kimi plugin version or hooks mismatch');
   for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
     rejectLinks(join(root, directory));

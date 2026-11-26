@@ -47,7 +47,7 @@ function checkedHook(ctx, exec, event, options, response) {
   return input ? handleHook('dsh', { ...input, tool_response: response }, options) : {};
 }
 
-/** apply registers the shared Skill and native per-call execution policies.
+/** apply registers the shared Skill and native result context.
  * Args:
  *   ctx: Effect-owned native Cordis context; unloading removes every registration.
  *   options: Optional stateDir for isolated installations and runtime tests.
@@ -61,20 +61,6 @@ export function apply(ctx, options = {}) {
   if (!match) throw new Error('Incomplete bundled CCNeed Skill');
   ctx.skills.register({ name: 'ccneed', description: match[1], content: match[2], path, source: 'bundled', resourceBase: { kind: 'directory', path: fileURLToPath(new URL('../../skills/ccneed/', import.meta.url)).replace(/[\\/]$/, '') } });
 
-  // A monotonic native guard prevents later policy listeners from overriding
-  // a failed plan check. Native approvals remain owned by the DSH pipeline.
-  ctx.tools.guard(exec => {
-    const output = checkedHook(ctx, exec, 'PreToolUse', options).hookSpecificOutput;
-    return output?.permissionDecision === 'deny' ? output.permissionDecisionReason : undefined;
-  });
-  ctx.on('tools/pre-execute', async (exec, next) => {
-    if (exec.signal.aborted) return { kind: 'cancel' };
-    const output = checkedHook(ctx, exec, 'PreToolUse', options).hookSpecificOutput;
-    if (output?.permissionDecision === 'deny') return { kind: 'deny', reason: output.permissionDecisionReason };
-    const prior = await next();
-    if (prior.kind !== 'allow' || output?.permissionDecision !== 'ask') return prior;
-    return { kind: 'ask', reason: output.permissionDecisionReason };
-  });
   ctx.on('tools/post-execute', async (exec, result, next) => {
     const prior = await next();
     if (prior.kind !== 'accept' || result.isError || exec.signal.aborted) return prior;
