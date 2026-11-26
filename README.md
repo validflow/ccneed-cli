@@ -26,7 +26,7 @@ CCNeed connects your Agent to social data collection and cloud research through 
 
 - **Get data:** collect into a knowledge base and export CSV or JSON for your own Agent.
 - **Run cloud research:** analyze knowledge bases and files with CCNeed's cloud Agent, then download the report.
-- **Review before collecting:** adjust keywords, collection targets and budget, confirm the plan, then approve execution in your Agent.
+- **Review before collecting:** adjust keywords, collection targets and budget, then confirm the plan before collection starts.
 
 ## Install or update
 
@@ -98,7 +98,7 @@ ccneed kb export --kb-id KB_ID --format csv
 ccneed kb export --kb-id KB_ID --format json
 ```
 
-For new data, your agent prepares a plan with `kb plan`, presents it conversationally and waits for your confirmation, then runs `kb start` under the host’s existing permissions. Once collection and tagging finish, the Agent normally exports and delivers CSV automatically; requested formats and destinations take priority. See [collection instructions](skills/ccneed/references/acquisition.md). The legacy `kb create` website entry remains available.
+For new data, your agent prepares a plan with `kb plan`, presents it conversationally and runs `kb start` after your confirmation. Once collection and tagging finish, the Agent normally exports and delivers CSV automatically; requested formats and destinations take priority. See [collection instructions](skills/ccneed/references/acquisition.md). The legacy `kb create` website entry remains available.
 
 For cloud analysis, start a conversation with your first question and the knowledge-base ID. To bind a file too, upload it first and use the returned file ID:
 
