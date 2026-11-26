@@ -20,9 +20,9 @@ func TestRemoteHTTPRequiresExplicitPerInvocationOptIn(t *testing.T) {
 		want string
 		exit int
 	}{
-		{[]string{"--api-url", origin, "kb", "create"}, `"code":"invalid_origin"`, 1},
-		{[]string{"--api-url", origin, "--allow-insecure-http", "kb", "create"}, `"url":"http://192.0.2.10/insightflow/kb"`, 0},
-		{[]string{"--api-url", "http://ccneed.ai/api", "--allow-insecure-http", "kb", "create"}, `"code":"invalid_origin"`, 1},
+		{[]string{"--api-url", origin, "kb", "stats", "--kb-id", "7"}, `"code":"invalid_origin"`, 1},
+		{[]string{"--api-url", origin, "--allow-insecure-http", "kb", "stats", "--kb-id", "7"}, `"code":"not_authenticated"`, 1},
+		{[]string{"--api-url", "http://ccneed.ai/api", "--allow-insecure-http", "kb", "stats", "--kb-id", "7"}, `"code":"invalid_origin"`, 1},
 	} {
 		var output bytes.Buffer
 		code := Run(context.Background(), scenario.args, Options{Stdout: &output})
