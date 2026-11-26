@@ -2,6 +2,12 @@
 
 English · [中文](../zh/CHANGELOG.md)
 
+## 0.1.18
+
+- Simplify collection confirmation: the Agent presents the `kb plan` result and waits for user confirmation before starting. Cloud HITL replies convey the user's answer; execution follows the host's existing permissions.
+- Remove extra execution approvals and mode restrictions from native plugins, avoiding CCNeed rule conflicts with Codex Never mode and `kb start --help`.
+- Migrate Codex rules that exactly match the previous installer template while preserving custom rules; review legacy WorkBuddy rules manually. Update the shared Skill, installation guidance and plugin versions.
+
 ## 0.1.17
 
 - Clear an earlier cloud confirmation when a new task read has no pending action, and restore ZCode startup guidance when a session resumes.
