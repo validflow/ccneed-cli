@@ -18,7 +18,7 @@ import (
 //	知识库命令组。
 func kbCommand(connection *connectionConfig) *cobra.Command {
 	command := commandGroup("kb", "Plan collection, start an approved plan, and export knowledge-base data")
-	command.AddCommand(kbListCommand(connection), kbCreateCommand(connection))
+	command.AddCommand(kbListCommand(connection))
 	command.AddCommand(kbGetCommand(connection))
 	command.AddCommand(kbPlatformsCommand(connection))
 	command.AddCommand(kbStatsCommand(connection))
@@ -110,30 +110,6 @@ func kbListCommand(connection *connectionConfig) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		return json.NewEncoder(cmd.OutOrStdout()).Encode(result)
-	}}
-}
-
-// kbCreateCommand 只给出同一环境的官网入口，不复制意图、配额和确认流程。
-//
-// Args:
-//
-//	connection: 用户明确选择的服务 origin。
-//
-// Returns:
-//
-//	需要用户在网站完成的创建交接命令。
-func kbCreateCommand(connection *connectionConfig) *cobra.Command {
-	return &cobra.Command{Use: "create", Short: "Return the website knowledge-base creation entry", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		origin, err := connection.selectedOrigin()
-		if err != nil {
-			return err
-		}
-		result := struct {
-			Status   string `json:"status"`
-			URL      string `json:"url"`
-			NextStep string `json:"next_step"`
-		}{"website_required", origin.String() + "/insightflow/kb", "Create the knowledge base on this website; then use kb list to find its ID and selection status."}
 		return json.NewEncoder(cmd.OutOrStdout()).Encode(result)
 	}}
 }

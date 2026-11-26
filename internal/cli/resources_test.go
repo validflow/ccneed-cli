@@ -33,11 +33,20 @@ func TestKBStatsDisplaysOnlyAggregatesAndWebsiteEntry(t *testing.T) {
 	}
 }
 
-func TestKBCreationReturnsWebsiteHandoffWithoutStartingCollection(t *testing.T) {
+func TestKBCreateIsNotACommand(t *testing.T) {
 	var calls atomic.Int32
 	code, output := runTaskCommand(t, func(http.ResponseWriter, *http.Request) { calls.Add(1) }, "kb", "create")
-	if code != 0 || calls.Load() != 0 || !strings.Contains(output, "website_required") || !strings.Contains(output, "/insightflow/kb") {
+	if code == 0 || calls.Load() != 0 || !strings.Contains(output, "command_failed") {
 		t.Fatalf("exit=%d calls=%d output=%s", code, calls.Load(), output)
+	}
+}
+
+func TestKBHelpShowsCollectionCommands(t *testing.T) {
+	code, output := runTaskCommand(t, func(http.ResponseWriter, *http.Request) {
+		t.Error("help must not contact the server")
+	}, "kb", "--help")
+	if code != 0 || !strings.Contains(output, "plan") || !strings.Contains(output, "start") || strings.Contains(output, "create") {
+		t.Fatalf("exit=%d output=%s", code, output)
 	}
 }
 

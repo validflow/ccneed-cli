@@ -98,7 +98,7 @@ ccneed kb export --kb-id KB_ID --format csv
 ccneed kb export --kb-id KB_ID --format json
 ```
 
-For new data, your agent prepares a plan with `kb plan`, presents it conversationally and runs `kb start` after your confirmation. Once collection and tagging finish, the Agent normally exports and delivers CSV automatically; requested formats and destinations take priority. See [collection instructions](skills/ccneed/references/acquisition.md). The legacy `kb create` website entry remains available.
+For new data, your agent prepares a plan with `kb plan`, presents it conversationally and runs `kb start` after your confirmation. Once collection and tagging finish, the Agent normally exports and delivers CSV automatically; requested formats and destinations take priority. See [collection instructions](skills/ccneed/references/acquisition.md).
 
 For cloud analysis, start a conversation with your first question and the knowledge-base ID. To bind a file too, upload it first and use the returned file ID:
 
