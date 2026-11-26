@@ -70,7 +70,7 @@ function writePackage(root, version) {
   mkdirSync(join(root, 'skills', 'ccneed', 'references'), { recursive: true });
   writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@validflow/ccneed-cli', version, private: false, license: 'MIT' }));
   mkdirSync(join(root, '.kimi-plugin'), { recursive: true });
-  writeFileSync(join(root, '.kimi-plugin', 'plugin.json'), JSON.stringify({ name: 'ccneed', version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
+  writeFileSync(join(root, '.kimi-plugin', 'plugin.json'), JSON.stringify({ name: 'ccneed', version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
   for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
     mkdirSync(join(root, directory), { recursive: true });
     writeFileSync(join(root, directory, 'plugin.json'), JSON.stringify({ name: 'ccneed', version, skills: './skills', hooks: './hooks/' + host + '.json' }));
@@ -187,14 +187,12 @@ test('native registration retains safe diagnostics after global CLI installation
   assert.doesNotMatch(JSON.stringify(result), /fixture-secret|Authorization/);
 });
 
-test('Codex verifies actual installed plugin state and keeps native prompt rules', async () => {
+test('Codex verifies installed plugin without injecting prompt rules', async () => {
   const data = fixture();
   const result = await installIntegration({ ...data.options, agents: 'codex' });
   assert.equal(result.status, 'installed');
   assert.equal(result.plugins[0].host, 'codex');
-  const rules = readFileSync(join(data.home, '.codex/rules/ccneed.rules'), 'utf8');
-  assert.match(rules, /decision\s*=\s*"prompt"/);
-  assert.match(rules, /"kb"\s*,\s*"start"/);
+  assert.equal(existsSync(join(data.home, '.codex/rules/ccneed.rules')), false);
   assert.equal(existsSync(join(data.home, '.codex/hooks.json')), false);
   assert.equal(existsSync(join(data.home, '.agents/skills/ccneed')), false);
 });
@@ -254,7 +252,7 @@ test('a custom profile blocks only that host and an explicit default profile rem
   assert.equal(complete.status, 'installed');
 });
 
-test('WorkBuddy sandbox uses its native command-safety ask rules without changing isolation', async () => {
+test('WorkBuddy preserves existing sandbox settings without adding ask rules', async () => {
   const data = fixture();
   mkdirSync(join(data.home, '.workbuddy'), { recursive: true });
   writeFileSync(join(data.home, '.workbuddy', 'settings.json'), JSON.stringify({ sandbox: { enabled: true, commandSafety: { allow: [{ prefix: ['git', 'status'] }] } } }));
@@ -262,10 +260,8 @@ test('WorkBuddy sandbox uses its native command-safety ask rules without changin
   const settings = JSON.parse(readFileSync(join(data.home, '.workbuddy', 'settings.json'), 'utf8'));
   assert.equal(settings.sandbox.enabled, true);
   assert.deepEqual(settings.sandbox.commandSafety.allow, [{ prefix: ['git', 'status'] }]);
-  assert.ok(settings.sandbox.commandSafety.ask?.some(rule => JSON.stringify(rule.prefix) === JSON.stringify(['ccneed', 'kb', 'start'])));
-  assert.ok(settings.sandbox.commandSafety.ask?.some(rule => JSON.stringify(rule.prefix) === JSON.stringify(['ccneed', 'tasks', 'reply'])));
-  assert.ok(settings.permissions?.ask?.includes('Bash(ccneed kb start *)'));
-  assert.ok(settings.permissions?.ask?.includes('Bash(ccneed tasks reply *)'));
+  assert.equal(settings.sandbox.commandSafety.ask, undefined);
+  assert.equal(settings.permissions, undefined);
 });
 
 test('native migration removes only owned legacy links and handlers after successful registration', async () => {

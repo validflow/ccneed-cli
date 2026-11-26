@@ -47,7 +47,7 @@ function fixture() {
   mkdirSync(join(root, 'hooks'));
   writeFileSync(join(root, 'hooks', 'acquisition.mjs'), 'fixture shared hook');
   mkdirSync(join(root, '.kimi-plugin'));
-  writeFileSync(join(root, '.kimi-plugin', 'plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PreToolUse', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
+  writeFileSync(join(root, '.kimi-plugin', 'plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', sessionStart: { skill: 'ccneed' }, hooks: ['SessionStart', 'PostToolUse'].map(event => ({ event, ...(event === 'SessionStart' ? {} : { matcher: 'Bash|Shell' }), command: 'node ./hooks/acquisition.mjs --host kimi', timeout: 10 })) }));
   for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex-plugin'], ['workbuddy', '.codebuddy-plugin']]) {
     mkdirSync(join(root, directory));
     writeFileSync(join(root, directory, 'plugin.json'), JSON.stringify({ name: 'ccneed', version: manifest.version, skills: './skills', hooks: './hooks/' + host + '.json' }));

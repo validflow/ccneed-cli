@@ -1,16 +1,26 @@
 {
   "name": "ccneed",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "CCNeed collection plans, knowledge-base data export and cloud research with Kimi native permissions.",
   "skills": "./skills",
-  "sessionStart": { "skill": "ccneed" },
+  "sessionStart": {
+    "skill": "ccneed"
+  },
   "interface": {
     "displayName": "CCNeed",
     "shortDescription": "Review plans, collect and export data"
   },
   "hooks": [
-    { "event": "SessionStart", "command": "node ./hooks/acquisition.mjs --host kimi", "timeout": 10 },
-    { "event": "PreToolUse", "matcher": "Bash|Shell", "command": "node ./hooks/acquisition.mjs --host kimi", "timeout": 10 },
-    { "event": "PostToolUse", "matcher": "Bash|Shell", "command": "node ./hooks/acquisition.mjs --host kimi", "timeout": 10 }
+    {
+      "event": "SessionStart",
+      "command": "node ./hooks/acquisition.mjs --host kimi",
+      "timeout": 10
+    },
+    {
+      "event": "PostToolUse",
+      "matcher": "Bash|Shell",
+      "command": "node ./hooks/acquisition.mjs --host kimi",
+      "timeout": 10
+    }
   ]
 }

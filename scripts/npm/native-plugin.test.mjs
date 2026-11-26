@@ -15,7 +15,7 @@ test('Kimi native manifest shares the Skill and declares relocatable native hook
   assert.equal(manifest.version, read('package.json').version);
   assert.equal(manifest.skills, './skills');
   assert.equal(manifest.sessionStart.skill, 'ccneed');
-  for (const event of ['SessionStart', 'PreToolUse', 'PostToolUse']) {
+  for (const event of ['SessionStart', 'PostToolUse']) {
     const hook = manifest.hooks.find(hook => hook.event === event);
     assert.equal(hook.command, 'node ./hooks/acquisition.mjs --host kimi');
     assert.equal(hook.timeout, 10);
@@ -41,7 +41,7 @@ for (const [host, directory] of [['claude', '.claude-plugin'], ['codex', '.codex
     const hookPath = resolve(root, manifest.hooks);
     assert.ok(!relative(root, hookPath).startsWith('..'));
     const config = JSON.parse(readFileSync(hookPath, 'utf8'));
-    for (const event of ['SessionStart', 'PreToolUse', 'PostToolUse']) {
+    for (const event of ['SessionStart', 'PostToolUse']) {
       assert.ok(config.hooks[event]?.length, event + ' must load from native plugin');
       for (const entry of config.hooks[event]) for (const hook of entry.hooks) {
         assert.equal(hook.type, 'command');

@@ -8,7 +8,7 @@
 2. 把方案写入普通 JSON 文件，用 `ccneed kb plan --plan-file ./plan.json --output ./prepared.json` 交平台校验、分配每词数量、计算积分并比较余额。这一步不创建知识库、不扣款、不采集。
 3. 插件通过 PostToolUse 或宿主原生工具事件把最终方案送入上下文；Kimi 由 Agent 读取 CLI 完整输出和 `--output` 文件。每次请用户确认时，用自然语言按下方要求完整展示，不能因前文展示过而省略关键词，也不原样粘贴内部说明。保存完整返回 JSON，不能只存 token 或自行改展示字段；不用 shell 重定向隐藏 stdout。`invalid_plan` 的字段错误应修复后重新提交。
 4. 等待用户在对话中确认或提出修改。用户可修改需求、平台、实体词、其他关键词或配额；两类关键词都可增删或替换，但每个平台至少保留一个有效实体词。修改后重新调用 `kb plan`，完整展示新结果再确认。`insufficient_credits`、无 token、过期或校验失败都不能执行。
-5. 对话确认后，使用同一 prepared 文件执行 `ccneed kb start --plan-file ./prepared.json --request-id REQUEST_UUID`。PreToolUse 检查版本、有效期和余额，执行前只短提示，不重复整份方案。命令必须独立调用；权限弹窗或已有授权按下方宿主规则处理，Kimi 自动／会话授权继续有效。接收未知时保留同一 request ID，先查状态，不换 ID 重发。Codex、Kimi 的 prepared 和 HITL 回答文件必须用绝对路径；Kimi 的 `--output` 也使用新的绝对文件路径。
+5. 对话确认后，使用同一 prepared 文件执行 `ccneed kb start --plan-file ./prepared.json --request-id REQUEST_UUID`。执行前只短提示，不重复整份方案。接收未知时保留同一 request ID，先查状态，不换 ID 重发。Kimi 的 `--output` 使用新的绝对文件路径。
 6. 按返回的真实 KB ID 查询状态；CLI 提交后由平台执行统一采集、打标流程，不另起打标任务。服务确认本次流程完成后，通常自动执行 `kb export --kb-id KB_ID --format csv` 并交付本地文件链接，无需再问是否导出。用户指定 JSON、两种格式或目录时按其要求；明确只需要云端分析时不额外导出。采集中、打标中继续有界查询同一 KB；失败或等待确认时说明实际状态，不以已接收、已有部分数据或云端回合结束代替任务完成。只需数据的用户不必创建云端分析会话或报告任务。
 
 示例输入结构（使用用户的真实研究需求与词；示例平台仅在本次查询返回对应 ID 时可用，不照抄样例）：
@@ -54,24 +54,10 @@ T1/T2/T3 是宿主与平台的内部字段，不向用户解释术语或逐词�
 
 平台配额展示为“采集目标”，并说明平台按整页返回数据，实际采集条数可能超过目标；保留完整末页，不把目标描述成严格上限。
 
-这是最终执行方案，两类关键词和配额仍可调整。对话确认的是方案内容，执行权限由宿主处理：需要审批时通过原生界面允许／拒绝，Kimi 已有的自动／会话授权按用户意愿生效。不能拿前一版展示作为新一版授权，也不以展示代替所需执行权限。
+这是最终执行方案，两类关键词和配额仍可调整。修改后重新校验并确认。
 
 ## 云端 Agent 对话中的采集
 
-`tasks get/watch` 返回采集类 `waiting_user` 时，Agent 完整读取 `pending_action.suggested`，展示需求、平台、配额与积分并等待用户确认；Kimi 用绝对 `--output` 快照保留全文。按当前 `resume_schema` 保存答案，修改方案先重新校验。批准创建/补采集的 `tasks reply` 遵循相同宿主权限规则，Kimi 不重复拦截已有自动／会话授权。执行前只短提示；`user_feedback/user_rejected` 是反馈，不是批准。之后沿用同一回合取得真实 KB ID、等待采集完成并导出；缺少 KB ID 时说明情况，不按名称猜测。
+`tasks get/watch` 返回采集类 `waiting_user` 时，Agent 完整读取 `pending_action.suggested`，展示需求、平台、配额与积分并等待用户确认；Kimi 用绝对 `--output` 快照保留全文。按当前 `resume_schema` 提交用户的批准、拒绝或修改意见；方案修改后重新校验、展示并确认。之后沿用同一回合取得真实 KB ID、等待采集完成并导出；缺少 KB ID 时说明情况，不按名称猜测。
 
 其他 AskUser 澄清仍按[会话与任务](tasks.md)处理，不把所有 HITL 都改成采集授权。
-
-## 宿主接入边界
-
-安装/升级后重新加载宿主，并核对 hook 已加载、原生权限策略有效。CLI 本身是 Bash/执行命令工具运行的子进程，不能在 CLI 内伪造宿主权限弹窗。
-
-- Claude Code：PreToolUse 可请求 `ask`；禁止用 bypass/dontAsk/自动批准模式执行采集。
-- Codex：安装器为 `kb start` 和 `tasks reply` 配置原生 `prefix_rule(..., decision="prompt")`；使用独立的 `ccneed` 命令，按需由 Codex 弹出权限确认，每次选择仅允许本次。PreToolUse 的 `ask` 不受支持，不能返回它假装有效。禁用 hook/rules、忽略配置或自动审批时不得继续采集。
-- WorkBuddy：桌面端使用 `~/.workbuddy` 的 Skill 与 hooks，付费采集使用同一宿主的**原生 Bash 工具**，保持默认权限与现有沙箱。沙箱内由安装器添加的 `sandbox.commandSafety.ask` 请求原生确认；当前 PowerShell 的安全删除包装不能可靠命中该规则，因此付费执行会拒绝并提示改用 Bash，不关闭沙箱。每次选择“仅允许本次”；选择“本会话不再询问”会主动扩大授权，需新建宿主会话恢复逐次确认。旧 `.codebuddy` 本地代码配置不代表桌面端已加载。
-
-- Kimi Code：执行权限交给 Kimi 原生策略，尊重用户选择的询问、自动模式和会话授权；Hook 继续验证最终方案、积分与版本，不额外禁止自动模式。不要伪造 `ask`、权限字段或改用 HTTP 绕过业务校验。
-- Kimi Code 2.5.3 的 SessionStart/PostToolUse 不注入 Hook 输出，且 Hook 只收到工具结果前 2000 字符。`kb plan` 与处理 HITL 的 `tasks get/watch` 使用新的绝对 `--output` 文件，由 Agent 读取完整方案，Hook 据同一文件校验。文件不能覆盖；本地 Hook 不读取远程 Bash 的文件，不根据截断内容推测方案。
-- OpenClaw、Pi、ZCode、Qoder、Trae、DeepSeek Harness 的接入方式和兼容要求见[安装说明](https://github.com/validflow/ccneed-cli/blob/main/docs/zh/INSTALL.md)。使用宿主原生插件管理器加载，不能用复制 Skill 代替。工具事件传递的是方案上下文，不是用户已经确认的证据；仍需展示并等待对话确认。Pi 需要交互式扩展 UI。Qoder 的 hook `ask` 继续进入宿主权限判断，是否弹窗取决于用户的模式及规则，不把 hook 输出当成审批已完成。
-
-所有宿主都不能以“配置文件存在”代替真实加载与权限验收，也不能在用户关闭 hook 或绕过全部权限后声称仍能强制确认。
